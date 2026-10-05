@@ -60,10 +60,12 @@ function StoreProviderInner({ children }: { children: ReactNode }) {
       <AuthModal />
       <WhatsAppButton />
       <AccessibilityWidgets />
+      <AdminHotkey />
     </StoreCtx.Provider>
   );
 }
 
+import AdminHotkey from "./AdminHotkey";
 import { LanguageProvider } from "./LanguageContext";
 import { AccessibilityProvider } from "./AccessibilityContext";
 import AccessibilityWidgets from "./AccessibilityWidgets";

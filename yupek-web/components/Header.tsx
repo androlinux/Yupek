@@ -207,16 +207,6 @@ export default function Header() {
                   >
                     {t.nav.wishlist} ({wishlist.length})
                   </Link>
-
-                  {user.role === "admin" && (
-                    <Link
-                      href="/admin"
-                      onClick={() => setUserDropdownOpen(false)}
-                      className="block px-3 py-1.5 text-xs font-medium tracking-wider text-burgundy hover:bg-burgundy/10 transition-colors"
-                    >
-                      {t.nav.admin} ✦
-                    </Link>
-                  )}
                 </div>
 
                 <div className="border-t border-brown/10 pt-1">
@@ -304,11 +294,6 @@ export default function Header() {
                   <Icon name="user" className="h-4 w-4" />
                   <span>{user.name}</span>
                 </Link>
-                {user.role === "admin" && (
-                  <Link href="/admin" className="text-xs uppercase tracking-widest text-burgundy font-medium">
-                    {t.nav.admin}
-                  </Link>
-                )}
               </div>
             ) : (
               <button

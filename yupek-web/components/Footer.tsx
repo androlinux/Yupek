@@ -19,7 +19,6 @@ export default function Footer() {
     { label: t.nav.about, href: "/about" },
     { label: t.nav.contact, href: "/contact" },
     { label: t.nav.account, href: "/account" },
-    { label: t.nav.admin, href: "/admin" },
   ];
 
   return (
