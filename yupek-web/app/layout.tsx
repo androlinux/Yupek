@@ -22,7 +22,7 @@ const sans = Inter({
   display: "swap",
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://yupek.vercel.app";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.yupek.shop";
 const title = "YUPEK — Eastern Roots / European Form";
 const description =
   "Contemporary architectural clothing inspired by ancient Turkmen silk heritage, tailored for modern European living. Handcrafted fabrics, organic cottons, plant dyes, and sustainable European couture standards.";

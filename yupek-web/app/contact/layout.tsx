@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     title: "Contact Concierge — YUPEK",
     description:
       "Connect with YUPEK in Amsterdam for private appointments, custom inquiries, and client assistance.",
-    url: "https://yupek.vercel.app/contact",
+    url: "https://www.yupek.shop/contact",
   },
 };
 

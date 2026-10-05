@@ -8,3 +8,4 @@ export function createClient() {
 }
 
 export const supabase = createClient();
+export { getOAuthRedirectUrl, getBaseOrigin, isLocalDev } from "./authEnv";

@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Shop Collection — YUPEK",
     description: "Contemporary architectural clothing inspired by Eastern heritage.",
-    url: "https://yupek.vercel.app/shop",
+    url: "https://www.yupek.shop/shop",
   },
 };
 

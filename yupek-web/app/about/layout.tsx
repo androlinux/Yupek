@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "About YUPEK — Brand Heritage & Story",
     description: "Eastern Roots. European Form. The story, craft, and philosophy of YUPEK.",
-    url: "https://yupek.vercel.app/about",
+    url: "https://www.yupek.shop/about",
   },
 };
 

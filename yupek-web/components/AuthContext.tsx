@@ -1,6 +1,7 @@
 "use client";
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
+import { getOAuthRedirectUrl } from "@/lib/authEnv";
 
 export interface UserOrder {
   id: string;
@@ -380,11 +381,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // OAuth Google
   const signInWithGoogle = useCallback(async (): Promise<{ success: boolean; error?: string }> => {
     try {
-      const origin = typeof window !== "undefined" ? window.location.origin : "";
+      const redirectTo = getOAuthRedirectUrl();
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${origin}/auth/callback?next=/account`,
+          redirectTo,
         },
       });
 
@@ -405,11 +406,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // OAuth Apple
   const signInWithApple = useCallback(async (): Promise<{ success: boolean; error?: string }> => {
     try {
-      const origin = typeof window !== "undefined" ? window.location.origin : "";
+      const redirectTo = getOAuthRedirectUrl();
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "apple",
         options: {
-          redirectTo: `${origin}/auth/callback?next=/account`,
+          redirectTo,
         },
       });
 
