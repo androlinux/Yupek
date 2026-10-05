@@ -89,8 +89,11 @@ export default function Footer() {
             <Link href="/contact" className="hover:text-cream transition-colors">
               {t.footer.complimentaryShipping}
             </Link>
-            <Link href="/contact" className="hover:text-cream transition-colors">
+            <Link href="/returns" className="hover:text-cream transition-colors">
               {t.footer.returns30Days}
+            </Link>
+            <Link href="/returns" className="hover:text-cream transition-colors">
+              {t.footer.euCompliance}
             </Link>
           </div>
         </div>

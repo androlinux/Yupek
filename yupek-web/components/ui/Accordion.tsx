@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Icon from "./Icon";
 
-export default function Accordion({ items }: { items: { title: string; body: string }[] }) {
+export default function Accordion({ items }: { items: { title: string; body: React.ReactNode }[] }) {
   const [open, setOpen] = useState<number | null>(0);
   return (
     <div className="border-t border-brown/15">
@@ -14,7 +14,7 @@ export default function Accordion({ items }: { items: { title: string; body: str
             </button>
           </h3>
           <div id={`acc-${i}`} role="region" className={`grid transition-all duration-300 ${open === i ? "grid-rows-[1fr] pb-5" : "grid-rows-[0fr]"}`}>
-            <p className="overflow-hidden text-sm leading-7 text-brown/80">{it.body}</p>
+            <div className="overflow-hidden text-sm leading-7 text-brown/80">{it.body}</div>
           </div>
         </div>
       ))}
