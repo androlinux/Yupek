@@ -193,6 +193,49 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // 1B. REGISTER OAUTH (Google / Apple)
+    if (action === "register_oauth") {
+      const { id, name, email } = body;
+      if (!email) {
+        return NextResponse.json({ error: "Email is required" }, { status: 400 });
+      }
+
+      const normalizedEmail = String(email).trim().toLowerCase();
+      const clients = await readClients();
+      let client = clients.find((c) => c.email.toLowerCase() === normalizedEmail);
+
+      if (!client) {
+        client = {
+          id: id || `usr-${Date.now()}`,
+          name: name || email.split("@")[0],
+          email: normalizedEmail,
+          phone: "",
+          salt: "",
+          passwordHash: "",
+          role: "customer",
+          createdAt: new Date().toISOString(),
+          address: {
+            fullName: name || email.split("@")[0],
+            street: "",
+            city: "",
+            postalCode: "",
+            country: "Netherlands",
+            phone: "",
+          },
+        };
+        clients.push(client);
+        await writeClients(clients);
+      }
+
+      const orders = await getClientOrders(normalizedEmail);
+
+      return NextResponse.json({
+        success: true,
+        user: sanitizeClient(client),
+        orders,
+      });
+    }
+
     // 2. LOGIN
     if (action === "login") {
       const { email, password } = body;

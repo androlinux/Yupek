@@ -46,8 +46,8 @@ interface AuthContextType {
   loading: boolean;
   authModalOpen: boolean;
   setAuthModalOpen: (open: boolean) => void;
-  signInWithGoogle: () => Promise<void>;
-  signInWithApple: () => Promise<void>;
+  signInWithGoogle: () => Promise<{ success: boolean; error?: string }>;
+  signInWithApple: () => Promise<{ success: boolean; error?: string }>;
   signInWithEmail: (email: string, pass: string) => Promise<{ success: boolean; error?: string }>;
   signUpWithEmail: (email: string, pass: string, name: string, phone?: string) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
@@ -87,23 +87,117 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Initialize from localStorage and sync
+  // Initialize from localStorage and Supabase session
   useEffect(() => {
+    // 1. Restore local session
     try {
       const cached = localStorage.getItem(USER_STORAGE_KEY);
       if (cached) {
         const parsed: AuthUser = JSON.parse(cached);
         setUser(parsed);
-        // Refresh orders in background
         if (parsed.email) {
           syncServerOrders(parsed.email);
         }
       }
     } catch {
       // ignore
-    } finally {
-      setLoading(false);
     }
+
+    // 2. Check Supabase OAuth session (Google / Apple)
+    async function checkSupabaseSession() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const supa = session.user;
+          const email = supa.email || "";
+          const name = supa.user_metadata?.full_name || supa.user_metadata?.name || email.split("@")[0] || "Valued Client";
+          const provider = (supa.app_metadata?.provider || "google") as AuthUser["provider"];
+
+          // Register or sync with /api/auth
+          try {
+            await fetch("/api/auth", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                action: "register_oauth",
+                id: supa.id,
+                email,
+                name,
+                provider,
+              }),
+            });
+          } catch {}
+
+          const oauthUser: AuthUser = {
+            id: supa.id,
+            email,
+            name,
+            role: "customer",
+            provider,
+            orders: [],
+            address: {
+              fullName: name,
+              street: "",
+              city: "",
+              postalCode: "",
+              country: "Netherlands",
+              phone: "",
+            },
+            createdAt: supa.created_at,
+          };
+
+          setUser(oauthUser);
+          localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(oauthUser));
+          if (email) {
+            syncServerOrders(email);
+          }
+        }
+      } catch {
+        // ignore
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    checkSupabaseSession();
+
+    // 3. Listen to auth changes (when redirected back from Google / Apple)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        const supa = session.user;
+        const email = supa.email || "";
+        const name = supa.user_metadata?.full_name || supa.user_metadata?.name || email.split("@")[0] || "Valued Client";
+        const provider = (supa.app_metadata?.provider || "google") as AuthUser["provider"];
+
+        const oauthUser: AuthUser = {
+          id: supa.id,
+          email,
+          name,
+          role: "customer",
+          provider,
+          orders: [],
+          address: {
+            fullName: name,
+            street: "",
+            city: "",
+            postalCode: "",
+            country: "Netherlands",
+            phone: "",
+          },
+          createdAt: supa.created_at,
+        };
+
+        setUser(oauthUser);
+        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(oauthUser));
+        if (email) {
+          syncServerOrders(email);
+        }
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [syncServerOrders]);
 
   // Real client Sign In via /api/auth
@@ -284,32 +378,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user, syncServerOrders]);
 
   // OAuth Google
-  const signInWithGoogle = useCallback(async () => {
+  const signInWithGoogle = useCallback(async (): Promise<{ success: boolean; error?: string }> => {
     try {
       const origin = typeof window !== "undefined" ? window.location.origin : "";
-      await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
           redirectTo: `${origin}/auth/callback?next=/account`,
         },
       });
-    } catch (err) {
-      console.warn("Google OAuth error", err);
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      if (data?.url) {
+        window.location.href = data.url;
+      }
+      return { success: true };
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Google OAuth error";
+      return { success: false, error: msg };
     }
   }, []);
 
   // OAuth Apple
-  const signInWithApple = useCallback(async () => {
+  const signInWithApple = useCallback(async (): Promise<{ success: boolean; error?: string }> => {
     try {
       const origin = typeof window !== "undefined" ? window.location.origin : "";
-      await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "apple",
         options: {
           redirectTo: `${origin}/auth/callback?next=/account`,
         },
       });
-    } catch (err) {
-      console.warn("Apple OAuth error", err);
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      if (data?.url) {
+        window.location.href = data.url;
+      }
+      return { success: true };
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Apple OAuth error";
+      return { success: false, error: msg };
     }
   }, []);
 
