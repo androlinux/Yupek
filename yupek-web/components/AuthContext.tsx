@@ -48,7 +48,6 @@ interface AuthContextType {
   authModalOpen: boolean;
   setAuthModalOpen: (open: boolean) => void;
   signInWithGoogle: () => Promise<{ success: boolean; error?: string }>;
-  signInWithApple: () => Promise<{ success: boolean; error?: string }>;
   signInWithEmail: (email: string, pass: string) => Promise<{ success: boolean; error?: string }>;
   signUpWithEmail: (email: string, pass: string, name: string, phone?: string) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
@@ -104,7 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // ignore
     }
 
-    // 2. Check Supabase OAuth session (Google / Apple)
+    // 2. Check Supabase OAuth session (Google)
     async function checkSupabaseSession() {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -162,7 +161,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     checkSupabaseSession();
 
-    // 3. Listen to auth changes (when redirected back from Google / Apple)
+    // 3. Listen to auth changes (when redirected back from Google)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
         const supa = session.user;
@@ -403,31 +402,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // OAuth Apple
-  const signInWithApple = useCallback(async (): Promise<{ success: boolean; error?: string }> => {
-    try {
-      const redirectTo = getOAuthRedirectUrl();
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: "apple",
-        options: {
-          redirectTo,
-        },
-      });
-
-      if (error) {
-        return { success: false, error: error.message };
-      }
-
-      if (data?.url) {
-        window.location.href = data.url;
-      }
-      return { success: true };
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Apple OAuth error";
-      return { success: false, error: msg };
-    }
-  }, []);
-
   return (
     <AuthContext.Provider
       value={{
@@ -436,7 +410,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         authModalOpen,
         setAuthModalOpen,
         signInWithGoogle,
-        signInWithApple,
         signInWithEmail,
         signUpWithEmail,
         signOut,
