@@ -194,6 +194,22 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
                 title: t.product.shippingTitle,
                 body: t.product.shippingBody,
               },
+              {
+                title: t.product.euRulesTitle,
+                body: (
+                  <div className="space-y-3">
+                    <p>{t.product.euRulesBody}</p>
+                    <div className="pt-1">
+                      <Link
+                        href="/returns"
+                        className="inline-flex items-center gap-1.5 text-[11px] font-semibold tracking-[.18em] uppercase text-gold hover:text-brown transition-colors underline underline-offset-4"
+                      >
+                        {locale === "nl" ? "Bekijk volledig EU retourbeleid & garanties" : "View Full EU Return Policy & Guarantees"} &rarr;
+                      </Link>
+                    </div>
+                  </div>
+                ),
+              },
             ]}
           />
         </div>

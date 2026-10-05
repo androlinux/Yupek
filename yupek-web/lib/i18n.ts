@@ -110,6 +110,8 @@ export interface Translations {
     sizeGuideCaption: string;
     chest: string;
     length: string;
+    euRulesTitle: string;
+    euRulesBody: string;
   };
   cart: {
     title: string;
@@ -286,6 +288,7 @@ export interface Translations {
     termsOfService: string;
     complimentaryShipping: string;
     returns30Days: string;
+    euCompliance: string;
   };
   whatsapp: {
     tooltip: string;
@@ -305,6 +308,51 @@ export interface Translations {
     placeholder: string;
     noResults: string;
     closeAria: string;
+  };
+  returnsPage: {
+    heroTag: string;
+    heroTitle: string;
+    heroSubtitle: string;
+    policyHighlights: Array<{
+      badge: string;
+      title: string;
+      desc: string;
+    }>;
+    withdrawalTitle: string;
+    withdrawalSubtitle: string;
+    withdrawalBody1: string;
+    withdrawalBody2: string;
+    conditionsTitle: string;
+    conditions: string[];
+    guaranteeTitle: string;
+    guaranteeSubtitle: string;
+    guaranteeBody1: string;
+    guaranteeBody2: string;
+    euRegulationsTitle: string;
+    euRegulationsSubtitle: string;
+    regulationsList: Array<{
+      directive: string;
+      title: string;
+      scope: string;
+      description: string;
+    }>;
+    stepsTitle: string;
+    stepsSubtitle: string;
+    steps: Array<{
+      stepNumber: string;
+      title: string;
+      desc: string;
+    }>;
+    addressTitle: string;
+    addressSubtitle: string;
+    addressLines: string[];
+    conciergeTitle: string;
+    conciergeSubtitle: string;
+    contactEmailBtn: string;
+    contactWhatsAppBtn: string;
+    odrTitle: string;
+    odrDesc: string;
+    odrPlatformBtn: string;
   };
 }
 
@@ -430,6 +478,8 @@ export const dictionaries: Record<Locale, Translations> = {
       sizeGuideCaption: "Size guide, chest in cm",
       chest: "CHEST",
       length: "LENGTH",
+      euRulesTitle: "EU COMPLIANCE & 2-YEAR GUARANTEE",
+      euRulesBody: "Protected by EU Directive (EU) 2019/771 with a mandatory 2-year statutory legal conformity guarantee against defects. 30-day extended withdrawal rights (Directive 2011/83/EU). Compliant with EU Textile Regulation No 1007/2011 and REACH non-toxic safety (EC 1907/2006).",
     },
     cart: {
       title: "BAG",
@@ -664,6 +714,7 @@ export const dictionaries: Record<Locale, Translations> = {
       termsOfService: "TERMS OF SERVICE",
       complimentaryShipping: "COMPLIMENTARY SHIPPING",
       returns30Days: "30-DAY RETURNS",
+      euCompliance: "EU CONSUMER COMPLIANCE",
     },
     whatsapp: {
       tooltip: "Concierge Online",
@@ -683,6 +734,116 @@ export const dictionaries: Record<Locale, Translations> = {
       placeholder: "Tee, Shirt, Silk, Denim...",
       noResults: "NO PIECES MATCH",
       closeAria: "Close search",
+    },
+    returnsPage: {
+      heroTag: "CONSUMER RIGHTS • STATUTORY PROTECTIONS",
+      heroTitle: "RETURN POLICY &\nEU REGULATIONS",
+      heroSubtitle: "Full transparency regarding your 30-day right of withdrawal, 2-year statutory legal conformity guarantee, and European product safety standards.",
+      policyHighlights: [
+        {
+          badge: "30 DAYS",
+          title: "Extended Withdrawal Right",
+          desc: "Statutory 14-day EU right of withdrawal (Directive 2011/83/EU) extended to 30 calendar days by YUPEK Atelier.",
+        },
+        {
+          badge: "2 YEARS",
+          title: "Legal Guarantee of Conformity",
+          desc: "Comprehensive protection against defects in materials and craft under Directive (EU) 2019/771 & Dutch Civil Code Book 7.",
+        },
+        {
+          badge: "100% EU",
+          title: "Certified Textile Compliance",
+          desc: "Accurate fibre labelling under Regulation (EU) No 1007/2011 and REACH non-toxic safety (Regulation EC 1907/2006).",
+        },
+        {
+          badge: "FAST REFUND",
+          title: "Prompt Reimbursement",
+          desc: "Full refunds processed within 14 calendar days to your original payment method upon atelier inspection.",
+        },
+      ],
+      withdrawalTitle: "30-DAY STATUTORY RIGHT OF WITHDRAWAL",
+      withdrawalSubtitle: "EU Directive 2011/83/EU & Atelier Standard",
+      withdrawalBody1: "In accordance with European Union Directive 2011/83/EU on Consumer Rights, you have the statutory right to withdraw from your purchase within 14 days without giving any reason. At YUPEK Atelier, we proudly extend this period to 30 calendar days from the day on which you, or a third party designated by you, acquire physical possession of the items.",
+      withdrawalBody2: "To exercise your right of withdrawal, simply notify us via your account, email (daniyarow16@gmail.com), or direct WhatsApp. When you withdraw from the contract in full, we will reimburse all payments received from you, including initial standard delivery costs, without undue delay and at the latest within 14 days from the day we receive the returned items or proof of return shipment.",
+      conditionsTitle: "Return Conditions & Integrity Criteria",
+      conditions: [
+        "Garments must be returned unworn, unwashed, unaltered, and undamaged.",
+        "All original YUPEK textile labels, security tags, and atelier seals must remain attached and untampered.",
+        "Items must be returned inside their original protective luxury dustbags, bespoke boxes, and packaging.",
+        "Trying on garments for sizing and fit in the same manner as in a physical boutique is fully permitted; wearing items beyond initial fitting impairs return validity.",
+      ],
+      guaranteeTitle: "2-YEAR STATUTORY LEGAL CONFORMITY GUARANTEE",
+      guaranteeSubtitle: "Directive (EU) 2019/771 & Dutch Consumer Law",
+      guaranteeBody1: "Every garment purchased from YUPEK Atelier is protected by a mandatory 2-year statutory legal conformity guarantee under Directive (EU) 2019/771 on the Sale of Goods and the Dutch Civil Code (Burgerlijk Wetboek, Boek 7).",
+      guaranteeBody2: "If a piece presents a lack of conformity—such as unexpected seam failure, zipper or button detachment, fabric distortion not resulting from improper care, or discrepancy with published specifications—you are entitled to remedy free of charge. We provide repair or immediate replacement; if repair or replacement is impossible or disproportionate, you may request an appropriate price reduction or full refund.",
+      euRegulationsTitle: "EU PRODUCT REGULATIONS & SAFETY COMPLIANCE",
+      euRegulationsSubtitle: "Strict adherence to European Union health, environmental, and consumer protection laws",
+      regulationsList: [
+        {
+          directive: "Regulation (EU) No 1007/2011",
+          title: "Textile Fibre Names & Labelling",
+          scope: "Fibre Purity & Transparency",
+          description: "Mandatory complete disclosure of all textile compositions by percentage weight (e.g. 100% Mulberry Silk, 100% Organic Cotton). Any non-textile parts of animal origin (such as natural mother-of-pearl buttons or horn accents) are explicitly labelled according to EU law.",
+        },
+        {
+          directive: "Regulation (EC) No 1907/2006",
+          title: "REACH Chemical Safety & Non-Toxicity",
+          scope: "Health & Environmental Safety",
+          description: "All textiles, organic natural dyes, and metal hardware comply with the European Union REACH Regulation. Free from restricted azo colourants, heavy metals, harmful formaldehyde, carcinogenic substances, and harmful PFAS.",
+        },
+        {
+          directive: "Regulation (EU) 2023/988 / GPSR",
+          title: "General Product Safety & Traceability",
+          scope: "Consumer Protection & Accountability",
+          description: "Products are designed, manufactured, and inspected to the highest European safety standards. Responsible economic operator established in the European Union: YUPEK ATELIER B.V., Keizersgracht 482, 1016 GD Amsterdam, The Netherlands.",
+        },
+        {
+          directive: "Directive 2000/31/EC & GDPR",
+          title: "Data Protection & Digital Fairness",
+          scope: "Privacy & Fair Commerce",
+          description: "Your orders, payment credentials, and personal records are processed under strict European General Data Protection Regulation (EU 2016/679) standards with zero third-party commercial sharing.",
+        },
+      ],
+      stepsTitle: "HOW TO INITIATE AN ATELIER RETURN",
+      stepsSubtitle: "Simple 4-step concierge process",
+      steps: [
+        {
+          stepNumber: "01",
+          title: "Contact Concierge",
+          desc: "Notify our atelier team via your account portal, email, or direct WhatsApp with your order number (e.g., YPK-2026-XXXX).",
+        },
+        {
+          stepNumber: "02",
+          title: "Repack in Atelier Box",
+          desc: "Place garments carefully into their original protective dustbag and shipping box with security labels attached.",
+        },
+        {
+          stepNumber: "03",
+          title: "Courier Dispatch",
+          desc: "Affix the return address and dispatch via insured tracked courier (DHL, PostNL, UPS) to our Amsterdam atelier.",
+        },
+        {
+          stepNumber: "04",
+          title: "Inspection & Prompt Refund",
+          desc: "Upon receipt, our master tailors inspect the piece within 48 hours. Reimbursement is promptly released to your original payment method.",
+        },
+      ],
+      addressTitle: "ATELIER RETURN DESTINATION",
+      addressSubtitle: "Official European Union return headquarters",
+      addressLines: [
+        "YUPEK ATELIER B.V.",
+        "Attn: Returns & Quality Inspection",
+        "Keizersgracht 482",
+        "1016 GD Amsterdam",
+        "The Netherlands",
+      ],
+      conciergeTitle: "NEED PERSONAL ASSISTANCE?",
+      conciergeSubtitle: "Our Amsterdam atelier concierge is at your disposal for sizing exchanges, return labels, or technical inquiries.",
+      contactEmailBtn: "EMAIL ATELIER CONCIERGE",
+      contactWhatsAppBtn: "WHATSAPP CONCIERGE",
+      odrTitle: "EUROPEAN ONLINE DISPUTE RESOLUTION (ODR)",
+      odrDesc: "In accordance with Article 14(1) of EU Regulation No 524/2013, the European Commission provides an online platform for out-of-court dispute resolution between European consumers and online traders.",
+      odrPlatformBtn: "VISIT EU ODR PLATFORM",
     },
   },
   nl: {
@@ -806,6 +967,8 @@ export const dictionaries: Record<Locale, Translations> = {
       sizeGuideCaption: "Maattabel, borstomvang in cm",
       chest: "BORST",
       length: "LENGTE",
+      euRulesTitle: "EU CONFORMITEIT & 2 JAAR GARANTIE",
+      euRulesBody: "Beschermd onder EU Richtlijn (EU) 2019/771 met 2 jaar wettelijke conformiteitsgarantie tegen fabricage- en materiaalfouten. 30 dagen herroepingsrecht (Richtlijn 2011/83/EU). Conform EU Textielverordening nr. 1007/2011 en gifvrije REACH-normen (EG 1907/2006).",
     },
     cart: {
       title: "WINKELMAND",
@@ -1040,6 +1203,7 @@ export const dictionaries: Record<Locale, Translations> = {
       termsOfService: "ALGEMENE VOORWAARDEN",
       complimentaryShipping: "GRATIS VERZENDING",
       returns30Days: "30 DAGEN RETOURNEREN",
+      euCompliance: "EU CONSUMENTENRECHT",
     },
     whatsapp: {
       tooltip: "Conciërge Online",
@@ -1059,6 +1223,116 @@ export const dictionaries: Record<Locale, Translations> = {
       placeholder: "T-shirt, Overhemd, Zijde, Spijkerbroek...",
       noResults: "GEEN STUKS GEVONDEN VOOR",
       closeAria: "Zoekvenster sluiten",
+    },
+    returnsPage: {
+      heroTag: "CONSUMENTENRECHTEN • WETTELIJKE BESCHERMING",
+      heroTitle: "RETOURBELEID &\nEU REGELGEVING",
+      heroSubtitle: "Volledige transparantie over uw 30 dagen herroepingsrecht, 2 jaar wettelijke conformiteitsgarantie en Europese productveiligheidsnormen.",
+      policyHighlights: [
+        {
+          badge: "30 DAGEN",
+          title: "Verlengd Herroepingsrecht",
+          desc: "Wettelijk EU-herroepingsrecht van 14 dagen (Richtlijn 2011/83/EU) verlengd tot 30 kalenderdagen door YUPEK Atelier.",
+        },
+        {
+          badge: "2 JAAR",
+          title: "Wettelijke Conformiteitsgarantie",
+          desc: "Volledige bescherming tegen fabricage- en materiaalfouten onder Richtlijn (EU) 2019/771 en het Nederlands Burgerlijk Wetboek Boek 7.",
+        },
+        {
+          badge: "100% EU",
+          title: "Gecertificeerde Textielconformiteit",
+          desc: "Nauwkeurige vezelaanduiding volgens Verordening (EU) nr. 1007/2011 en gifvrije REACH-veiligheid (Verordening EG 1907/2006).",
+        },
+        {
+          badge: "SNELLE TERUGBETALING",
+          title: "Snelle Vergoeding",
+          desc: "Volledige terugbetaling binnen 14 kalenderdagen via uw oorspronkelijke betaalmethode na ontvangst en inspectie in ons atelier.",
+        },
+      ],
+      withdrawalTitle: "30 DAGEN WETTELIJK HERROEPINGSRECHT",
+      withdrawalSubtitle: "EU Richtlijn 2011/83/EU & YUPEK Atelier Standaard",
+      withdrawalBody1: "Op grond van Richtlijn 2011/83/EU van de Europese Unie betreffende consumentenrechten heeft u het wettelijke recht om binnen een termijn van 14 dagen zonder opgave van redenen de overeenkomst te herroepen. Bij YUPEK Atelier verlengen wij deze periode naar 30 kalenderdagen, ingaande op de dag waarop u of een door u aangewezen derde het artikel fysiek in bezit heeft gekregen.",
+      withdrawalBody2: "Om uw herroepingsrecht uit te oefenen, kunt u eenvoudig contact opnemen via uw account, e-mail (daniyarow16@gmail.com) of WhatsApp. Als u de gehele bestelling herroept, vergoeden wij alle ontvangen betalingen, inclusief de initiële standaard bezorgkosten, uiterlijk binnen 14 dagen na ontvangst van de geretourneerde goederen of het bewijs van retourverzending.",
+      conditionsTitle: "Retourvoorwaarden & Integriteitscriteria",
+      conditions: [
+        "Kledingstukken moeten ongedragen, ongewassen, ongewijzigd en onbeschadigd worden geretourneerd.",
+        "Alle originele YUPEK textiellabels, beveiligingszegels en labels moeten intact en onbeschadigd aanwezig zijn.",
+        "Artikelen moeten worden geretourneerd in de originele beschermende stofzakken en luxe atelier-verpakking.",
+        "Het passen van kleding om de maat en pasvorm te beoordelen—zoals gebruikelijk in een fysieke boetiek—is uiteraard toegestaan; het dragen van artikelen buitenshuis ontbindt het recht op herroeping.",
+      ],
+      guaranteeTitle: "2 JAAR WETTELIJKE CONFORMITEITSGARANTIE",
+      guaranteeSubtitle: "Richtlijn (EU) 2019/771 & Nederlands Consumentenrecht",
+      guaranteeBody1: "Elk kledingstuk aangeschaft bij YUPEK Atelier is beschermd door de verplichte wettelijke garantie van 2 jaar volgens Richtlijn (EU) 2019/771 betreffende de verkoop van goederen en Boek 7 van het Nederlands Burgerlijk Wetboek.",
+      guaranteeBody2: "Mocht een artikel een gebrek aan overeenstemming vertonen—zoals een onverwachte naadbreuk, rits- of knoopdefect, materiaalonvolkomenheid die niet het gevolg is van verkeerd wassen of onderhoud—dan heeft u kosteloos recht op herstel of vervanging. Indien herstel of vervanging onmogelijk of onevenredig is, heeft u recht op een passende prijsvermindering of volledige ontbinding met terugbetaling.",
+      euRegulationsTitle: "EU PRODUCTREGELGEVING & VEILIGHEIDSCONFORMITEIT",
+      euRegulationsSubtitle: "Strikte naleving van Europese normen voor gezondheid, milieu en consumentenbescherming",
+      regulationsList: [
+        {
+          directive: "Verordening (EU) nr. 1007/2011",
+          title: "Textielvezelbenamingen & Etikettering",
+          scope: "Vezelzuiverheid & Transparantie",
+          description: "Verplichte 100% openbaarmaking van alle textielvezels naar gewichtspercentage (bijv. 100% Moerbeizijde, 100% Biologisch Katoen). Niet-textiele delen van dierlijke oorsprong (zoals parelmoeren knopen) worden conform EU-wetgeving uitdrukkelijk vermeld.",
+        },
+        {
+          directive: "Verordening (EG) nr. 1907/2006",
+          title: "REACH Chemische Veiligheid & Niet-Giftigheid",
+          scope: "Gezondheid & Milieuveiligheid",
+          description: "Alle textielstoffen, natuurlijke verfstoffen en metalen fournituren voldoen aan de strenge Europese REACH-verordening. Gegarandeerd vrij van schadelijke azokleurstoffen, zware metalen, formaldehyde en toxische PFAS.",
+        },
+        {
+          directive: "Verordening (EU) 2023/988 / GPSR",
+          title: "Algemene Productveiligheid & Traceerbaarheid",
+          scope: "Consumentenbescherming",
+          description: "Artikelen zijn ontworpen en vervaardigd volgens de hoogste Europese kwaliteits- en veiligheidseisen. Verantwoordelijke marktdeelnemer in de Europese Unie: YUPEK ATELIER B.V., Keizersgracht 482, 1016 GD Amsterdam, Nederland.",
+        },
+        {
+          directive: "Richtlijn 2000/31/EG & AVG/GDPR",
+          title: "Gegevensbescherming & Eerlijke Handel",
+          scope: "Privacy & Consumentenrecht",
+          description: "Uw persoonsgegevens en bestellingen worden behandeld volgens de strengste Europese Algemene Verordening Gegevensbescherming (AVG/GDPR).",
+        },
+      ],
+      stepsTitle: "HOE EEN ATELIER RETOUR AAN TE MELDEN",
+      stepsSubtitle: "Eenvoudig 4-stappen proces",
+      steps: [
+        {
+          stepNumber: "01",
+          title: "Neem Contact Op Met Conciërge",
+          desc: "Meld uw retour via uw account, e-mail of WhatsApp onder vermelding van uw bestelnummer (bijv. YPK-2026-XXXX).",
+        },
+        {
+          stepNumber: "02",
+          title: "Inpakken in Atelier Doos",
+          desc: "Plaats het kledingstuk netjes in de originele beschermende stofzak en verzenddoos met alle verzegelingen intact.",
+        },
+        {
+          stepNumber: "03",
+          title: "Verzending via Koerier",
+          desc: "Voorzie het pakket van het retouradres en verzend via een betrouwbare koeriersdienst (PostNL, DHL, UPS) naar Amsterdam.",
+        },
+        {
+          stepNumber: "04",
+          title: "Inspectie & Terugbetaling",
+          desc: "Na ontvangst controleren onze meester-kleermakers het artikel binnen 48 uur. Het aankoopbedrag wordt direct gecrediteerd via uw betaalmethode.",
+        },
+      ],
+      addressTitle: "ATELIER RETOURADRES",
+      addressSubtitle: "Officieel retouradres binnen de Europese Unie",
+      addressLines: [
+        "YUPEK ATELIER B.V.",
+        "T.a.v. Afdeling Retouren & Kwaliteitscontrole",
+        "Keizersgracht 482",
+        "1016 GD Amsterdam",
+        "Nederland",
+      ],
+      conciergeTitle: "PERSOONLIJKE ONDERSTEUNING NODIG?",
+      conciergeSubtitle: "Onze Amsterdamse atelier conciërge staat voor u klaar bij maatruilingen, retourlabels of vragen over EU-rechten.",
+      contactEmailBtn: "E-MAIL ATELIER CONCIËRGE",
+      contactWhatsAppBtn: "WHATSAPP CONCIËRGE",
+      odrTitle: "EUROPESE ONLINE GESCHILLENBESLECHTING (ODR)",
+      odrDesc: "Overeenkomstig artikel 14 lid 1 van Verordening (EU) nr. 524/2013 biedt de Europese Commissie een platform voor online geschillenbeslechting (ODR) voor buitengerechtelijke beslechting van consumentengeschillen.",
+      odrPlatformBtn: "BEZOEK EU ODR PLATFORM",
     },
   },
 };
