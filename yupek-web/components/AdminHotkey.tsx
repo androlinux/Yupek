@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 /**
  * AdminHotkey listens globally for the secret shortcut Alt + A (or Option + A on macOS)
- * and navigates directly to the atelier admin panel (/admin).
+ * and navigates directly to the admin panel (/admin).
  */
 export default function AdminHotkey() {
   const router = useRouter();

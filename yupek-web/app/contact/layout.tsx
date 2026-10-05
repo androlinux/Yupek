@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Contact Atelier Concierge — YUPEK",
+  title: "Contact Concierge — YUPEK",
   description:
     "Schedule a private viewing at Keizersgracht 482 Amsterdam, inquire about bespoke silk sizing, or contact our client concierge.",
   alternates: {
     canonical: "/contact",
   },
   openGraph: {
-    title: "Contact Atelier Concierge — YUPEK",
+    title: "Contact Concierge — YUPEK",
     description:
-      "Connect with YUPEK Atelier in Amsterdam for private appointments, custom inquiries, and client assistance.",
+      "Connect with YUPEK in Amsterdam for private appointments, custom inquiries, and client assistance.",
     url: "https://yupek.vercel.app/contact",
   },
 };

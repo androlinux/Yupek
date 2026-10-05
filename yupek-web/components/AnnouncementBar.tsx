@@ -14,7 +14,7 @@ export default function AnnouncementBar() {
   // Use localized text if default config, or custom text
   const isDefaultText =
     config.announcementText ===
-    "COMPLIMENTARY SHIPPING ACROSS EUROPE ON ORDERS OVER €100 — PRIVATE ATELIER VIEWINGS AVAILABLE";
+    "COMPLIMENTARY SHIPPING ACROSS EUROPE ON ORDERS OVER €100 — PRIVATE SHOWROOM VIEWINGS AVAILABLE";
   const displayText = isDefaultText || locale === "nl" ? t.announcement.text : config.announcementText;
   const displayBadge = isDefaultText || locale === "nl" ? t.announcement.badge : config.announcementBadge;
 

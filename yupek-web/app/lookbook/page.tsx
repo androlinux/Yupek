@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     canonical: "/lookbook",
   },
   openGraph: {
-    title: "Visual Lookbook — YUPEK Atelier",
+    title: "Visual Lookbook — YUPEK",
     description: "Central Asian heritage silhouettes reimagined for contemporary European life.",
     url: "https://yupek.vercel.app/lookbook",
   },

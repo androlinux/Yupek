@@ -241,8 +241,8 @@ export default function ContactPage() {
                       config.whatsappMessage && locale === "en"
                         ? config.whatsappMessage
                         : locale === "nl"
-                        ? "Hallo YUPEK Atelier, ik heb een vraag over uw collectie."
-                        : "Hello YUPEK Atelier, I have an inquiry regarding your collection."
+                        ? "Hallo YUPEK, ik heb een vraag over uw collectie."
+                        : "Hello YUPEK, I have an inquiry regarding your collection."
                     )}`}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -259,7 +259,7 @@ export default function ContactPage() {
               <ScrollReveal delayMs={300}>
                 <div className="border border-brown/15 bg-black overflow-hidden shadow-sm">
                   <span className="text-[10px] uppercase tracking-widest text-sand p-3 block bg-brown">
-                    {t.contact.atelierTour}
+                    {t.contact.studioTour}
                   </span>
                   <video
                     src={config.contactVideoUrl}

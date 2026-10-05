@@ -66,7 +66,7 @@ async function getClientOrders(email: string) {
         date: o.createdAt || new Date().toISOString(),
         status: o.status === "Delivered" ? "Delivered" : o.status === "Shipped" ? "In Transit" : "Processing",
         total: o.total || 0,
-        tracking: o.tracking || `Atelier Dispatch: ${o.orderNumber || o.id}`,
+        tracking: o.tracking || `YUPEK Dispatch: ${o.orderNumber || o.id}`,
         items: o.items || [],
       }));
   } catch {
@@ -267,7 +267,7 @@ export async function POST(req: NextRequest) {
             provider: "email" as const,
             createdAt: new Date().toISOString(),
             address: {
-              fullName: "YUPEK Atelier",
+              fullName: "YUPEK",
               street: config.contactAddress || "Keizersgracht 482",
               city: "Amsterdam",
               postalCode: "1016 GD",

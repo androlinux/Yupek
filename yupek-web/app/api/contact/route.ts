@@ -18,7 +18,7 @@ export async function POST(request: Request) {
       name,
       email,
       phone: phone || "",
-      subject: subject || "General Atelier Inquiry",
+      subject: subject || "General Inquiry",
       message,
       createdAt: new Date().toISOString(),
       read: false,

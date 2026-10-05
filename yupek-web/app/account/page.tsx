@@ -161,13 +161,13 @@ export default function AccountPage() {
   };
 
   // ==========================================
-  // 1. UNAUTHENTICATED STATE: Real Atelier Client Portal
+  // 1. UNAUTHENTICATED STATE: Real Client Portal
   // ==========================================
   if (!user) {
     return (
       <div className="wrap py-20 md:py-28">
         <div className="mx-auto max-w-xl border border-brown/20 bg-cream p-7 sm:p-10 md:p-12 shadow-xl">
-          {/* Atelier Brand Header */}
+          {/* Brand Header */}
           <div className="text-center">
             <span className="label tracking-[.3em] text-burgundy text-[10px] uppercase font-semibold">
               {t.account.portalTag}
@@ -179,8 +179,8 @@ export default function AccountPage() {
               {authMode === "signin"
                 ? t.account.signInPrompt
                 : locale === "nl"
-                ? "Registreer uw persoonlijke atelieraccount om uw bestellingen te volgen en exclusieve capsulecollecties te ontdekken."
-                : "Register your private atelier account to track your orders, store your delivery address, and view private collections."}
+                ? "Registreer uw persoonlijke account om uw bestellingen te volgen en exclusieve capsulecollecties te ontdekken."
+                : "Register your private account to track your orders, store your delivery address, and view private collections."}
             </p>
           </div>
 
@@ -280,7 +280,7 @@ export default function AccountPage() {
                     <span>{t.auth.authenticating}</span>
                   </>
                 ) : (
-                  <span>{t.auth.enterAtelierBtn} &rarr;</span>
+                  <span>{t.auth.enterStoreBtn} &rarr;</span>
                 )}
               </button>
             </form>
@@ -525,7 +525,7 @@ export default function AccountPage() {
       {activeTab === "orders" && (
         <div className="mt-8 space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="font-serif text-lg text-brown">Your Atelier Purchases</h2>
+            <h2 className="font-serif text-lg text-brown">Your Orders</h2>
             <button
               onClick={() => refreshOrders()}
               className="text-[11px] uppercase tracking-wider text-brown/60 hover:text-brown inline-flex items-center gap-1.5"
@@ -813,8 +813,8 @@ export default function AccountPage() {
               <a
                 href={`https://wa.me/31612345678?text=${encodeURIComponent(
                   locale === "nl"
-                    ? `Hallo YUPEK! Ik ben ${user.name} (${user.email}) en vraag atelierassistentie aan.`
-                    : `Hello YUPEK! I am ${user.name} (${user.email}) requesting atelier assistance.`
+                    ? `Hallo YUPEK! Ik ben ${user.name} (${user.email}) en vraag assistentie aan.`
+                    : `Hello YUPEK! I am ${user.name} (${user.email}) requesting assistance.`
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"

@@ -134,11 +134,11 @@ export default function AuthModal() {
         <div className="text-center">
           <img
             src="/images/logo.png"
-            alt="YUPEK Atelier"
+            alt="YUPEK"
             className="h-12 md:h-14 w-auto mx-auto mb-3 object-contain drop-shadow-sm"
           />
           <p className="label tracking-[.3em] text-burgundy text-[10px] uppercase font-semibold">
-            {t.auth.atelierTag}
+            {t.auth.brandTag}
           </p>
           <h2 className="font-serif text-2xl sm:text-3xl tracking-wide text-brown mt-1">
             {tab === "signin" ? t.auth.clientAccessTitle : t.auth.createAccountTitle}
@@ -271,7 +271,7 @@ export default function AuthModal() {
             {loading
               ? t.auth.authenticating
               : tab === "signin"
-              ? t.auth.enterAtelierBtn
+              ? t.auth.enterStoreBtn
               : t.auth.createProfileBtn}
           </button>
         </form>
@@ -341,7 +341,7 @@ export default function AuthModal() {
             className="text-[11px] text-brown/60 hover:text-burgundy hover:underline"
           >
             {locale === "nl"
-              ? "Hulp nodig met uw atelieraccount? Contacteer Concierge &rarr;"
+              ? "Hulp nodig met uw account? Contacteer Concierge &rarr;"
               : "Need assistance with your account? Contact Concierge &rarr;"}
           </Link>
         </div>

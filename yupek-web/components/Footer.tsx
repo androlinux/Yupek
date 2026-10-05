@@ -28,7 +28,7 @@ export default function Footer() {
           <Link href="/" className="inline-block group focus:outline-none" aria-label="YUPEK home">
             <img
               src="/images/logo-light.png"
-              alt="YUPEK Atelier"
+              alt="YUPEK"
               className="h-16 md:h-20 w-auto object-contain transition-transform duration-300 group-hover:scale-105 drop-shadow-md"
             />
           </Link>
@@ -80,7 +80,7 @@ export default function Footer() {
 
       <div className="border-t border-cream/15">
         <div className="wrap flex flex-col justify-between gap-4 py-6 text-[10px] uppercase tracking-[.2em] text-cream/60 md:flex-row items-center">
-          <p>© 2026 YUPEK ATELIER B.V. {t.common.allRightsReserved}.</p>
+          <p>© 2026 YUPEK B.V. {t.common.allRightsReserved}.</p>
           <div className="flex flex-wrap gap-6 items-center">
             <Link href="/about" className="hover:text-cream transition-colors">
               {t.footer.privacyPolicy}

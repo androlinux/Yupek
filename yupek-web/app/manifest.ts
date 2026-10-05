@@ -2,7 +2,7 @@ import { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "YUPEK Atelier Amsterdam",
+    name: "YUPEK Amsterdam",
     short_name: "YUPEK",
     description: "Contemporary architectural clothing inspired by ancient Turkmen silk heritage, tailored for modern European living.",
     start_url: "/",
