@@ -3,11 +3,14 @@
 import Link from "next/link";
 import { site } from "@/config/site";
 import { Pattern } from "./ui/Pattern";
+import Icon from "./ui/Icon";
 import { useLanguage } from "./LanguageContext";
 import LanguageSwitcher from "./LanguageSwitcher";
+import { useAccessibility } from "./AccessibilityContext";
 
 export default function Footer() {
   const { t } = useLanguage();
+  const { openDrawer } = useAccessibility();
 
   const navCols = [
     { label: t.nav.shop, href: "/shop" },
@@ -95,6 +98,13 @@ export default function Footer() {
             <Link href="/returns" className="hover:text-cream transition-colors">
               {t.footer.euCompliance}
             </Link>
+            <button
+              onClick={openDrawer}
+              className="hover:text-cream transition-colors uppercase inline-flex items-center gap-1.5 text-gold"
+            >
+              <Icon name="accessibility" className="w-3 h-3 text-gold" />
+              <span>{t.a11y.drawerTitle}</span>
+            </button>
           </div>
         </div>
       </div>

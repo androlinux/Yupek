@@ -59,22 +59,27 @@ function StoreProviderInner({ children }: { children: ReactNode }) {
       {children}
       <AuthModal />
       <WhatsAppButton />
+      <AccessibilityWidgets />
     </StoreCtx.Provider>
   );
 }
 
 import { LanguageProvider } from "./LanguageContext";
+import { AccessibilityProvider } from "./AccessibilityContext";
+import AccessibilityWidgets from "./AccessibilityWidgets";
 
 export default function Providers({ children }: { children: ReactNode }) {
   return (
     <LanguageProvider>
-      <ConfigProvider>
-        <AuthProvider>
-          <StoreProviderInner>
-            {children}
-          </StoreProviderInner>
-        </AuthProvider>
-      </ConfigProvider>
+      <AccessibilityProvider>
+        <ConfigProvider>
+          <AuthProvider>
+            <StoreProviderInner>
+              {children}
+            </StoreProviderInner>
+          </AuthProvider>
+        </ConfigProvider>
+      </AccessibilityProvider>
     </LanguageProvider>
   );
 }
