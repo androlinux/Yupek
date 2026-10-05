@@ -1,12 +1,125 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { products } from "@/data/products";
+import { products, type Product } from "@/data/products";
 import { getProduct, related } from "@/lib/catalog";
 import ProductGrid from "@/components/ProductGrid";
 import SectionHeading from "@/components/SectionHeading";
 import ProductView from "./ProductView";
 
 const PRODUCTION_URL = "https://www.yupek.shop";
+
+/**
+ * Safely serialize JSON-LD to prevent HTML breakout / XSS when rendered
+ * inside an inline <script type="application/ld+json"> tag.
+ */
+function safeJsonLd(data: unknown): string {
+  return JSON.stringify(data)
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/&/g, "\\u0026");
+}
+
+/**
+ * Build dynamic, Schema.org-compliant Product and BreadcrumbList structured data
+ * derived strictly from authentic product data.
+ */
+function buildProductJsonLd(p: Product, baseUrl: string) {
+  const productUrl = `${baseUrl}/product/${p.slug}`;
+  const images = (p.images || [])
+    .filter(Boolean)
+    .map((img) => (img.startsWith("http") ? img : `${baseUrl}${img}`));
+
+  const offer: Record<string, unknown> = {
+    "@type": "Offer",
+    priceCurrency: p.currency || "EUR",
+    price: p.price,
+    itemCondition: "https://schema.org/NewCondition",
+    availability:
+      p.inventory !== undefined
+        ? p.inventory > 0
+          ? "https://schema.org/InStock"
+          : "https://schema.org/OutOfStock"
+        : "https://schema.org/InStock",
+    url: productUrl,
+    seller: {
+      "@type": "Organization",
+      name: "YUPEK B.V.",
+    },
+    hasMerchantReturnPolicy: {
+      "@type": "MerchantReturnPolicy",
+      applicableCountry: "EU",
+      returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+      merchantReturnDays: 30,
+      returnMethod: "https://schema.org/ReturnByMail",
+      returnFees: "https://schema.org/FreeReturn",
+    },
+  };
+
+  const productSchema: Record<string, unknown> = {
+    "@type": "Product",
+    "@id": `${productUrl}#product`,
+    name: p.name,
+    url: productUrl,
+    brand: {
+      "@type": "Brand",
+      name: "YUPEK",
+    },
+    offers: offer,
+  };
+
+  if (p.description) {
+    productSchema.description = p.description;
+  }
+
+  if (images.length > 0) {
+    productSchema.image = images;
+  }
+
+  if (p.slug) {
+    productSchema.sku = p.slug;
+  }
+
+  if (p.category) {
+    productSchema.category = p.category;
+  }
+
+  if (p.material) {
+    productSchema.material = p.material;
+  }
+
+  if (p.colors && p.colors.length > 0) {
+    productSchema.color = p.colors.join(", ");
+  }
+
+  const breadcrumbSchema = {
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: baseUrl,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Shop",
+        item: `${baseUrl}/shop`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: p.name,
+        item: productUrl,
+      },
+    ],
+  };
+
+  return {
+    "@context": "https://schema.org",
+    "@graph": [productSchema, breadcrumbSchema],
+  };
+}
 
 export const generateStaticParams = () => products.map((p) => ({ slug: p.slug }));
 
@@ -57,76 +170,14 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
   const p = getProduct(params.slug);
   if (!p) notFound();
 
-  const productImages = p.images.map((img) => (img.startsWith("http") ? img : `${PRODUCTION_URL}${img}`));
-
-  const ld = {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "Product",
-        "@id": `${PRODUCTION_URL}/product/${p.slug}#product`,
-        name: p.name,
-        description: p.description,
-        image: productImages,
-        sku: p.slug,
-        mpn: `YPK-${p.slug.toUpperCase()}`,
-        brand: {
-          "@type": "Brand",
-          name: "YUPEK",
-        },
-        material: p.material,
-        color: p.colors.join(", "),
-        category: p.category,
-        offers: {
-          "@type": "Offer",
-          priceCurrency: "EUR",
-          price: p.price.toFixed(2),
-          itemCondition: "https://schema.org/NewCondition",
-          availability: "https://schema.org/InStock",
-          url: `${PRODUCTION_URL}/product/${p.slug}`,
-          seller: {
-            "@type": "Organization",
-            name: "YUPEK B.V.",
-          },
-          hasMerchantReturnPolicy: {
-            "@type": "MerchantReturnPolicy",
-            applicableCountry: "EU",
-            returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
-            merchantReturnDays: 30,
-            returnMethod: "https://schema.org/ReturnByMail",
-            returnFees: "https://schema.org/FreeReturn",
-          },
-        },
-      },
-      {
-        "@type": "BreadcrumbList",
-        itemListElement: [
-          {
-            "@type": "ListItem",
-            position: 1,
-            name: "Home",
-            item: PRODUCTION_URL,
-          },
-          {
-            "@type": "ListItem",
-            position: 2,
-            name: "Shop",
-            item: `${PRODUCTION_URL}/shop`,
-          },
-          {
-            "@type": "ListItem",
-            position: 3,
-            name: p.name,
-            item: `${PRODUCTION_URL}/product/${p.slug}`,
-          },
-        ],
-      },
-    ],
-  };
+  const ld = buildProductJsonLd(p, PRODUCTION_URL);
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(ld) }}
+      />
       <ProductView p={p} />
       <section className="wrap py-24">
         <SectionHeading title="YOU MAY ALSO LIKE" />
