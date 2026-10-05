@@ -6,7 +6,7 @@ import ProductGrid from "@/components/ProductGrid";
 import SectionHeading from "@/components/SectionHeading";
 import ProductView from "./ProductView";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://yupek.vercel.app";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.yupek.shop";
 
 export const generateStaticParams = () => products.map((p) => ({ slug: p.slug }));
 

@@ -1,11 +1,17 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { getBaseOrigin } from "@/lib/authEnv";
 
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
   const next = searchParams.get("next") ?? "/account";
+
+  // Dynamically resolve base origin:
+  // - Production -> https://www.yupek.shop
+  // - Local development -> http://localhost:3000
+  const baseOrigin = getBaseOrigin(request);
 
   if (code) {
     const cookieStore = cookies();
@@ -33,18 +39,14 @@ export async function GET(request: Request) {
 
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      const forwardedHost = request.headers.get("x-forwarded-host");
-      const isLocalEnv = process.env.NODE_ENV === "development";
-      if (isLocalEnv) {
-        return NextResponse.redirect(`${origin}${next}`);
-      } else if (forwardedHost) {
-        return NextResponse.redirect(`https://${forwardedHost}${next}`);
-      } else {
-        return NextResponse.redirect(`${origin}${next}`);
-      }
+      // Ensure target destination is safe relative path
+      const targetPath = next.startsWith("/") ? next : `/${next}`;
+      return NextResponse.redirect(`${baseOrigin}${targetPath}`);
+    } else {
+      console.error("[Auth Callback] Exchange code error:", error.message);
     }
   }
 
-  // Return the user to an error page or back to home
-  return NextResponse.redirect(`${origin}/?auth_error=1`);
+  // Return the user to home with auth_error indicator using the environment base origin
+  return NextResponse.redirect(`${baseOrigin}/?auth_error=1`);
 }
