@@ -50,7 +50,6 @@ interface AuthContextType {
   signInWithApple: () => Promise<void>;
   signInWithEmail: (email: string, pass: string) => Promise<{ success: boolean; error?: string }>;
   signUpWithEmail: (email: string, pass: string, name: string, phone?: string) => Promise<{ success: boolean; error?: string }>;
-  quickDemoLogin: (role?: "customer" | "admin") => void;
   signOut: () => Promise<void>;
   updateProfile: (profile: Partial<AuthUser>) => void;
   updateAddress: (address: UserAddress) => Promise<boolean>;
@@ -314,31 +313,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Legacy fallback if referenced anywhere
-  const quickDemoLogin = useCallback((role: "customer" | "admin" = "customer") => {
-    if (role === "admin") {
-      const adminObj: AuthUser = {
-        id: "admin-yupek-01",
-        email: "daniyarow16@gmail.com",
-        name: "YUPEK Master Atelier",
-        role: "admin",
-        provider: "demo",
-        orders: [],
-        address: {
-          fullName: "YUPEK Head Office",
-          street: "Keizersgracht 482",
-          city: "Amsterdam",
-          postalCode: "1016 GD",
-          country: "Netherlands",
-          phone: "+31644154126",
-        },
-      };
-      setUser(adminObj);
-      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(adminObj));
-    }
-    setAuthModalOpen(false);
-  }, []);
-
   return (
     <AuthContext.Provider
       value={{
@@ -350,7 +324,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signInWithApple,
         signInWithEmail,
         signUpWithEmail,
-        quickDemoLogin,
         signOut,
         updateProfile,
         updateAddress,
