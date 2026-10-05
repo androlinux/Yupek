@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { useSiteConfig } from "./ConfigContext";
 import { useLanguage } from "./LanguageContext";
@@ -64,10 +65,17 @@ export default function Hero() {
           </div>
         </div>
       ) : (
-        <div
-          className="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-1000 scale-105"
-          style={{ backgroundImage: `url(${config.heroImage || "/images/hero.jpg"})` }}
-        />
+        <div className="absolute inset-0 z-0 overflow-hidden">
+          <Image
+            src={config.heroImage || "/images/hero.jpg"}
+            alt="YUPEK Atelier Heritage Collection"
+            fill
+            priority
+            sizes="100vw"
+            quality={85}
+            className="object-cover object-center transition-transform duration-1000 scale-105"
+          />
+        </div>
       )}
 
       {/* Cinematic Luxury Gradient Overlay */}
