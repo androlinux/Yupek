@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import nodemailer from "nodemailer";
+import { promises as fs } from "fs";
+import path from "path";
 import { StoreOrder, defaultSiteConfig, SiteConfig } from "@/lib/siteConfig";
 
 export const dynamic = "force-dynamic";
@@ -335,6 +337,21 @@ export async function POST(request: NextRequest) {
     } else {
       newOrder.emailNotificationError = "Gmail App Password not yet configured. Order saved to store database.";
       console.log(`[ORDER PLACED] ${newOrder.orderNumber} by ${newOrder.customer.firstName} ${newOrder.customer.lastName} (€${newOrder.total}). Waiting for Gmail credentials.`);
+    }
+
+    // Persist order to data/site-config.json
+    try {
+      const configPath = path.join(process.cwd(), "data", "site-config.json");
+      const raw = await fs.readFile(configPath, "utf-8");
+      const parsed = JSON.parse(raw);
+      const orders = Array.isArray(parsed.storeOrders) ? parsed.storeOrders : [];
+      parsed.storeOrders = [
+        newOrder,
+        ...orders.filter((o: any) => o.id !== newOrder.id && o.orderNumber !== newOrder.orderNumber),
+      ];
+      await fs.writeFile(configPath, JSON.stringify(parsed, null, 2), "utf-8");
+    } catch (saveErr) {
+      console.warn("[Orders save to disk warning]", saveErr);
     }
 
     return NextResponse.json({
