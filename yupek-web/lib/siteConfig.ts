@@ -134,7 +134,7 @@ export const defaultSiteConfig: SiteConfig = {
   adminUsername: "admin",
   adminPassword: "yupek2026",
   announcementEnabled: true,
-  announcementText: "COMPLIMENTARY SHIPPING ACROSS EUROPE ON ORDERS OVER €100 — PRIVATE ATELIER VIEWINGS AVAILABLE",
+  announcementText: "COMPLIMENTARY SHIPPING ACROSS EUROPE ON ORDERS OVER €100 — PRIVATE SHOWROOM VIEWINGS AVAILABLE",
   announcementLink: "/shop",
   announcementBadge: "SPRING CAPSULE",
 
@@ -163,7 +163,7 @@ export const defaultSiteConfig: SiteConfig = {
 
   whatsappEnabled: true,
   whatsappNumber: "+31612345678",
-  whatsappMessage: "Hello YUPEK Atelier! I would like personal assistance with your collection.",
+  whatsappMessage: "Hello YUPEK! I would like personal assistance with your collection.",
   whatsappTooltip: "Chat with Concierge",
 
   contactEmail: "concierge@yupek.eu",
@@ -171,7 +171,7 @@ export const defaultSiteConfig: SiteConfig = {
   contactAddress: "Keizersgracht 482, 1016 GD Amsterdam, The Netherlands",
   contactHours: "Monday – Saturday: 10:00 – 19:00 CET",
   contactVideoUrl: "",
-  orderNotificationEmail: "yupek.atelier@gmail.com",
+  orderNotificationEmail: "daniyarow16@gmail.com",
   smtpUser: "",
   smtpPass: "",
 
@@ -187,8 +187,8 @@ export const defaultSiteConfig: SiteConfig = {
       name: "Sophie van der Meer",
       email: "sophie.vdm@example.com",
       phone: "+31 6 8123 4567",
-      subject: "Bespoke Silk Sizing & Atelier Appointment",
-      message: "Good day, I would love to inquire about private viewing of the Silk-Inspired Shirt in Amsterdam atelier next Thursday.",
+      subject: "Bespoke Silk Sizing & Private Appointment",
+      message: "Good day, I would love to inquire about private viewing of the Silk-Inspired Shirt in Amsterdam next Thursday.",
       createdAt: "2026-10-04T14:32:00Z",
       read: true
     }
@@ -226,7 +226,7 @@ export const defaultSiteConfig: SiteConfig = {
       total: 285,
       status: "Processing",
       emailNotificationSent: true,
-      emailNotificationRecipient: "yupek.atelier@gmail.com",
+      emailNotificationRecipient: "daniyarow16@gmail.com",
     },
   ],
 };

@@ -97,7 +97,7 @@ export default function About() {
               {config.shopButtonLabel && locale === "en" ? config.shopButtonLabel : t.about.shopCollectionBtn}
             </Link>
             <Link href="/contact" className="btn btn-line">
-              {t.about.visitAtelierBtn}
+              {t.about.visitStudioBtn}
             </Link>
           </div>
         </ScrollReveal>

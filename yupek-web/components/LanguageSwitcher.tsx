@@ -135,7 +135,7 @@ export default function LanguageSwitcher({
       onClick={toggle}
       className={`relative inline-flex items-center select-none cursor-pointer group focus:outline-none focus-visible:ring-1.5 focus-visible:ring-gold focus-visible:ring-offset-1 transition-transform duration-200 active:scale-[0.97] ${dims.wrapper} ${className}`}
     >
-      {/* Atelier Brown Main Track (compact rounded pill, flush border, zero heavy shadow) */}
+      {/* Deep Brown Main Track (compact rounded pill, flush border, zero heavy shadow) */}
       <div
         className={`relative z-10 w-full ${dims.trackH} bg-[#2B1D14] border-[1px] border-[#2B1D14] rounded-full flex items-center overflow-hidden shadow-sm ring-1 ring-cream/10`}
       >

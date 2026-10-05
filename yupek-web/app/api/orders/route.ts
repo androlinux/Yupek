@@ -45,7 +45,7 @@ function generateOrderHtml(order: StoreOrder): string {
           <!-- Header -->
           <tr>
             <td style="background-color: #2B1D14; padding: 32px 30px; text-align: center; border-bottom: 3px solid #C49A45;">
-              <span style="font-size: 10px; letter-spacing: 0.35em; color: #C49A45; text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 6px;">ATELIER ORDER NOTIFICATION</span>
+              <span style="font-size: 10px; letter-spacing: 0.35em; color: #C49A45; text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 6px;">YUPEK ORDER NOTIFICATION</span>
               <h1 style="color: #F6F1E7; font-family: Georgia, 'Times New Roman', serif; font-size: 26px; margin: 0; font-weight: normal; letter-spacing: 0.08em;">NEW ORDER RECEIVED</h1>
               <p style="color: #D9CBB0; font-size: 12px; margin: 8px 0 0; letter-spacing: 0.1em; font-family: monospace;">
                 ${order.orderNumber} &bull; ${new Date(order.createdAt).toLocaleString("en-GB", { timeZone: "Europe/Amsterdam" })} CET
@@ -145,7 +145,7 @@ function generateOrderHtml(order: StoreOrder): string {
 
               <!-- Action Link -->
               <div style="text-align: center; margin-top: 25px;">
-                <a href="mailto:${order.customer.email}?subject=YUPEK Atelier Order ${order.orderNumber}" style="display: inline-block; background-color: #2B1D14; color: #F6F1E7; font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em; font-weight: 600; padding: 12px 24px; text-decoration: none; border-radius: 2px;">
+                <a href="mailto:${order.customer.email}?subject=YUPEK Order ${order.orderNumber}" style="display: inline-block; background-color: #2B1D14; color: #F6F1E7; font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em; font-weight: 600; padding: 12px 24px; text-decoration: none; border-radius: 2px;">
                   Reply to Customer &rarr;
                 </a>
               </div>
@@ -181,7 +181,7 @@ export async function POST(request: NextRequest) {
         body.recipient ||
         process.env.NOTIFICATION_GMAIL ||
         process.env.GMAIL_USER ||
-        "yupek.atelier@gmail.com";
+        "daniyarow16@gmail.com";
 
       const gmailUser = (body.smtpUser || process.env.GMAIL_USER || "").trim();
       const gmailPass = (body.smtpPass || process.env.GMAIL_APP_PASSWORD || "").trim().replace(/\s+/g, "");
@@ -206,9 +206,9 @@ export async function POST(request: NextRequest) {
         await transporter.verify();
 
         await transporter.sendMail({
-          from: `"YUPEK Atelier" <${gmailUser}>`,
+          from: `"YUPEK" <${gmailUser}>`,
           to: recipient,
-          subject: "✓ YUPEK Atelier — Gmail Order Notifications Active",
+          subject: "✓ YUPEK — Gmail Order Notifications Active",
           html: `
             <div style="font-family: Georgia, serif; max-width: 500px; margin: 0 auto; padding: 30px; border: 1px solid #D9CBB0; background: #FAF7F2; color: #2B1D14;">
               <h2 style="color: #6E1F2B; margin-top: 0;">GMAIL NOTIFICATIONS ACTIVE</h2>
@@ -220,7 +220,7 @@ export async function POST(request: NextRequest) {
               </p>
               <hr style="border: 0; border-top: 1px solid #D9CBB0; margin: 20px 0;" />
               <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: #888;">
-                YUPEK &bull; Amsterdam Atelier
+                YUPEK &bull; Amsterdam
               </p>
             </div>
           `,
@@ -286,7 +286,7 @@ export async function POST(request: NextRequest) {
       body.notificationEmail ||
       process.env.NOTIFICATION_GMAIL ||
       process.env.GMAIL_USER ||
-      "yupek.atelier@gmail.com";
+      "daniyarow16@gmail.com";
 
     newOrder.emailNotificationRecipient = recipientEmail;
 
@@ -319,9 +319,9 @@ export async function POST(request: NextRequest) {
         // Also send copy/confirmation to customer
         try {
           await transporter.sendMail({
-            from: `"YUPEK Atelier" <${gmailUser}>`,
+            from: `"YUPEK" <${gmailUser}>`,
             to: newOrder.customer.email,
-            subject: `Thank you for your order ${newOrder.orderNumber} — YUPEK Atelier`,
+            subject: `Thank you for your order ${newOrder.orderNumber} — YUPEK`,
             html: htmlContent,
           });
         } catch {

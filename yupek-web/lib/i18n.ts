@@ -203,7 +203,7 @@ export interface Translations {
     bookAppointmentBtn: string;
   };
   auth: {
-    atelierTag: string;
+    brandTag: string;
     clientAccessTitle: string;
     createAccountTitle: string;
     subtitle: string;
@@ -216,7 +216,7 @@ export interface Translations {
     emailLabel: string;
     passwordLabel: string;
     authenticating: string;
-    enterAtelierBtn: string;
+    enterStoreBtn: string;
     createProfileBtn: string;
     instantPreview: string;
     vipDemoBtn: string;
@@ -244,7 +244,7 @@ export interface Translations {
     telephoneLine: string;
     visitingHours: string;
     directWhatsAppBtn: string;
-    atelierTour: string;
+    studioTour: string;
     subjects: {
       appointment: string;
       garments: string;
@@ -263,7 +263,7 @@ export interface Translations {
     experienceCapsule: string;
     experienceSubtitle: string;
     shopCollectionBtn: string;
-    visitAtelierBtn: string;
+    visitStudioBtn: string;
     blocks: Array<{ title: string; desc: string }>;
   };
   lookbook: {
@@ -420,7 +420,7 @@ export const dictionaries: Record<Locale, Translations> = {
       shop: "SHOP",
       collections: "COLLECTIONS",
       journal: "JOURNAL",
-      about: "ABOUT ATELIER",
+      about: "ABOUT YUPEK",
       contact: "CONTACT",
       lookbook: "LOOKBOOK",
       wishlist: "WISHLIST",
@@ -432,7 +432,7 @@ export const dictionaries: Record<Locale, Translations> = {
       bag: "Bag",
     },
     announcement: {
-      text: "COMPLIMENTARY SHIPPING ACROSS EUROPE ON ORDERS OVER €100 — PRIVATE ATELIER VIEWINGS AVAILABLE",
+      text: "COMPLIMENTARY SHIPPING ACROSS EUROPE ON ORDERS OVER €100 — PRIVATE SHOWROOM VIEWINGS AVAILABLE",
       badge: "SPRING CAPSULE",
     },
     hero: {
@@ -468,7 +468,7 @@ export const dictionaries: Record<Locale, Translations> = {
       heritageTitle: "FROM HERITAGE\nTO EVERYDAY.",
       heritageDesc1: "YUPEK draws from a visual language shaped by silk, woven textiles, traditional geometric patterns and generations of craftsmanship.",
       heritageDesc2: "Rather than reproducing heritage literally, we reinterpret it. The result is clothing that carries a sense of origin while belonging naturally in modern Europe.",
-      ourStoryBtn: "OUR ATELIER STORY",
+      ourStoryBtn: "OUR BRAND STORY",
       visitShowroomBtn: "VISIT SHOWROOM",
       visualLookbook: "VISUAL LOOKBOOK",
       visualLookbookSub: "SPRING / SUMMER 2026 CAPSULE",
@@ -481,7 +481,7 @@ export const dictionaries: Record<Locale, Translations> = {
       title: "SHOP",
       subtitle: "Contemporary pieces inspired by Eastern heritage.",
       filter: "FILTER",
-      piecesCount: "PIECES IN ATELIER",
+      piecesCount: "PIECES IN COLLECTION",
       sort: "SORT",
       category: "CATEGORY",
       size: "SIZE",
@@ -542,7 +542,7 @@ export const dictionaries: Record<Locale, Translations> = {
     },
     checkout: {
       title: "CHECKOUT",
-      tag: "ATELIER DISPATCH",
+      tag: "ORDER DISPATCH",
       clientContact: "01 • CLIENT CONTACT",
       emailPlaceholder: "CLIENT EMAIL ADDRESS",
       deliveryDestination: "02 • DELIVERY DESTINATION",
@@ -555,7 +555,7 @@ export const dictionaries: Record<Locale, Translations> = {
       shippingMethod: "03 • SHIPPING METHOD",
       standardCourier: "STANDARD COURIER DELIVERY",
       standardNote: "3–5 working days (PostNL / DHL)",
-      expressCourier: "EXPRESS PRIORITY ATELIER DISPATCH",
+      expressCourier: "EXPRESS PRIORITY DISPATCH",
       expressNote: "1–2 working days (DHL Express)",
       complimentary: "COMPLIMENTARY",
       paymentMethod: "04 • PAYMENT METHOD",
@@ -564,28 +564,28 @@ export const dictionaries: Record<Locale, Translations> = {
       applePay: "Apple Pay",
       securityNote: "Encrypted with 256-bit TLS security. Immediate dispatch from Central European fulfillment.",
       placeOrder: "PLACE ORDER",
-      processingOrder: "PROCESSING ATELIER ORDER...",
+      processingOrder: "PROCESSING YOUR ORDER...",
       orderSummary: "ORDER SUMMARY",
       inclVat: "INCL. 21% VAT",
       estimatedTotal: "ESTIMATED TOTAL",
       orderConfirmed: "ORDER CONFIRMED",
       thankYou: "THANK YOU FOR YOUR PATRONAGE",
-      confirmationDispatched: "Your order has been transmitted to our Amsterdam atelier. A confirmation receipt has been dispatched to your email.",
+      confirmationDispatched: "Your order has been received by our Amsterdam team. A confirmation receipt has been dispatched to your email.",
       viewInAccount: "VIEW IN MY ACCOUNT",
       continueBrowsing: "CONTINUE BROWSING",
     },
     account: {
-      portalTag: "ATELIER PORTAL",
+      portalTag: "CLIENT PORTAL",
       clientAccess: "CLIENT ACCESS",
-      signInPrompt: "Sign in with your Google, Apple, or Atelier account to track order dispatches, manage your delivery addresses, and view private collections.",
+      signInPrompt: "Sign in with your Google, Apple, or YUPEK account to track order dispatches, manage your delivery addresses, and view private collections.",
       continueGoogle: "CONTINUE WITH GOOGLE",
       continueApple: "CONTINUE WITH APPLE",
       signInEmail: "SIGN IN WITH EMAIL",
       demoSession: "Instant Demo Session",
       vipClientDemo: "Log In As VIP Client",
       adminDemo: "Log In As Admin",
-      vipMemberTag: "Atelier Circle VIP",
-      adminMemberTag: "Master Atelier Admin",
+      vipMemberTag: "YUPEK Circle VIP",
+      adminMemberTag: "Store Administrator",
       signedVia: "Authorized via",
       adminPanelBtn: "Admin Panel",
       signOutBtn: "Sign Out",
@@ -610,13 +610,13 @@ export const dictionaries: Record<Locale, Translations> = {
       saveChanges: "Save Changes",
       cancelBtn: "Cancel",
       conciergeTag: "PRIVATE CLIENT ADVISORY",
-      conciergeTitle: "YUPEK ATELIER CONCIERGE",
-      conciergeDesc: "As a registered client, you have direct priority access to our Amsterdam atelier. We assist with bespoke sizing, private showroom viewings, and expedited courier requests.",
+      conciergeTitle: "YUPEK CLIENT CONCIERGE",
+      conciergeDesc: "As a registered client, you have direct priority access to our Amsterdam team. We assist with bespoke sizing, private showroom viewings, and expedited courier requests.",
       whatsAppConciergeBtn: "WhatsApp Private Concierge",
-      bookAppointmentBtn: "Book Atelier Appointment",
+      bookAppointmentBtn: "Book Private Appointment",
     },
     auth: {
-      atelierTag: "YUPEK ATELIER",
+      brandTag: "YUPEK",
       clientAccessTitle: "CLIENT ACCESS",
       createAccountTitle: "CREATE ACCOUNT",
       subtitle: "Experience bespoke order tracking, saved archives, and private previews.",
@@ -629,7 +629,7 @@ export const dictionaries: Record<Locale, Translations> = {
       emailLabel: "Email Address",
       passwordLabel: "Password",
       authenticating: "AUTHENTICATING...",
-      enterAtelierBtn: "ENTER ATELIER",
+      enterStoreBtn: "ENTER STORE",
       createProfileBtn: "CREATE CLIENT PROFILE",
       instantPreview: "Instant Preview Access",
       vipDemoBtn: "VIP Client Demo",
@@ -637,27 +637,27 @@ export const dictionaries: Record<Locale, Translations> = {
     },
     contact: {
       tag: "DIRECT INQUIRIES",
-      title: "ATELIER CONCIERGE",
+      title: "CLIENT CONCIERGE",
       subtitle: "Whether you wish to schedule a private viewing in our Amsterdam studio, discuss bespoke sizing, or request international courier options, our concierge team is at your disposal.",
       formTitle: "TRANSMIT AN INQUIRY",
-      formSubtitle: "Our private client team typically responds within two hours during atelier working hours.",
+      formSubtitle: "Our private client team typically responds within two hours during customer care hours.",
       fullName: "Full Name *",
       email: "Email Address *",
       phone: "Telephone (Optional)",
       subject: "Subject of Inquiry",
       message: "Message / Request Details *",
-      transmitting: "TRANSMITTING TO ATELIER...",
-      sendInquiryBtn: "SEND ATELIER INQUIRY",
+      transmitting: "TRANSMITTING INQUIRY...",
+      sendInquiryBtn: "SEND INQUIRY",
       thankYouTitle: "Thank you for your message",
-      thankYouDesc: "Your inquiry has been registered with the atelier concierge. A confirmation email and response will follow shortly.",
+      thankYouDesc: "Your inquiry has been registered with client concierge. A confirmation email and response will follow shortly.",
       sendAnother: "Send another message",
-      headquartersTag: "HEADQUARTERS & ATELIER",
+      headquartersTag: "HEADQUARTERS & STUDIO",
       studioTitle: "AMSTERDAM STUDIO",
       conciergeEmail: "Concierge Email",
       telephoneLine: "Telephone & Courier Line",
       visitingHours: "Visiting & Telephone Hours",
       directWhatsAppBtn: "DIRECT CHAT VIA WHATSAPP",
-      atelierTour: "Atelier Tour",
+      studioTour: "Studio Tour",
       subjects: {
         appointment: "Private Showroom Appointment",
         garments: "Garment Inquiries & Fabric Care",
@@ -667,16 +667,16 @@ export const dictionaries: Record<Locale, Translations> = {
       },
     },
     about: {
-      manifestoTag: "ATELIER MANIFESTO",
+      manifestoTag: "BRAND MANIFESTO",
       title: "THE STORY\nOF YUPEK",
       bornMeeting: "YUPEK was born from a meeting of two worlds.",
       bornBody: "Central Asia offers thousands of years of woven textiles, silk trade history, and tactile poetry. Modern Europe offers clean silhouettes, restrained elegance, and daily wearability.",
       taglineBanner: "EASTERN ROOTS • EUROPEAN FORM",
-      craftFilm: "Atelier Craftsmanship Film",
+      craftFilm: "Heritage Craftsmanship Film",
       experienceCapsule: "EXPERIENCE THE CAPSULE",
       experienceSubtitle: "Limited batch production engineered for longevity.",
       shopCollectionBtn: "SHOP THE COLLECTION",
-      visitAtelierBtn: "VISIT ATELIER",
+      visitStudioBtn: "VISIT SHOWROOM",
       blocks: [
         {
           title: "THE ROOTS",
@@ -696,7 +696,7 @@ export const dictionaries: Record<Locale, Translations> = {
         },
         {
           title: "PERPETUAL CRAFT",
-          desc: "A growing atelier of everyday wardrobe pieces, crafted with meticulous care and rooted in an ancient culture that deserves to be lived in, not merely archived in museums.",
+          desc: "A growing collection of everyday wardrobe pieces, crafted with meticulous care and rooted in an ancient culture that deserves to be lived in, not merely archived in museums.",
         },
       ],
     },
@@ -741,7 +741,7 @@ export const dictionaries: Record<Locale, Translations> = {
         {
           title: "THE ARCHITECTURE OF YUPEK",
           desc: "From hand-drawn calligraphy sketches to finished organic poplin and brushed fleece.",
-          category: "ATELIER",
+          category: "COLLECTION",
           date: "AUGUST 2026",
         },
         {
@@ -766,16 +766,16 @@ export const dictionaries: Record<Locale, Translations> = {
       ariaLabel: "Chat on WhatsApp with YUPEK Concierge",
     },
     newsletter: {
-      tag: "ATELIER DISPATCH",
-      title: "JOIN THE PRIVATE ATELIER CIRCLE",
+      tag: "ORDER DISPATCH",
+      title: "JOIN THE PRIVATE YUPEK CIRCLE",
       subtitle: "Subscribers receive private previews of seasonal capsules, invitations to showroom viewings, and textile essays.",
       emailPlaceholder: "YOUR EMAIL ADDRESS",
       subscribeBtn: "JOIN CIRCLE",
-      thankYou: "WELCOME TO THE ATELIER CIRCLE",
+      thankYou: "WELCOME TO THE YUPEK CIRCLE",
       privacyNote: "Strictly confidential. No spam, unsubscribe anytime.",
     },
     searchOverlay: {
-      title: "SEARCH ATELIER COLLECTION",
+      title: "SEARCH YUPEK COLLECTION",
       placeholder: "Tee, Shirt, Silk, Denim...",
       noResults: "NO PIECES MATCH",
       closeAria: "Close search",
@@ -788,7 +788,7 @@ export const dictionaries: Record<Locale, Translations> = {
         {
           badge: "30 DAYS",
           title: "Extended Withdrawal Right",
-          desc: "Statutory 14-day EU right of withdrawal (Directive 2011/83/EU) extended to 30 calendar days by YUPEK Atelier.",
+          desc: "Statutory 14-day EU right of withdrawal (Directive 2011/83/EU) extended to 30 calendar days by YUPEK.",
         },
         {
           badge: "2 YEARS",
@@ -803,23 +803,23 @@ export const dictionaries: Record<Locale, Translations> = {
         {
           badge: "FAST REFUND",
           title: "Prompt Reimbursement",
-          desc: "Full refunds processed within 14 calendar days to your original payment method upon atelier inspection.",
+          desc: "Full refunds processed within 14 calendar days to your original payment method upon item inspection.",
         },
       ],
       withdrawalTitle: "30-DAY STATUTORY RIGHT OF WITHDRAWAL",
-      withdrawalSubtitle: "EU Directive 2011/83/EU & Atelier Standard",
-      withdrawalBody1: "In accordance with European Union Directive 2011/83/EU on Consumer Rights, you have the statutory right to withdraw from your purchase within 14 days without giving any reason. At YUPEK Atelier, we proudly extend this period to 30 calendar days from the day on which you, or a third party designated by you, acquire physical possession of the items.",
+      withdrawalSubtitle: "EU Directive 2011/83/EU & YUPEK Standard",
+      withdrawalBody1: "In accordance with European Union Directive 2011/83/EU on Consumer Rights, you have the statutory right to withdraw from your purchase within 14 days without giving any reason. At YUPEK, we proudly extend this period to 30 calendar days from the day on which you, or a third party designated by you, acquire physical possession of the items.",
       withdrawalBody2: "To exercise your right of withdrawal, simply notify us via your account, email (daniyarow16@gmail.com), or direct WhatsApp. When you withdraw from the contract in full, we will reimburse all payments received from you, including initial standard delivery costs, without undue delay and at the latest within 14 days from the day we receive the returned items or proof of return shipment.",
       conditionsTitle: "Return Conditions & Integrity Criteria",
       conditions: [
         "Garments must be returned unworn, unwashed, unaltered, and undamaged.",
-        "All original YUPEK textile labels, security tags, and atelier seals must remain attached and untampered.",
+        "All original YUPEK textile labels, security tags, and packaging seals must remain attached and untampered.",
         "Items must be returned inside their original protective luxury dustbags, bespoke boxes, and packaging.",
         "Trying on garments for sizing and fit in the same manner as in a physical boutique is fully permitted; wearing items beyond initial fitting impairs return validity.",
       ],
       guaranteeTitle: "2-YEAR STATUTORY LEGAL CONFORMITY GUARANTEE",
       guaranteeSubtitle: "Directive (EU) 2019/771 & Dutch Consumer Law",
-      guaranteeBody1: "Every garment purchased from YUPEK Atelier is protected by a mandatory 2-year statutory legal conformity guarantee under Directive (EU) 2019/771 on the Sale of Goods and the Dutch Civil Code (Burgerlijk Wetboek, Boek 7).",
+      guaranteeBody1: "Every garment purchased from YUPEK is protected by a mandatory 2-year statutory legal conformity guarantee under Directive (EU) 2019/771 on the Sale of Goods and the Dutch Civil Code (Burgerlijk Wetboek, Boek 7).",
       guaranteeBody2: "If a piece presents a lack of conformity—such as unexpected seam failure, zipper or button detachment, fabric distortion not resulting from improper care, or discrepancy with published specifications—you are entitled to remedy free of charge. We provide repair or immediate replacement; if repair or replacement is impossible or disproportionate, you may request an appropriate price reduction or full refund.",
       euRegulationsTitle: "EU PRODUCT REGULATIONS & SAFETY COMPLIANCE",
       euRegulationsSubtitle: "Strict adherence to European Union health, environmental, and consumer protection laws",
@@ -840,7 +840,7 @@ export const dictionaries: Record<Locale, Translations> = {
           directive: "Regulation (EU) 2023/988 / GPSR",
           title: "General Product Safety & Traceability",
           scope: "Consumer Protection & Accountability",
-          description: "Products are designed, manufactured, and inspected to the highest European safety standards. Responsible economic operator established in the European Union: YUPEK ATELIER B.V., Keizersgracht 482, 1016 GD Amsterdam, The Netherlands.",
+          description: "Products are designed, manufactured, and inspected to the highest European safety standards. Responsible economic operator established in the European Union: YUPEK B.V., Keizersgracht 482, 1016 GD Amsterdam, The Netherlands.",
         },
         {
           directive: "Directive 2000/31/EC & GDPR",
@@ -849,23 +849,23 @@ export const dictionaries: Record<Locale, Translations> = {
           description: "Your orders, payment credentials, and personal records are processed under strict European General Data Protection Regulation (EU 2016/679) standards with zero third-party commercial sharing.",
         },
       ],
-      stepsTitle: "HOW TO INITIATE AN ATELIER RETURN",
+      stepsTitle: "HOW TO INITIATE A RETURN",
       stepsSubtitle: "Simple 4-step concierge process",
       steps: [
         {
           stepNumber: "01",
           title: "Contact Concierge",
-          desc: "Notify our atelier team via your account portal, email, or direct WhatsApp with your order number (e.g., YPK-2026-XXXX).",
+          desc: "Notify our team via your account portal, email, or direct WhatsApp with your order number (e.g., YPK-2026-XXXX).",
         },
         {
           stepNumber: "02",
-          title: "Repack in Atelier Box",
+          title: "Repack in Original Box",
           desc: "Place garments carefully into their original protective dustbag and shipping box with security labels attached.",
         },
         {
           stepNumber: "03",
           title: "Courier Dispatch",
-          desc: "Affix the return address and dispatch via insured tracked courier (DHL, PostNL, UPS) to our Amsterdam atelier.",
+          desc: "Affix the return address and dispatch via insured tracked courier (DHL, PostNL, UPS) to our Amsterdam address.",
         },
         {
           stepNumber: "04",
@@ -873,18 +873,18 @@ export const dictionaries: Record<Locale, Translations> = {
           desc: "Upon receipt, our master tailors inspect the piece within 48 hours. Reimbursement is promptly released to your original payment method.",
         },
       ],
-      addressTitle: "ATELIER RETURN DESTINATION",
+      addressTitle: "RETURN DESTINATION",
       addressSubtitle: "Official European Union return headquarters",
       addressLines: [
-        "YUPEK ATELIER B.V.",
+        "YUPEK B.V.",
         "Attn: Returns & Quality Inspection",
         "Keizersgracht 482",
         "1016 GD Amsterdam",
         "The Netherlands",
       ],
       conciergeTitle: "NEED PERSONAL ASSISTANCE?",
-      conciergeSubtitle: "Our Amsterdam atelier concierge is at your disposal for sizing exchanges, return labels, or technical inquiries.",
-      contactEmailBtn: "EMAIL ATELIER CONCIERGE",
+      conciergeSubtitle: "Our Amsterdam concierge is at your disposal for sizing exchanges, return labels, or technical inquiries.",
+      contactEmailBtn: "EMAIL CONCIERGE",
       contactWhatsAppBtn: "WHATSAPP CONCIERGE",
       odrTitle: "EUROPEAN ONLINE DISPUTE RESOLUTION (ODR)",
       odrDesc: "In accordance with Article 14(1) of EU Regulation No 524/2013, the European Commission provides an online platform for out-of-court dispute resolution between European consumers and online traders.",
@@ -911,7 +911,7 @@ export const dictionaries: Record<Locale, Translations> = {
       colorBlindDesc: "Scientifically calibrated Daltonization filters and high-contrast adaptations for varied color vision.",
       colorModes: {
         normal: {
-          name: "Standard Atelier",
+          name: "Default Palette",
           desc: "Original curated Turkmen silk & European architectural palette.",
         },
         highContrast: {
@@ -972,7 +972,7 @@ export const dictionaries: Record<Locale, Translations> = {
       shop: "WINKEL",
       collections: "COLLECTIES",
       journal: "JOURNAAL",
-      about: "OVER ATELIER",
+      about: "OVER YUPEK",
       contact: "CONTACT",
       lookbook: "LOOKBOOK",
       wishlist: "VERLANGLIJST",
@@ -984,7 +984,7 @@ export const dictionaries: Record<Locale, Translations> = {
       bag: "Winkelmand",
     },
     announcement: {
-      text: "GRATIS VERZENDING BINNEN EUROPA BIJ BESTELLINGEN VANAF €100 — PRIVATE ATELIER BEZOEKEN BESCHIKBAAR",
+      text: "GRATIS VERZENDING BINNEN EUROPA BIJ BESTELLINGEN VANAF €100 — PRIVÉ SHOWROOM BEZOEKEN BESCHIKBAAR",
       badge: "LENTE CAPSULE",
     },
     hero: {
@@ -1020,7 +1020,7 @@ export const dictionaries: Record<Locale, Translations> = {
       heritageTitle: "VAN ERFGOED\nNAAR HET DAGELIJKS LEVEN.",
       heritageDesc1: "YUPEK put uit een beeldtaal gevormd door zijde, geweven textiel, traditionele geometrische motieven en generaties van meesterlijk handwerk.",
       heritageDesc2: "In plaats van erfgoed letterlijk te kopiëren, herinterpreteren we het. Het resultaat is kleding met een diepe herkomst die volkomen natuurlijk aanvoelt in hedendaags Europa.",
-      ourStoryBtn: "ONS ATELIER VERHAAL",
+      ourStoryBtn: "ONS MERKVERHAAL",
       visitShowroomBtn: "BEZOEK SHOWROOM",
       visualLookbook: "VISUEEL LOOKBOOK",
       visualLookbookSub: "LENTE / ZOMER 2026 CAPSULE",
@@ -1033,7 +1033,7 @@ export const dictionaries: Record<Locale, Translations> = {
       title: "WINKEL",
       subtitle: "Hedendaagse kledingstukken geïnspireerd door Oosters erfgoed.",
       filter: "FILTER",
-      piecesCount: "STUKS IN ATELIER",
+      piecesCount: "STUKS IN COLLECTIE",
       sort: "SORTEER",
       category: "CATEGORIE",
       size: "MAAT",
@@ -1094,7 +1094,7 @@ export const dictionaries: Record<Locale, Translations> = {
     },
     checkout: {
       title: "AFREKENEN",
-      tag: "ATELIER VERZENDING",
+      tag: "BESTELLING VERZENDING",
       clientContact: "01 • KLANTGEGEVENS",
       emailPlaceholder: "UW E-MAILADRES",
       deliveryDestination: "02 • BEZORGADRES",
@@ -1107,14 +1107,14 @@ export const dictionaries: Record<Locale, Translations> = {
       shippingMethod: "03 • VERZENDMETHODE",
       standardCourier: "STANDAARD KOERIER BEZORGING",
       standardNote: "3–5 werkdagen (PostNL / DHL)",
-      expressCourier: "SPOEDVERZENDING UIT HET ATELIER",
+      expressCourier: "SPOEDVERZENDING VOORRANG",
       expressNote: "1–2 werkdagen (DHL Express)",
       complimentary: "GRATIS",
       paymentMethod: "04 • BETAALMETHODE",
       creditCard: "Creditcard",
       ideal: "iDEAL / SEPA",
       applePay: "Apple Pay",
-      securityNote: "Beveiligd met 256-bit TLS-encryptie. Onmiddellijke verzending vanuit Centraal-Europees atelier.",
+      securityNote: "Beveiligd met 256-bit TLS-encryptie. Onmiddellijke verzending vanuit ons Europees distributiecentrum.",
       placeOrder: "BESTELLING PLAATSEN",
       processingOrder: "BESTELLING WORDT VERWERKT...",
       orderSummary: "OVERZICHT BESTELLING",
@@ -1122,22 +1122,22 @@ export const dictionaries: Record<Locale, Translations> = {
       estimatedTotal: "TOTAALBEDRAG",
       orderConfirmed: "BESTELLING BEVESTIGD",
       thankYou: "HARTELIJK DANK VOOR UW BESTELLING",
-      confirmationDispatched: "Uw order is doorgestuurd naar ons Amsterdamse atelier. Een bevestigingsbewijs is verzonden naar uw e-mailadres.",
+      confirmationDispatched: "Uw order is doorgestuurd naar ons Amsterdamse team. Een bevestigingsbewijs is verzonden naar uw e-mailadres.",
       viewInAccount: "BEKIJK IN MIJN ACCOUNT",
       continueBrowsing: "VERDER WINKELEN",
     },
     account: {
-      portalTag: "ATELIER PORTAL",
+      portalTag: "CLIENT PORTAL",
       clientAccess: "KLANTENTOEGANG",
-      signInPrompt: "Log in met uw Google-, Apple- of Atelier-account om uw bestellingen te volgen, bezorgadressen te beheren en privécollecties te bekijken.",
+      signInPrompt: "Log in met uw Google-, Apple- of YUPEK-account om uw bestellingen te volgen, bezorgadressen te beheren en privécollecties te bekijken.",
       continueGoogle: "DOORGAAN MET GOOGLE",
       continueApple: "DOORGAAN MET APPLE",
       signInEmail: "INLOGGEN MET E-MAIL",
       demoSession: "Directe Demo Toegang",
       vipClientDemo: "Inloggen als VIP Klant",
       adminDemo: "Inloggen als Beheerder",
-      vipMemberTag: "Atelier Circle VIP",
-      adminMemberTag: "Meester Atelier Beheerder",
+      vipMemberTag: "YUPEK Circle VIP",
+      adminMemberTag: "Winkelbeheerder",
       signedVia: "Geautoriseerd via",
       adminPanelBtn: "Beheerderspaneel",
       signOutBtn: "Uitloggen",
@@ -1162,13 +1162,13 @@ export const dictionaries: Record<Locale, Translations> = {
       saveChanges: "Wijzigingen Opslaan",
       cancelBtn: "Annuleren",
       conciergeTag: "PRIVÉ KLANTENADVICE",
-      conciergeTitle: "YUPEK ATELIER CONCIËRGE",
-      conciergeDesc: "Als geregistreerde cliënt heeft u directe voorrang bij ons Amsterdamse atelier. Wij assisteren bij maatmaatwerk, privé showroombezichtigingen en spoedkoeriers.",
+      conciergeTitle: "YUPEK CLIËNT CONCIËRGE",
+      conciergeDesc: "Als geregistreerde cliënt heeft u directe voorrang bij ons Amsterdamse team. Wij assisteren bij maatmaatwerk, privé showroombezichtigingen en spoedkoeriers.",
       whatsAppConciergeBtn: "WhatsApp Privé Conciërge",
-      bookAppointmentBtn: "Boek Atelier Afspraak",
+      bookAppointmentBtn: "Boek Privé Afspraak",
     },
     auth: {
-      atelierTag: "YUPEK ATELIER",
+      brandTag: "YUPEK",
       clientAccessTitle: "KLANTENTOEGANG",
       createAccountTitle: "ACCOUNT AANMAKEN",
       subtitle: "Ervaar persoonlijke orderopvolging, bewaarde favorieten en exclusieve previews.",
@@ -1181,7 +1181,7 @@ export const dictionaries: Record<Locale, Translations> = {
       emailLabel: "E-mailadres",
       passwordLabel: "Wachtwoord",
       authenticating: "VERIFIËREN...",
-      enterAtelierBtn: "ATELIER BETREDEN",
+      enterStoreBtn: "WINKEL BETREDEN",
       createProfileBtn: "PROFIEL AANMAKEN",
       instantPreview: "Snelle Demo Toegang",
       vipDemoBtn: "VIP Klant Demo",
@@ -1189,7 +1189,7 @@ export const dictionaries: Record<Locale, Translations> = {
     },
     contact: {
       tag: "DIRECT CONTACT",
-      title: "ATELIER CONCIËRGE",
+      title: "CLIËNT CONCIËRGE",
       subtitle: "Of u nu een privéafspraak wilt in onze Amsterdamse studio, maatspecificaties wilt bespreken of internationale koeriersopties wilt aanvragen: ons team staat tot uw beschikking.",
       formTitle: "STUUR EEN BERICHT",
       formSubtitle: "Ons particuliere klantenteam reageert doorgaans binnen twee uur tijdens kantooruren.",
@@ -1198,18 +1198,18 @@ export const dictionaries: Record<Locale, Translations> = {
       phone: "Telefoonnummer (Optioneel)",
       subject: "Onderwerp van het bericht",
       message: "Bericht & details van uw aanvraag *",
-      transmitting: "BEZORGEN BIJ ATELIER...",
+      transmitting: "BERICHT VERZENDEN...",
       sendInquiryBtn: "VERSTUUR AANVRAAG",
       thankYouTitle: "Hartelijk dank voor uw bericht",
-      thankYouDesc: "Uw aanvraag is geregistreerd bij de atelier conciërge. U ontvangt spoedig een bevestiging per e-mail.",
+      thankYouDesc: "Uw aanvraag is geregistreerd bij de conciërge. U ontvangt spoedig een bevestiging per e-mail.",
       sendAnother: "Nog een bericht versturen",
-      headquartersTag: "HOOFDKANTOOR & ATELIER",
+      headquartersTag: "HOOFDKANTOOR & STUDIO",
       studioTitle: "AMSTERDAM STUDIO",
       conciergeEmail: "Conciërge E-mail",
       telephoneLine: "Telefoon & Koeriersdienst",
       visitingHours: "Bezoek- & Openingstijden",
       directWhatsAppBtn: "DIRECT CHATTEN VIA WHATSAPP",
-      atelierTour: "Atelier Tour",
+      studioTour: "Studio Tour",
       subjects: {
         appointment: "Privé Showroom Afspraak",
         garments: "Vragen over Kleding & Stoffenverzorging",
@@ -1219,16 +1219,16 @@ export const dictionaries: Record<Locale, Translations> = {
       },
     },
     about: {
-      manifestoTag: "ATELIER MANIFEST",
+      manifestoTag: "MERK MANIFEST",
       title: "HET VERHAAL\nVAN YUPEK",
       bornMeeting: "YUPEK ontstond uit een ontmoeting van twee werelden.",
       bornBody: "Centraal-Azië brengt duizenden jaren aan geweven textiel, zijderoute-geschiedenis en tactiele poëzie. Modern Europa biedt strakke silhouetten, ingetogen elegantie en dagelijkse draagbaarheid.",
       taglineBanner: "OOSTERSE WORTELS • EUROPESE VORM",
-      craftFilm: "Atelier Vakmanschapsfilm",
+      craftFilm: "Vakmanschapsfilm",
       experienceCapsule: "ERVAAR DE CAPSULE",
       experienceSubtitle: "Gelimiteerde productie gebouwd voor een lange levensduur.",
       shopCollectionBtn: "SHOP DE COLLECTIE",
-      visitAtelierBtn: "BEZOEK ATELIER",
+      visitStudioBtn: "BEZOEK SHOWROOM",
       blocks: [
         {
           title: "DE WORTELS",
@@ -1248,7 +1248,7 @@ export const dictionaries: Record<Locale, Translations> = {
         },
         {
           title: "BLIJVEND AMBACHT",
-          desc: "Een groeiend atelier van tijdloze garderobestukken, met uiterste precisie vervaardigd en geworteld in een cultuur die gedragen moet worden, en niet enkel in vitrines bewaard.",
+          desc: "Een groeiende collectie van tijdloze garderobestukken, met uiterste precisie vervaardigd en geworteld in een cultuur die gedragen moet worden, en niet enkel in vitrines bewaard.",
         },
       ],
     },
@@ -1293,7 +1293,7 @@ export const dictionaries: Record<Locale, Translations> = {
         {
           title: "DE ARCHITECTUUR VAN YUPEK",
           desc: "Van handgetekende kalligrafieschetsen tot verfijnd biologisch popeline en geborsteld fleece.",
-          category: "ATELIER",
+          category: "COLLECTION",
           date: "AUGUSTUS 2026",
         },
         {
@@ -1318,16 +1318,16 @@ export const dictionaries: Record<Locale, Translations> = {
       ariaLabel: "Chat op WhatsApp met de YUPEK Conciërge",
     },
     newsletter: {
-      tag: "ATELIER BERICHT",
-      title: "WORD LID VAN DE ATELIER CIRCLE",
+      tag: "MEDEDELING",
+      title: "WORD LID VAN DE YUPEK CIRCLE",
       subtitle: "Leden ontvangen exclusieve previews van seizoenscapsules, uitnodigingen voor showroombezichtigingen en textielessays.",
       emailPlaceholder: "UW E-MAILADRES",
       subscribeBtn: "AANMELDEN",
-      thankYou: "WELKOM BIJ DE ATELIER CIRCLE",
+      thankYou: "WELKOM BIJ DE YUPEK CIRCLE",
       privacyNote: "Strikt vertrouwelijk. Geen spam, op elk moment opzegbaar.",
     },
     searchOverlay: {
-      title: "ZOEKEN IN ATELIER COLLECTIE",
+      title: "ZOEKEN IN YUPEK COLLECTIE",
       placeholder: "T-shirt, Overhemd, Zijde, Spijkerbroek...",
       noResults: "GEEN STUKS GEVONDEN VOOR",
       closeAria: "Zoekvenster sluiten",
@@ -1340,7 +1340,7 @@ export const dictionaries: Record<Locale, Translations> = {
         {
           badge: "30 DAGEN",
           title: "Verlengd Herroepingsrecht",
-          desc: "Wettelijk EU-herroepingsrecht van 14 dagen (Richtlijn 2011/83/EU) verlengd tot 30 kalenderdagen door YUPEK Atelier.",
+          desc: "Wettelijk EU-herroepingsrecht van 14 dagen (Richtlijn 2011/83/EU) verlengd tot 30 kalenderdagen door YUPEK.",
         },
         {
           badge: "2 JAAR",
@@ -1355,23 +1355,23 @@ export const dictionaries: Record<Locale, Translations> = {
         {
           badge: "SNELLE TERUGBETALING",
           title: "Snelle Vergoeding",
-          desc: "Volledige terugbetaling binnen 14 kalenderdagen via uw oorspronkelijke betaalmethode na ontvangst en inspectie in ons atelier.",
+          desc: "Volledige terugbetaling binnen 14 kalenderdagen via uw oorspronkelijke betaalmethode na ontvangst en inspectie van het artikel.",
         },
       ],
       withdrawalTitle: "30 DAGEN WETTELIJK HERROEPINGSRECHT",
-      withdrawalSubtitle: "EU Richtlijn 2011/83/EU & YUPEK Atelier Standaard",
-      withdrawalBody1: "Op grond van Richtlijn 2011/83/EU van de Europese Unie betreffende consumentenrechten heeft u het wettelijke recht om binnen een termijn van 14 dagen zonder opgave van redenen de overeenkomst te herroepen. Bij YUPEK Atelier verlengen wij deze periode naar 30 kalenderdagen, ingaande op de dag waarop u of een door u aangewezen derde het artikel fysiek in bezit heeft gekregen.",
+      withdrawalSubtitle: "EU Richtlijn 2011/83/EU & YUPEK Standaard",
+      withdrawalBody1: "Op grond van Richtlijn 2011/83/EU van de Europese Unie betreffende consumentenrechten heeft u het wettelijke recht om binnen een termijn van 14 dagen zonder opgave van redenen de overeenkomst te herroepen. Bij YUPEK verlengen wij deze periode naar 30 kalenderdagen, ingaande op de dag waarop u of een door u aangewezen derde het artikel fysiek in bezit heeft gekregen.",
       withdrawalBody2: "Om uw herroepingsrecht uit te oefenen, kunt u eenvoudig contact opnemen via uw account, e-mail (daniyarow16@gmail.com) of WhatsApp. Als u de gehele bestelling herroept, vergoeden wij alle ontvangen betalingen, inclusief de initiële standaard bezorgkosten, uiterlijk binnen 14 dagen na ontvangst van de geretourneerde goederen of het bewijs van retourverzending.",
       conditionsTitle: "Retourvoorwaarden & Integriteitscriteria",
       conditions: [
         "Kledingstukken moeten ongedragen, ongewassen, ongewijzigd en onbeschadigd worden geretourneerd.",
         "Alle originele YUPEK textiellabels, beveiligingszegels en labels moeten intact en onbeschadigd aanwezig zijn.",
-        "Artikelen moeten worden geretourneerd in de originele beschermende stofzakken en luxe atelier-verpakking.",
+        "Artikelen moeten worden geretourneerd in de originele beschermende stofzakken en luxe originele verpakking.",
         "Het passen van kleding om de maat en pasvorm te beoordelen—zoals gebruikelijk in een fysieke boetiek—is uiteraard toegestaan; het dragen van artikelen buitenshuis ontbindt het recht op herroeping.",
       ],
       guaranteeTitle: "2 JAAR WETTELIJKE CONFORMITEITSGARANTIE",
       guaranteeSubtitle: "Richtlijn (EU) 2019/771 & Nederlands Consumentenrecht",
-      guaranteeBody1: "Elk kledingstuk aangeschaft bij YUPEK Atelier is beschermd door de verplichte wettelijke garantie van 2 jaar volgens Richtlijn (EU) 2019/771 betreffende de verkoop van goederen en Boek 7 van het Nederlands Burgerlijk Wetboek.",
+      guaranteeBody1: "Elk kledingstuk aangeschaft bij YUPEK is beschermd door de verplichte wettelijke garantie van 2 jaar volgens Richtlijn (EU) 2019/771 betreffende de verkoop van goederen en Boek 7 van het Nederlands Burgerlijk Wetboek.",
       guaranteeBody2: "Mocht een artikel een gebrek aan overeenstemming vertonen—zoals een onverwachte naadbreuk, rits- of knoopdefect, materiaalonvolkomenheid die niet het gevolg is van verkeerd wassen of onderhoud—dan heeft u kosteloos recht op herstel of vervanging. Indien herstel of vervanging onmogelijk of onevenredig is, heeft u recht op een passende prijsvermindering of volledige ontbinding met terugbetaling.",
       euRegulationsTitle: "EU PRODUCTREGELGEVING & VEILIGHEIDSCONFORMITEIT",
       euRegulationsSubtitle: "Strikte naleving van Europese normen voor gezondheid, milieu en consumentenbescherming",
@@ -1392,7 +1392,7 @@ export const dictionaries: Record<Locale, Translations> = {
           directive: "Verordening (EU) 2023/988 / GPSR",
           title: "Algemene Productveiligheid & Traceerbaarheid",
           scope: "Consumentenbescherming",
-          description: "Artikelen zijn ontworpen en vervaardigd volgens de hoogste Europese kwaliteits- en veiligheidseisen. Verantwoordelijke marktdeelnemer in de Europese Unie: YUPEK ATELIER B.V., Keizersgracht 482, 1016 GD Amsterdam, Nederland.",
+          description: "Artikelen zijn ontworpen en vervaardigd volgens de hoogste Europese kwaliteits- en veiligheidseisen. Verantwoordelijke marktdeelnemer in de Europese Unie: YUPEK B.V., Keizersgracht 482, 1016 GD Amsterdam, Nederland.",
         },
         {
           directive: "Richtlijn 2000/31/EG & AVG/GDPR",
@@ -1401,7 +1401,7 @@ export const dictionaries: Record<Locale, Translations> = {
           description: "Uw persoonsgegevens en bestellingen worden behandeld volgens de strengste Europese Algemene Verordening Gegevensbescherming (AVG/GDPR).",
         },
       ],
-      stepsTitle: "HOE EEN ATELIER RETOUR AAN TE MELDEN",
+      stepsTitle: "HOE EEN RETOUR AAN TE MELDEN",
       stepsSubtitle: "Eenvoudig 4-stappen proces",
       steps: [
         {
@@ -1411,7 +1411,7 @@ export const dictionaries: Record<Locale, Translations> = {
         },
         {
           stepNumber: "02",
-          title: "Inpakken in Atelier Doos",
+          title: "Inpakken in Originele Doos",
           desc: "Plaats het kledingstuk netjes in de originele beschermende stofzak en verzenddoos met alle verzegelingen intact.",
         },
         {
@@ -1425,18 +1425,18 @@ export const dictionaries: Record<Locale, Translations> = {
           desc: "Na ontvangst controleren onze meester-kleermakers het artikel binnen 48 uur. Het aankoopbedrag wordt direct gecrediteerd via uw betaalmethode.",
         },
       ],
-      addressTitle: "ATELIER RETOURADRES",
+      addressTitle: "RETOURADRES",
       addressSubtitle: "Officieel retouradres binnen de Europese Unie",
       addressLines: [
-        "YUPEK ATELIER B.V.",
+        "YUPEK B.V.",
         "T.a.v. Afdeling Retouren & Kwaliteitscontrole",
         "Keizersgracht 482",
         "1016 GD Amsterdam",
         "Nederland",
       ],
       conciergeTitle: "PERSOONLIJKE ONDERSTEUNING NODIG?",
-      conciergeSubtitle: "Onze Amsterdamse atelier conciërge staat voor u klaar bij maatruilingen, retourlabels of vragen over EU-rechten.",
-      contactEmailBtn: "E-MAIL ATELIER CONCIËRGE",
+      conciergeSubtitle: "Onze Amsterdamse conciërge staat voor u klaar bij maatruilingen, retourlabels of vragen over EU-rechten.",
+      contactEmailBtn: "E-MAIL CONCIËRGE",
       contactWhatsAppBtn: "WHATSAPP CONCIËRGE",
       odrTitle: "EUROPESE ONLINE GESCHILLENBESLECHTING (ODR)",
       odrDesc: "Overeenkomstig artikel 14 lid 1 van Verordening (EU) nr. 524/2013 biedt de Europese Commissie een platform voor online geschillenbeslechting (ODR) voor buitengerechtelijke beslechting van consumentengeschillen.",
@@ -1463,7 +1463,7 @@ export const dictionaries: Record<Locale, Translations> = {
       colorBlindDesc: "Wetenschappelijk gekalibreerde daltonisatie-filters en hoog contrast voor kleurenblindheid.",
       colorModes: {
         normal: {
-          name: "Standaard Atelier",
+          name: "Standaard Palet",
           desc: "Oorspronkelijk geselecteerd kleurenpalet van Turkmeense zijde en Europese vorm.",
         },
         highContrast: {

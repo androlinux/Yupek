@@ -14,7 +14,7 @@ export default function WhatsAppButton() {
 
   // Format number (remove spaces, plus, dashes for wa.me link)
   const cleanNumber = config.whatsappNumber.replace(/[^0-9]/g, "");
-  const defaultMsg = locale === "nl" ? "Hallo YUPEK Atelier! Ik wil graag persoonlijke assistentie." : (config.whatsappMessage || "Hello YUPEK Atelier!");
+  const defaultMsg = locale === "nl" ? "Hallo YUPEK! Ik wil graag persoonlijke assistentie." : (config.whatsappMessage || "Hello YUPEK!");
   const encodedText = encodeURIComponent(defaultMsg);
   const waUrl = `https://wa.me/${cleanNumber}?text=${encodedText}`;
 

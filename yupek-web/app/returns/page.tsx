@@ -17,7 +17,7 @@ export default function ReturnsPage() {
 
   return (
     <div className="bg-cream min-h-screen text-brown selection:bg-gold selection:text-white">
-      {/* Luxury Atelier Header */}
+      {/* Luxury Header */}
       <header className="relative bg-brown py-24 text-center text-cream md:py-36 overflow-hidden">
         <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#C49A45_1px,transparent_1px)] [background-size:24px_24px]" />
         <div className="absolute inset-0 bg-gradient-to-b from-brown/80 via-transparent to-brown" />
@@ -196,7 +196,7 @@ export default function ReturnsPage() {
           <div>
             <div className="max-w-2xl mb-12">
               <span className="text-[10px] tracking-[.25em] uppercase text-gold font-semibold block mb-2">
-                04 • ATELIER PROCEDURE
+                04 • RETURN PROCEDURE
               </span>
               <h2 className="font-serif text-3xl md:text-4xl text-brown tracking-wide">
                 {r.stepsTitle}
@@ -264,7 +264,7 @@ export default function ReturnsPage() {
 
                 <div className="flex flex-col sm:flex-row gap-3">
                   <a
-                    href={`mailto:${returnEmail}?subject=YUPEK%20Atelier%20Return%20Inquiry`}
+                    href={`mailto:${returnEmail}?subject=YUPEK%20Return%20Inquiry`}
                     className="btn bg-gold text-brown hover:bg-cream transition-colors text-center text-[10px] tracking-[.2em] font-semibold py-3 px-5 flex items-center justify-center gap-2"
                   >
                     <Icon name="mail" className="w-3.5 h-3.5" />
@@ -272,7 +272,7 @@ export default function ReturnsPage() {
                   </a>
                   {cleanPhone && (
                     <a
-                      href={`https://wa.me/${cleanPhone}?text=${encodeURIComponent("Hello YUPEK Atelier Concierge, I would like to inquire about returning an item.")}`}
+                      href={`https://wa.me/${cleanPhone}?text=${encodeURIComponent("Hello YUPEK Concierge, I would like to inquire about returning an item.")}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="btn border border-cream/30 text-cream hover:bg-cream hover:text-brown transition-colors text-center text-[10px] tracking-[.2em] font-semibold py-3 px-5"
@@ -283,7 +283,7 @@ export default function ReturnsPage() {
                 </div>
 
                 <div className="pt-2 text-[10px] text-cream/40 uppercase tracking-widest">
-                  Atelier Hours: {config.contactHours || "Monday – Saturday: 10:00 – 19:00 CET"}
+                  Customer Care Hours: {config.contactHours || "Monday – Saturday: 10:00 – 19:00 CET"}
                 </div>
               </div>
             </div>
@@ -327,7 +327,7 @@ export default function ReturnsPage() {
             href="/shop"
             className="inline-flex items-center gap-2 text-xs font-semibold tracking-[.25em] uppercase text-brown hover:text-gold transition-colors"
           >
-            &larr; {locale === "nl" ? "Terug naar Atelier Collectie" : "Return to Atelier Collection"}
+            &larr; {locale === "nl" ? "Terug naar YUPEK Collectie" : "Return to YUPEK Collection"}
           </Link>
         </div>
       </section>

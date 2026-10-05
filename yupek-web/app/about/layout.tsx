@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "About Our Atelier — YUPEK",
+  title: "About YUPEK — Brand Heritage & Story",
   description:
     "Discover YUPEK: Where Silk Road textile memory meets modern European architectural tailoring in Amsterdam.",
   alternates: {
     canonical: "/about",
   },
   openGraph: {
-    title: "About Our Atelier — YUPEK",
-    description: "Eastern Roots. European Form. The story, craft, and philosophy of YUPEK Atelier.",
+    title: "About YUPEK — Brand Heritage & Story",
+    description: "Eastern Roots. European Form. The story, craft, and philosophy of YUPEK.",
     url: "https://yupek.vercel.app/about",
   },
 };

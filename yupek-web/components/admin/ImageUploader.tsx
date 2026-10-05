@@ -177,7 +177,7 @@ export default function ImageUploader({
               <span className="text-xs uppercase tracking-wider text-brown font-medium">
                 Uploading photo from device...
               </span>
-              <span className="text-[10px] text-brown/60">Saving to atelier media library</span>
+              <span className="text-[10px] text-brown/60">Saving to media library</span>
             </div>
           ) : (
             <>

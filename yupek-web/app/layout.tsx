@@ -31,12 +31,12 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
     default: title,
-    template: "%s | YUPEK Atelier",
+    template: "%s | YUPEK",
   },
   description,
   keywords: [
     "YUPEK",
-    "YUPEK Atelier",
+    "YUPEK Fashion",
     "Turkmen Silk",
     "Eastern Heritage Fashion",
     "European Tailoring",
@@ -78,7 +78,7 @@ export const metadata: Metadata = {
   openGraph: {
     title,
     description,
-    siteName: "YUPEK Atelier",
+    siteName: "YUPEK",
     type: "website",
     locale: "en_NL",
     url: siteUrl,
@@ -87,7 +87,7 @@ export const metadata: Metadata = {
         url: "/images/og.jpg",
         width: 1200,
         height: 630,
-        alt: "YUPEK Atelier — Eastern Roots / European Form",
+        alt: "YUPEK — Eastern Roots / European Form",
       },
     ],
   },
@@ -112,7 +112,7 @@ const jsonLd = {
     {
       "@type": "ClothingStore",
       "@id": `${siteUrl}/#organization`,
-      name: "YUPEK Atelier B.V.",
+      name: "YUPEK B.V.",
       url: siteUrl,
       logo: `${siteUrl}/images/logo-dark.png`,
       image: `${siteUrl}/images/og.jpg`,
@@ -140,7 +140,7 @@ const jsonLd = {
       "@type": "WebSite",
       "@id": `${siteUrl}/#website`,
       url: siteUrl,
-      name: "YUPEK Atelier",
+      name: "YUPEK",
       publisher: {
         "@id": `${siteUrl}/#organization`,
       },

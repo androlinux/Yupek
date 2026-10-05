@@ -180,7 +180,7 @@ export default function Home() {
         </ScrollReveal>
       </section>
 
-      {/* 8. Atelier Newsletter Subscription */}
+      {/* 8. YUPEK Newsletter Subscription */}
       <ScrollReveal>
         <Newsletter />
       </ScrollReveal>

@@ -27,7 +27,7 @@ const AVAILABLE_IMAGES = [
   { label: "Hero Heritage 4K", url: "/images/hero.jpg" },
   { label: "Yupek Silk Road", url: "/images/collection.jpg" },
   { label: "Traditional Textile", url: "/images/heritage.jpg" },
-  { label: "Atelier Silk Craft", url: "/images/about.jpg" },
+  { label: "Heritage Silk Craft", url: "/images/about.jpg" },
   { label: "Lookbook Editorial 01", url: "/images/look-1.jpg" },
   { label: "Lookbook Editorial 02", url: "/images/look-2.jpg" },
   { label: "Lookbook Editorial 03", url: "/images/look-3.jpg" },
@@ -136,7 +136,7 @@ export default function AdminPage() {
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  // Combined library of uploaded photos + original atelier archive
+  // Combined library of uploaded photos + original archive
   const allGalleryImages = [
     ...uploadedMedia.map((m) => {
       // Clean display name
@@ -334,7 +334,7 @@ export default function AdminPage() {
 
   // Delete uploaded photo
   const handleDeleteMedia = async (filename: string) => {
-    if (!confirm(`Are you sure you want to delete this photo from the atelier server?`)) return;
+    if (!confirm(`Are you sure you want to delete this photo from the server?`)) return;
     try {
       const res = await fetch(`/api/upload?filename=${encodeURIComponent(filename)}`, {
         method: "DELETE",
@@ -408,7 +408,7 @@ export default function AdminPage() {
                 className="h-12 w-auto mx-auto object-contain"
               />
             </Link>
-            <p className="label tracking-[.3em] text-burgundy text-[10px] uppercase font-medium">ATELIER CONTROL SYSTEM</p>
+            <p className="label tracking-[.3em] text-burgundy text-[10px] uppercase font-medium">YUPEK CONTROL SYSTEM</p>
             <h1 className="font-serif text-2xl text-brown mt-1">ADMINISTRATOR SIGN IN</h1>
             <p className="mt-2 text-xs text-brown/65 leading-relaxed">
               Enter your administrator credentials to access store configuration.
@@ -526,7 +526,7 @@ export default function AdminPage() {
             <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse" />
             <div>
               <h1 className="font-serif text-xl tracking-wider text-brown flex items-center gap-2">
-                YUPEK ATELIER CMS
+                YUPEK CMS
                 <span className="text-[10px] font-sans font-medium uppercase tracking-widest bg-burgundy/15 text-burgundy px-2 py-0.5 rounded-full">
                   Admin Panel
                 </span>
@@ -1019,7 +1019,7 @@ export default function AdminPage() {
                   </span>
                 </h2>
                 <p className="text-xs text-brown/60 mt-1">
-                  Change the administrator username and password required to unlock and manage the YUPEK Atelier Admin Panel.
+                  Change the administrator username and password required to unlock and manage the YUPEK Admin Panel.
                 </p>
               </div>
 
@@ -1047,7 +1047,7 @@ export default function AdminPage() {
                     <span className="text-[10px] uppercase tracking-wider text-green-800 font-medium">Session Active</span>
                   </div>
                   <p className="text-xs text-brown/60">
-                    Primary atelier admin account &bull; Saved to <code className="bg-white/80 px-1 py-0.5 rounded text-[11px] font-mono">data/site-config.json</code>
+                    Primary admin account &bull; Saved to <code className="bg-white/80 px-1 py-0.5 rounded text-[11px] font-mono">data/site-config.json</code>
                   </p>
                 </div>
               </div>
@@ -1084,7 +1084,7 @@ export default function AdminPage() {
                     autoComplete="username"
                   />
                   <p className="text-[11px] text-brown/60 mt-1.5 leading-relaxed">
-                    Used to authenticate at <code className="text-burgundy font-medium">/admin</code>. You can also always sign in using your atelier email (<strong>daniyarow16@gmail.com</strong>).
+                    Used to authenticate at <code className="text-burgundy font-medium">/admin</code>. You can also always sign in using your store email (<strong>daniyarow16@gmail.com</strong>).
                   </p>
                 </div>
               </div>
@@ -1253,9 +1253,9 @@ export default function AdminPage() {
                   Quick Presets
                 </span>
                 {[
-                  "COMPLIMENTARY SHIPPING ACROSS EUROPE ON ORDERS OVER €100 — PRIVATE ATELIER VIEWINGS AVAILABLE",
+                  "COMPLIMENTARY SHIPPING ACROSS EUROPE ON ORDERS OVER €100 — PRIVATE SHOWROOM VIEWINGS AVAILABLE",
                   "NEW SEASON: SILK ROUTE CAPSULE NOW AVAILABLE IN LIMITED QUANTITIES",
-                  "INVITATION ONLY: AMSTERDAM ATELIER TRUNK SHOW RESERVATIONS OPEN",
+                  "INVITATION ONLY: AMSTERDAM SHOWROOM RESERVATIONS OPEN",
                   "SPRING ARCHIVES: RECEIVE A SIGNATURE SILK POCKET SQUARE WITH ORDERS OVER €200",
                 ].map((preset, idx) => (
                   <button
@@ -1546,7 +1546,7 @@ export default function AdminPage() {
             <div>
               <h2 className="font-serif text-2xl text-brown tracking-wide">EDITORIAL SHOWCASE & BRAND VIDEOS</h2>
               <p className="text-xs text-brown/60 mt-1">
-                Manage the storytelling section, editorial lookbook photography, and brand atelier videos.
+                Manage the storytelling section, editorial lookbook photography, and brand videos.
               </p>
             </div>
 
@@ -1617,7 +1617,7 @@ export default function AdminPage() {
 
                 <div>
                   <label className="block text-[10px] uppercase tracking-widest text-brown/70 mb-1">
-                    Atelier Story Video URL (for /about & story)
+                    Story Video URL (for /about & story)
                   </label>
                   <input
                     type="url"
@@ -1874,13 +1874,13 @@ export default function AdminPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h2 className="font-serif text-2xl text-brown tracking-wide flex items-center gap-2">
-                  <span>ATELIER MEDIA LIBRARY & UPLOADS</span>
+                  <span>MEDIA LIBRARY & UPLOADS</span>
                   <span className="text-[10px] font-sans font-medium uppercase tracking-widest bg-sand text-brown px-2.5 py-0.5 rounded-full border border-brown/15">
                     PC & Phone
                   </span>
                 </h2>
                 <p className="text-xs text-brown/60 mt-1">
-                  Upload high-resolution photography directly from your PC or mobile phone (via Camera or Photo Roll). Photos are instantly saved to the atelier server and can be assigned to Hero, Editorial, or Products.
+                  Upload high-resolution photography directly from your PC or mobile phone (via Camera or Photo Roll). Photos are instantly saved to the server and can be assigned to Hero, Editorial, or Products.
                 </p>
               </div>
 
@@ -2102,7 +2102,7 @@ export default function AdminPage() {
                   value={form.whatsappMessage}
                   onChange={(e) => setForm({ ...form, whatsappMessage: e.target.value })}
                   className="w-full border border-brown/20 bg-white/70 p-3 text-xs text-brown focus:border-brown focus:outline-none"
-                  placeholder="Hello YUPEK Atelier! I would like personal assistance with your collection."
+                  placeholder="Hello YUPEK! I would like personal assistance with your collection."
                 />
               </div>
 
@@ -2153,16 +2153,16 @@ export default function AdminPage() {
         {activeTab === "contact" && (
           <div className="bg-cream border border-brown/15 p-6 md:p-8 space-y-6">
             <div>
-              <h2 className="font-serif text-2xl text-brown tracking-wide">ATELIER CONTACT & INQUIRIES</h2>
+              <h2 className="font-serif text-2xl text-brown tracking-wide">STORE CONTACT & INQUIRIES</h2>
               <p className="text-xs text-brown/60 mt-1">
-                Manage contact address, phone, email, opening hours, and atelier video tour.
+                Manage contact address, phone, email, opening hours, and brand video tour.
               </p>
             </div>
 
             <div className="max-w-xl space-y-4">
               <div>
                 <label className="block text-[10px] uppercase tracking-widest text-brown/70 mb-1">
-                  Atelier Email
+                  Contact Email
                 </label>
                 <input
                   type="email"
@@ -2174,7 +2174,7 @@ export default function AdminPage() {
 
               <div>
                 <label className="block text-[10px] uppercase tracking-widest text-brown/70 mb-1">
-                  Atelier Telephone
+                  Contact Telephone
                 </label>
                 <input
                   type="text"
@@ -2340,7 +2340,7 @@ export default function AdminPage() {
               <div>
                 <h2 className="font-serif text-2xl text-brown tracking-wide">CLIENT INQUIRIES & CONTACT SUBMISSIONS</h2>
                 <p className="text-xs text-brown/60 mt-1">
-                  Messages submitted by clients via the contact page and atelier booking form.
+                  Messages submitted by clients via the contact page and booking form.
                 </p>
               </div>
               <span className="text-xs text-brown/60">

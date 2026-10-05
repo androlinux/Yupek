@@ -14,7 +14,7 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
   const p = getProduct(params.slug);
   if (!p) return {};
 
-  const title = `${p.name} — YUPEK Atelier`;
+  const title = `${p.name} — YUPEK`;
   const description = `${p.description} Tailored in Amsterdam with ${p.material}. Complimentary European shipping on orders over €100. 30-day returns.`;
   const image = p.images[0] ? (p.images[0].startsWith("http") ? p.images[0] : `${siteUrl}${p.images[0]}`) : `${siteUrl}/images/og.jpg`;
 
@@ -35,7 +35,7 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
           url: image,
           width: 1200,
           height: 1600,
-          alt: `${p.name} by YUPEK Atelier`,
+          alt: `${p.name} by YUPEK`,
         },
       ],
     },
@@ -81,7 +81,7 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
           url: `${siteUrl}/product/${p.slug}`,
           seller: {
             "@type": "Organization",
-            name: "YUPEK Atelier B.V.",
+            name: "YUPEK B.V.",
           },
           hasMerchantReturnPolicy: {
             "@type": "MerchantReturnPolicy",

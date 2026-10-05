@@ -127,7 +127,7 @@ export default function SearchOverlay() {
         {/* Top Header Actions */}
         <div className="flex items-center justify-between">
           <span className="text-[10px] uppercase tracking-[.3em] text-gold font-semibold">
-            YUPEK ATELIER ARCHIVE SEARCH
+            YUPEK ARCHIVE SEARCH
           </span>
           <button
             aria-label={t.searchOverlay.closeAria}
@@ -140,11 +140,11 @@ export default function SearchOverlay() {
 
         {/* Big Search Input Field */}
         <div className="relative mt-8 md:mt-12">
-          <label htmlFor="atelier-search" className="sr-only">
+          <label htmlFor="yupek-search" className="sr-only">
             {t.nav.search}
           </label>
           <input
-            id="atelier-search"
+            id="yupek-search"
             ref={ref}
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -199,7 +199,7 @@ export default function SearchOverlay() {
             {/* Trending & Popular Searches */}
             <div>
               <span className="text-[10px] uppercase tracking-widest text-brown/50 font-mono block mb-2.5">
-                {locale === "nl" ? "Populaire Zoektermen" : "Popular In Atelier"}
+                {locale === "nl" ? "Populaire Zoektermen" : "Popular Searches"}
               </span>
               <div className="flex flex-wrap gap-2">
                 {POPULAR_SEARCHES.map((term) => (

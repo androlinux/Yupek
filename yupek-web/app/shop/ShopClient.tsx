@@ -133,7 +133,7 @@ export default function ShopClient({ initial }: { initial: Filters }) {
     <>
       <header className="wrap py-16 text-center md:py-24">
         <span className="label tracking-[.3em] text-burgundy text-[10px]">
-          {locale === "nl" ? "ATELIER CATALOGUS" : "ATELIER CATALOG"}
+          {locale === "nl" ? "YUPEK CATALOGUS" : "YUPEK CATALOG"}
         </span>
         <h1 className="h-display mt-2 text-5xl md:text-7xl text-brown">{t.shop.title}</h1>
         <p className="mt-3 text-xs md:text-sm text-brown/70">{t.shop.subtitle}</p>
