@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { site } from "@/config/site";
 import { Pattern } from "./ui/Pattern";
@@ -26,9 +27,12 @@ export default function Footer() {
       <div className="wrap grid gap-12 py-20 md:grid-cols-3">
         <div>
           <Link href="/" className="inline-block group focus:outline-none" aria-label="YUPEK home">
-            <img
+            <Image
               src="/images/logo-light.png"
               alt="YUPEK"
+              width={180}
+              height={60}
+              loading="lazy"
               className="h-16 md:h-20 w-auto object-contain transition-transform duration-300 group-hover:scale-105 drop-shadow-md"
             />
           </Link>
@@ -39,7 +43,15 @@ export default function Footer() {
             {t.footer.citySummary}
           </p>
           <div className="mt-6 flex items-center gap-4">
-            <img src="/images/logo-symbol.png" alt="" className="h-6 w-6 object-contain opacity-85" aria-hidden="true" />
+            <Image
+              src="/images/logo-symbol.png"
+              alt=""
+              width={24}
+              height={24}
+              loading="lazy"
+              className="h-6 w-6 object-contain opacity-85"
+              aria-hidden="true"
+            />
             <div className="border-l border-cream/20 pl-4">
               <LanguageSwitcher />
             </div>

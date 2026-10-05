@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useSiteConfig } from "@/components/ConfigContext";
@@ -402,9 +403,12 @@ export default function AdminPage() {
         <div className="w-full max-w-md border border-brown/20 bg-cream p-8 md:p-10 shadow-2xl">
           <div className="text-center mb-6">
             <Link href="/" className="inline-block mb-3 hover:opacity-80 transition-opacity">
-              <img
+              <Image
                 src="/images/logo.png"
                 alt="YUPEK"
+                width={160}
+                height={48}
+                priority
                 className="h-12 w-auto mx-auto object-contain"
               />
             </Link>
@@ -517,9 +521,12 @@ export default function AdminPage() {
         <div className="wrap flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Link href="/" title="Go to website" className="shrink-0 hover:opacity-80 transition-opacity">
-              <img
+              <Image
                 src="/images/logo.png"
                 alt="YUPEK"
+                width={140}
+                height={40}
+                priority
                 className="h-10 w-auto object-contain"
               />
             </Link>
