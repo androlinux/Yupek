@@ -6,7 +6,7 @@ import ProductGrid from "@/components/ProductGrid";
 import SectionHeading from "@/components/SectionHeading";
 import ProductView from "./ProductView";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.yupek.shop";
+const PRODUCTION_URL = "https://www.yupek.shop";
 
 export const generateStaticParams = () => products.map((p) => ({ slug: p.slug }));
 
@@ -14,36 +14,41 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
   const p = getProduct(params.slug);
   if (!p) return {};
 
-  const title = `${p.name} — YUPEK`;
-  const description = `${p.description} Tailored in Amsterdam with ${p.material}. Complimentary European shipping on orders over €100. 30-day returns.`;
-  const image = p.images[0] ? (p.images[0].startsWith("http") ? p.images[0] : `${siteUrl}${p.images[0]}`) : `${siteUrl}/images/og.jpg`;
+  const title = p.name;
+  const materialSummary = p.material.split(".")[0];
+  const description = `${p.description} Crafted from ${materialSummary}. Category: ${p.descriptor}. Available in ${p.colors.join(", ")}. Price: €${p.price}.`;
+  const canonicalUrl = `${PRODUCTION_URL}/product/${p.slug}`;
+  const ogImageUrl = p.images[0]
+    ? (p.images[0].startsWith("http") ? p.images[0] : `${PRODUCTION_URL}${p.images[0]}`)
+    : `${PRODUCTION_URL}/images/og.jpg`;
 
   return {
     title,
     description,
     keywords: ["YUPEK", p.name, p.category, ...p.tags, ...p.colors],
     alternates: {
-      canonical: `/product/${p.slug}`,
+      canonical: canonicalUrl,
     },
     openGraph: {
-      title,
-      description,
+      title: `${p.name} | YUPEK`,
+      description: `${p.descriptor} — ${p.description}`,
       type: "website",
-      url: `${siteUrl}/product/${p.slug}`,
+      url: canonicalUrl,
+      siteName: "YUPEK",
       images: [
         {
-          url: image,
+          url: ogImageUrl,
           width: 1200,
           height: 1600,
-          alt: `${p.name} by YUPEK`,
+          alt: `${p.name} — YUPEK`,
         },
       ],
     },
     twitter: {
       card: "summary_large_image",
-      title,
-      description,
-      images: [image],
+      title: `${p.name} | YUPEK`,
+      description: `${p.descriptor} — ${p.description}`,
+      images: [ogImageUrl],
     },
   };
 }
@@ -52,14 +57,14 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
   const p = getProduct(params.slug);
   if (!p) notFound();
 
-  const productImages = p.images.map((img) => (img.startsWith("http") ? img : `${siteUrl}${img}`));
+  const productImages = p.images.map((img) => (img.startsWith("http") ? img : `${PRODUCTION_URL}${img}`));
 
   const ld = {
     "@context": "https://schema.org",
     "@graph": [
       {
         "@type": "Product",
-        "@id": `${siteUrl}/product/${p.slug}#product`,
+        "@id": `${PRODUCTION_URL}/product/${p.slug}#product`,
         name: p.name,
         description: p.description,
         image: productImages,
@@ -78,7 +83,7 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
           price: p.price.toFixed(2),
           itemCondition: "https://schema.org/NewCondition",
           availability: "https://schema.org/InStock",
-          url: `${siteUrl}/product/${p.slug}`,
+          url: `${PRODUCTION_URL}/product/${p.slug}`,
           seller: {
             "@type": "Organization",
             name: "YUPEK B.V.",
@@ -100,19 +105,19 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
             "@type": "ListItem",
             position: 1,
             name: "Home",
-            item: siteUrl,
+            item: PRODUCTION_URL,
           },
           {
             "@type": "ListItem",
             position: 2,
             name: "Shop",
-            item: `${siteUrl}/shop`,
+            item: `${PRODUCTION_URL}/shop`,
           },
           {
             "@type": "ListItem",
             position: 3,
             name: p.name,
-            item: `${siteUrl}/product/${p.slug}`,
+            item: `${PRODUCTION_URL}/product/${p.slug}`,
           },
         ],
       },
