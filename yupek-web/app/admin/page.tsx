@@ -46,7 +46,7 @@ export default function AdminPage() {
     deleteSubmission,
     updateOrderStatus,
   } = useSiteConfig();
-  const { user, quickDemoLogin } = useAuth();
+  const { user } = useAuth();
 
   // Local form state for batch or live saving
   const [form, _setForm] = useState<SiteConfig>(config);
@@ -173,7 +173,6 @@ export default function AdminPage() {
       try {
         sessionStorage.setItem("yupek_admin_auth", "true");
       } catch {}
-      quickDemoLogin("admin");
       showToast("✓ Welcome back, Administrator.");
       setIsLoggingIn(false);
     } else {
