@@ -1,17 +1,34 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Contact Concierge — YUPEK",
+  title: "Contact & Client Concierge",
   description:
-    "Schedule a private viewing at Keizersgracht 482 Amsterdam, inquire about bespoke silk sizing, or contact our client concierge.",
+    "Connect with YUPEK for client assistance, product details, orders, and appointments.",
   alternates: {
-    canonical: "/contact",
+    canonical: "https://www.yupek.shop/contact",
   },
   openGraph: {
-    title: "Contact Concierge — YUPEK",
+    title: "Contact Concierge | YUPEK",
     description:
-      "Connect with YUPEK in Amsterdam for private appointments, custom inquiries, and client assistance.",
+      "Connect with YUPEK for client assistance, product details, orders, and appointments.",
     url: "https://www.yupek.shop/contact",
+    siteName: "YUPEK",
+    type: "website",
+    images: [
+      {
+        url: "https://www.yupek.shop/images/og.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Contact YUPEK Concierge",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Contact Concierge | YUPEK",
+    description:
+      "Connect with YUPEK for client assistance, product details, orders, and appointments.",
+    images: ["https://www.yupek.shop/images/og.jpg"],
   },
 };
 

@@ -22,10 +22,10 @@ const sans = Inter({
   display: "swap",
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.yupek.shop";
-const title = "YUPEK — Eastern Roots / European Form";
+const siteUrl = "https://www.yupek.shop";
+const title = "YUPEK — Eastern Heritage, European Style";
 const description =
-  "Contemporary architectural clothing inspired by ancient Turkmen silk heritage, tailored for modern European living. Handcrafted fabrics, organic cottons, plant dyes, and sustainable European couture standards.";
+  "Contemporary fashion blending ancient Eastern silk heritage with refined European tailoring. Architectural silhouettes crafted from organic cotton, linen, and artisanal textiles.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -34,23 +34,11 @@ export const metadata: Metadata = {
     template: "%s | YUPEK",
   },
   description,
-  keywords: [
-    "YUPEK",
-    "YUPEK Fashion",
-    "Turkmen Silk",
-    "Eastern Heritage Fashion",
-    "European Tailoring",
-    "Architectural Clothing",
-    "Amsterdam Fashion",
-    "Sustainable Silk",
-    "Luxury Capsule",
-    "Organic Cotton Fashion",
-  ],
   alternates: {
-    canonical: "/",
+    canonical: siteUrl,
     languages: {
-      "en-US": "/?lang=en",
-      "nl-NL": "/?lang=nl",
+      "en-US": `${siteUrl}/?lang=en`,
+      "nl-NL": `${siteUrl}/?lang=nl`,
     },
   },
   robots: {
@@ -80,14 +68,14 @@ export const metadata: Metadata = {
     description,
     siteName: "YUPEK",
     type: "website",
-    locale: "en_NL",
+    locale: "en_US",
     url: siteUrl,
     images: [
       {
-        url: "/images/og.jpg",
+        url: `${siteUrl}/images/og.jpg`,
         width: 1200,
         height: 630,
-        alt: "YUPEK — Eastern Roots / European Form",
+        alt: title,
       },
     ],
   },
@@ -95,7 +83,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title,
     description,
-    images: ["/images/og.jpg"],
+    images: [`${siteUrl}/images/og.jpg`],
   },
 };
 

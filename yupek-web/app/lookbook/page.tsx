@@ -2,16 +2,34 @@ import type { Metadata } from "next";
 import LookbookClient from "./LookbookClient";
 
 export const metadata: Metadata = {
-  title: "Visual Lookbook — Collection 01 The Weave | YUPEK",
+  title: "Visual Lookbook — Collection 01",
   description:
     "Central Asian heritage silhouettes reimagined for contemporary European life. Clean architectural lines, raw silk drape, and enduring craft.",
   alternates: {
-    canonical: "/lookbook",
+    canonical: "https://www.yupek.shop/lookbook",
   },
   openGraph: {
-    title: "Visual Lookbook — YUPEK",
-    description: "Central Asian heritage silhouettes reimagined for contemporary European life.",
+    title: "Visual Lookbook — Collection 01 | YUPEK",
+    description:
+      "Central Asian heritage silhouettes reimagined for contemporary European life.",
     url: "https://www.yupek.shop/lookbook",
+    siteName: "YUPEK",
+    type: "website",
+    images: [
+      {
+        url: "https://www.yupek.shop/images/look-1.jpg",
+        width: 1200,
+        height: 1600,
+        alt: "YUPEK Visual Lookbook — Collection 01",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Visual Lookbook — Collection 01 | YUPEK",
+    description:
+      "Central Asian heritage silhouettes reimagined for contemporary European life.",
+    images: ["https://www.yupek.shop/images/look-1.jpg"],
   },
 };
 
