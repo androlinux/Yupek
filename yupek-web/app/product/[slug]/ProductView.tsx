@@ -10,11 +10,14 @@ import Accordion from "@/components/ui/Accordion";
 import ProductImage from "@/components/ui/ProductImage";
 import WishlistButton from "@/components/WishlistButton";
 import { Divider } from "@/components/ui/Pattern";
+import Icon from "@/components/ui/Icon";
+import { useAccessibility } from "@/components/AccessibilityContext";
 
 export default function ProductView({ p: initialProduct }: { p: Product }) {
   const { add } = useStore();
   const { getProduct, config } = useSiteConfig();
   const { t, locale } = useLanguage();
+  const { speakText, isSpeaking, stopSpeech } = useAccessibility();
   const p = getProduct(initialProduct.slug) || initialProduct;
 
   const [size, setSize] = useState("");
@@ -86,6 +89,29 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
           {locale === "nl" ? "OOSTERSE WORTELS / EUROPESE VORM" : "EASTERN ROOTS / EUROPEAN STYLE"}
         </p>
         <p className="mt-6 text-sm leading-7 text-brown/80 font-light">{p.description}</p>
+        
+        {/* Audio Readout for Low-Vision & Reading Disabled */}
+        <div className="mt-4 flex items-center gap-3">
+          <button
+            onClick={() => {
+              if (isSpeaking) {
+                stopSpeech();
+              } else {
+                speakText(`${p.name}. Price ${eur(p.price)}. ${p.description}. Material: ${p.material}. Available in sizes ${p.sizes.join(", ")}.`);
+              }
+            }}
+            className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[.2em] font-semibold text-gold hover:text-brown border border-gold/40 px-3.5 py-1.5 transition-all bg-sand/15 hover:bg-gold/20"
+            title={locale === "nl" ? "Beluister productdetails met spraakweergave" : "Listen to product details with speech synthesis"}
+          >
+            <Icon name={isSpeaking ? "volumeMute" : "volume"} className="w-3.5 h-3.5 text-gold" />
+            <span>
+              {isSpeaking
+                ? (locale === "nl" ? "Stop voorlezen" : "Stop reading")
+                : (locale === "nl" ? "Beluister beschrijving" : "Listen to description")}
+            </span>
+          </button>
+        </div>
+
         <Divider className="my-8 justify-start" />
 
         {/* Color Selector */}

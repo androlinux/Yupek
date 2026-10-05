@@ -18,6 +18,14 @@ const paths: Record<string, string> = {
   trash: "M3 6h18 M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6 M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2 M10 11v6 M14 11v6",
   refresh: "M23 4v6h-6 M1 20v-6h6 M3.51 9a9 9 0 0 1 14.85-3.36L23 10 M1 14l4.64 4.36A9 9 0 0 0 20.49 15",
   mail: "M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z M22 6l-10 7L2 6",
+  volume: "M11 5L6 9H2v6h4l5 4V5z M19.07 4.93a10 10 0 0 1 0 14.14 M15.54 8.46a5 5 0 0 1 0 7.07",
+  volumeMute: "M11 5L6 9H2v6h4l5 4V5z M23 9l-6 6 M17 9l6 6",
+  eye: "M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z",
+  accessibility: "M12 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4z M12 7v6 M7 9l5 2 5-2 M9 21l3-8 3 8",
+  play: "M5 3l14 9-14 9V3z",
+  pause: "M6 4h4v16H6z M14 4h4v16h-4z",
+  ruler: "M2 6h20v12H2z M6 6v4 M10 6v6 M14 6v4 M18 6v6",
+  type: "M4 7V4h16v3 M9 20h6 M12 4v16",
 };
 
 export default function Icon({

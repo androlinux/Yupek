@@ -354,6 +354,51 @@ export interface Translations {
     odrDesc: string;
     odrPlatformBtn: string;
   };
+  a11y: {
+    floatingButtonLabel: string;
+    floatingTooltip: string;
+    drawerTitle: string;
+    drawerSubtitle: string;
+    screenReaderTitle: string;
+    screenReaderDesc: string;
+    readPageBtn: string;
+    readSelectionBtn: string;
+    stopSpeechBtn: string;
+    pauseSpeechBtn: string;
+    resumeSpeechBtn: string;
+    speakingNow: string;
+    speechRateLabel: string;
+    rateSlow: string;
+    rateNormal: string;
+    rateFast: string;
+    colorBlindTitle: string;
+    colorBlindDesc: string;
+    colorModes: {
+      normal: { name: string; desc: string };
+      highContrast: { name: string; desc: string };
+      deuteranopia: { name: string; desc: string };
+      protanopia: { name: string; desc: string };
+      tritanopia: { name: string; desc: string };
+      monochrome: { name: string; desc: string };
+    };
+    readingTitle: string;
+    textSizeLabel: string;
+    textNormal: string;
+    textLarge: string;
+    textXLarge: string;
+    dyslexiaFontLabel: string;
+    dyslexiaFontDesc: string;
+    readingGuideLabel: string;
+    readingGuideDesc: string;
+    highlightLinksLabel: string;
+    highlightLinksDesc: string;
+    motionTitle: string;
+    pauseAnimationsLabel: string;
+    pauseAnimationsDesc: string;
+    resetAllBtn: string;
+    savedNote: string;
+    closeBtn: string;
+  };
 }
 
 export const dictionaries: Record<Locale, Translations> = {
@@ -845,6 +890,69 @@ export const dictionaries: Record<Locale, Translations> = {
       odrDesc: "In accordance with Article 14(1) of EU Regulation No 524/2013, the European Commission provides an online platform for out-of-court dispute resolution between European consumers and online traders.",
       odrPlatformBtn: "VISIT EU ODR PLATFORM",
     },
+    a11y: {
+      floatingButtonLabel: "Accessibility & Reading Tools",
+      floatingTooltip: "Accessibility & Color Blindness",
+      drawerTitle: "ACCESSIBILITY & READABILITY",
+      drawerSubtitle: "Audio screen reading, dyslexia-friendly typography & color vision adjustments",
+      screenReaderTitle: "AUDIO SCREEN READER (TEXT-TO-SPEECH)",
+      screenReaderDesc: "Listen to the current page, lookbook essays, or garment descriptions with natural speech synthesis.",
+      readPageBtn: "READ PAGE ALOUD",
+      readSelectionBtn: "READ SELECTED TEXT",
+      stopSpeechBtn: "STOP READING",
+      pauseSpeechBtn: "PAUSE",
+      resumeSpeechBtn: "RESUME",
+      speakingNow: "Reading aloud...",
+      speechRateLabel: "READING SPEED",
+      rateSlow: "0.8x (Relaxed)",
+      rateNormal: "1.0x (Standard)",
+      rateFast: "1.2x (Brisk)",
+      colorBlindTitle: "COLOR BLINDNESS & CONTRAST MODES",
+      colorBlindDesc: "Scientifically calibrated Daltonization filters and high-contrast adaptations for varied color vision.",
+      colorModes: {
+        normal: {
+          name: "Standard Atelier",
+          desc: "Original curated Turkmen silk & European architectural palette.",
+        },
+        highContrast: {
+          name: "High Contrast (WCAG AAA)",
+          desc: "Maximum contrast deep black background with crisp white & luminous gold.",
+        },
+        deuteranopia: {
+          name: "Deuteranopia Filter",
+          desc: "Green-weak adaptation: eliminates red-green confusion by shifting hues.",
+        },
+        protanopia: {
+          name: "Protanopia Filter",
+          desc: "Red-weak adaptation: enhances contrast and shifts red frequencies into visible spectrum.",
+        },
+        tritanopia: {
+          name: "Tritanopia Filter",
+          desc: "Blue-yellow adaptation: heightened luminance between blue and green tones.",
+        },
+        monochrome: {
+          name: "Monochromacy / Grayscale",
+          desc: "Pure high-contrast grayscale for complete color blindness (achromatopsia).",
+        },
+      },
+      readingTitle: "READING & TYPOGRAPHY ASSISTANCE",
+      textSizeLabel: "TEXT SCALING",
+      textNormal: "Standard (100%)",
+      textLarge: "Large (115%)",
+      textXLarge: "Extra Large (130%)",
+      dyslexiaFontLabel: "Dyslexia-Friendly Typography",
+      dyslexiaFontDesc: "High-legibility letterforms, increased character spacing & generous line height.",
+      readingGuideLabel: "Reading Ruler / Focus Guide",
+      readingGuideDesc: "Translucent guide bar following cursor to maintain line focus while reading.",
+      highlightLinksLabel: "Underline & Highlight Hyperlinks",
+      highlightLinksDesc: "Ensures interactive links are prominently distinguishable without relying on color.",
+      motionTitle: "MOTION & VISUAL COMFORT",
+      pauseAnimationsLabel: "Pause Animations & Autoplay",
+      pauseAnimationsDesc: "Disables editorial video autoplay, marquee tickers, and motion transitions.",
+      resetAllBtn: "RESET ALL ASSISTIVE SETTINGS",
+      savedNote: "Preferences are automatically remembered across your browsing session.",
+      closeBtn: "Close Accessibility Menu",
+    },
   },
   nl: {
     common: {
@@ -1333,6 +1441,69 @@ export const dictionaries: Record<Locale, Translations> = {
       odrTitle: "EUROPESE ONLINE GESCHILLENBESLECHTING (ODR)",
       odrDesc: "Overeenkomstig artikel 14 lid 1 van Verordening (EU) nr. 524/2013 biedt de Europese Commissie een platform voor online geschillenbeslechting (ODR) voor buitengerechtelijke beslechting van consumentengeschillen.",
       odrPlatformBtn: "BEZOEK EU ODR PLATFORM",
+    },
+    a11y: {
+      floatingButtonLabel: "Toegankelijkheid & Leesgereedschap",
+      floatingTooltip: "Toegankelijkheid & Kleurenblindheid",
+      drawerTitle: "TOEGANKELIJKHEID & LEESGEMAK",
+      drawerSubtitle: "Spraakweergave, dyslexie-vriendelijke typografie & kleurcontrast voor elk gezichtsvermogen",
+      screenReaderTitle: "AUDIO VOORLEZER (TEXT-TO-SPEECH)",
+      screenReaderDesc: "Luister naar de huidige pagina, essays of productbeschrijvingen met natuurlijke spraaksynthese.",
+      readPageBtn: "PAGINA VOORLEZEN",
+      readSelectionBtn: "GESELECTEERDE TEKST VOORLEZEN",
+      stopSpeechBtn: "STOP VOORLEZEN",
+      pauseSpeechBtn: "PAUZEREN",
+      resumeSpeechBtn: "HERVATTEN",
+      speakingNow: "Bezig met voorlezen...",
+      speechRateLabel: "LEESSNELHEID",
+      rateSlow: "0.8x (Rustig)",
+      rateNormal: "1.0x (Standaard)",
+      rateFast: "1.2x (Vlot)",
+      colorBlindTitle: "KLEURENBLINDHEID & CONTRASTMODI",
+      colorBlindDesc: "Wetenschappelijk gekalibreerde daltonisatie-filters en hoog contrast voor kleurenblindheid.",
+      colorModes: {
+        normal: {
+          name: "Standaard Atelier",
+          desc: "Oorspronkelijk geselecteerd kleurenpalet van Turkmeense zijde en Europese vorm.",
+        },
+        highContrast: {
+          name: "Hoog Contrast (WCAG AAA)",
+          desc: "Maximaal contrast met diepzwarte achtergrond, helder wit en goud.",
+        },
+        deuteranopia: {
+          name: "Deuteranopie Filter",
+          desc: "Groen-zwak aanpassing: voorkomt verwarring tussen rood en groen.",
+        },
+        protanopia: {
+          name: "Protanopie Filter",
+          desc: "Rood-zwak aanpassing: verbetert contrast en verschuift roodtinten naar het zichtbare spectrum.",
+        },
+        tritanopia: {
+          name: "Tritanopie Filter",
+          desc: "Blauw-geel aanpassing: verhoogd contrast tussen blauw- en groentinten.",
+        },
+        monochrome: {
+          name: "Monochromie / Grijstinten",
+          desc: "Zuiver hoog-contrast grijstinten voor totale kleurenblindheid (achromatopsie).",
+        },
+      },
+      readingTitle: "LEESHULPMIDDELEN & TYPOGRAFIE",
+      textSizeLabel: "TEKSTGROOTTE",
+      textNormal: "Standaard (100%)",
+      textLarge: "Groot (115%)",
+      textXLarge: "Extra Groot (130%)",
+      dyslexiaFontLabel: "Dyslexie-Vriendelijke Typografie",
+      dyslexiaFontDesc: "Goed leesbare lettervormen, bredere letterafstand en ruimere regelhoogte.",
+      readingGuideLabel: "Leesliniaal / Focusbalk",
+      readingGuideDesc: "Horizontale focusbalk die de cursor volgt om comfortabel regel voor regel te lezen.",
+      highlightLinksLabel: "Onderstreep & Accentueer Links",
+      highlightLinksDesc: "Zorgt ervoor dat klikbare koppelingen altijd duidelijk zichtbaar zijn, onafhankelijk van kleur.",
+      motionTitle: "BEWEGING & VISUEEL COMFORT",
+      pauseAnimationsLabel: "Pauzeer Animaties & Autoplay",
+      pauseAnimationsDesc: "Schakelt automatische videoweergave, tickers en vloeiende animaties uit.",
+      resetAllBtn: "HERSTEL NAAR STANDAARDINSTELLINGEN",
+      savedNote: "Uw voorkeuren worden automatisch bewaard tijdens uw bezoek.",
+      closeBtn: "Sluit Toegankelijkheidsmenu",
     },
   },
 };

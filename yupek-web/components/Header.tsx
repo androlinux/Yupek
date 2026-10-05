@@ -7,6 +7,7 @@ import { useStore } from "./Providers";
 import { useAuth } from "./AuthContext";
 import { useLanguage } from "./LanguageContext";
 import LanguageSwitcher from "./LanguageSwitcher";
+import { useAccessibility } from "./AccessibilityContext";
 
 export default function Header() {
   const path = usePathname();
@@ -18,6 +19,7 @@ export default function Header() {
   const { count, wishlist, setCartOpen, setSearchOpen, menuOpen, setMenuOpen } = useStore();
   const { user, setAuthModalOpen, signOut } = useAuth();
   const { t, locale } = useLanguage();
+  const { openDrawer } = useAccessibility();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 30);
@@ -136,6 +138,16 @@ export default function Header() {
             className="p-1 transition-transform duration-300 hover:scale-110 active:scale-95"
           >
             <Icon name="search" className="h-5 w-5" />
+          </button>
+
+          {/* Accessibility & Color Blind Trigger */}
+          <button
+            aria-label={t.a11y.floatingButtonLabel}
+            onClick={openDrawer}
+            title={t.a11y.floatingTooltip}
+            className="p-1 transition-transform duration-300 hover:scale-110 active:scale-95"
+          >
+            <Icon name="accessibility" className="h-5 w-5" />
           </button>
 
           {/* User Account / Profile Dropdown */}
@@ -310,6 +322,23 @@ export default function Header() {
                 <span>{t.nav.signIn}</span>
               </button>
             )}
+          </div>
+
+          {/* Mobile Accessibility Button */}
+          <div className="border-t border-brown/10 pt-3">
+            <button
+              onClick={() => {
+                setMenuOpen(false);
+                openDrawer();
+              }}
+              className="flex items-center justify-between w-full py-1 text-xs uppercase tracking-widest text-brown hover:text-gold transition-colors"
+            >
+              <span className="flex items-center gap-2">
+                <Icon name="accessibility" className="h-4 w-4 text-gold" />
+                <span>{t.a11y.drawerTitle}</span>
+              </span>
+              <span className="text-[10px] text-brown/50 font-mono">Audio & Vision</span>
+            </button>
           </div>
         </nav>
       </div>
