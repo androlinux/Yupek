@@ -10,12 +10,120 @@ export const related = (p: Product, n = 4, list: Product[] = products) =>
     .concat(list.filter((x) => x.slug !== p.slug && x.category !== p.category))
     .slice(0, n);
 
+function levenshtein(a: string, b: string): number {
+  if (a.length === 0) return b.length;
+  if (b.length === 0) return a.length;
+  const matrix: number[][] = [];
+  for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+  for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      if (b.charAt(i - 1) === a.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j] + 1
+        );
+      }
+    }
+  }
+  return matrix[b.length][a.length];
+}
+
 export function searchProducts(q: string, list: Product[] = products): Product[] {
-  const t = q.trim().toLowerCase();
-  if (!t) return [];
-  return list.filter((p) =>
-    [p.name, p.category, p.description, p.descriptor, ...p.tags].join(" ").toLowerCase().includes(t)
-  );
+  const query = q.trim().toLowerCase();
+  if (!query) return [];
+
+  const tokens = query.split(/\s+/).filter(Boolean);
+  if (tokens.length === 0) return [];
+
+  const scored: { product: Product; score: number }[] = [];
+
+  for (const p of list) {
+    let score = 0;
+    const nameLower = p.name.toLowerCase();
+    const catLower = p.category.toLowerCase();
+    const descLower = `${p.description} ${p.descriptor}`.toLowerCase();
+    const tagsLower = p.tags.map((t) => t.toLowerCase());
+    const colorsLower = p.colors.map((c) => c.toLowerCase());
+    const matLower = p.material.toLowerCase();
+
+    // Exact full query match
+    if (nameLower === query) score += 120;
+    else if (nameLower.includes(query)) score += 60;
+
+    let matchedTokens = 0;
+
+    for (const token of tokens) {
+      let tokenMatched = false;
+
+      // Name matches
+      if (nameLower.includes(token)) {
+        score += 40;
+        tokenMatched = true;
+      }
+
+      // Tag matches
+      if (tagsLower.some((t) => t === token)) {
+        score += 35;
+        tokenMatched = true;
+      } else if (tagsLower.some((t) => t.includes(token))) {
+        score += 20;
+        tokenMatched = true;
+      }
+
+      // Category / Gender matches
+      if (catLower === token || catLower.includes(token) || p.gender.toLowerCase() === token) {
+        score += 25;
+        tokenMatched = true;
+      }
+
+      // Color matches
+      if (colorsLower.some((c) => c.includes(token))) {
+        score += 25;
+        tokenMatched = true;
+      }
+
+      // Material matches
+      if (matLower.includes(token)) {
+        score += 20;
+        tokenMatched = true;
+      }
+
+      // Description matches
+      if (descLower.includes(token)) {
+        score += 10;
+        tokenMatched = true;
+      }
+
+      // Typo tolerance (fuzzy matching for words >= 4 letters)
+      if (!tokenMatched && token.length >= 4) {
+        const words = `${nameLower} ${catLower} ${tagsLower.join(" ")} ${colorsLower.join(" ")}`.split(/\s+/);
+        for (const w of words) {
+          if (w.length >= 4 && levenshtein(token, w) <= 1) {
+            score += 18;
+            tokenMatched = true;
+            break;
+          }
+        }
+      }
+
+      if (tokenMatched) matchedTokens++;
+    }
+
+    if (matchedTokens === tokens.length && tokens.length > 1) {
+      score += 40; // Bonus for multi-term match
+    }
+
+    if (score > 0) {
+      scored.push({ product: p, score });
+    }
+  }
+
+  scored.sort((a, b) => b.score - a.score);
+  return scored.map((item) => item.product);
 }
 
 export type Filters = {
