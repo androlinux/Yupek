@@ -193,7 +193,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 1B. REGISTER OAUTH (Google / Apple)
+    // 1B. REGISTER OAUTH (Google)
     if (action === "register_oauth") {
       const { id, name, email } = body;
       if (!email) {

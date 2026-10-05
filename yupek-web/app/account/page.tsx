@@ -17,7 +17,6 @@ export default function AccountPage() {
     signInWithEmail,
     signUpWithEmail,
     signInWithGoogle,
-    signInWithApple,
     refreshOrders,
   } = useAuth();
 
@@ -43,7 +42,7 @@ export default function AccountPage() {
 
   // Social OAuth states
   const [oauthError, setOauthError] = useState<string | null>(null);
-  const [oauthLoading, setOauthLoading] = useState<"google" | "apple" | null>(null);
+  const [oauthLoading, setOauthLoading] = useState<"google" | null>(null);
 
   // Logged-in portal states
   const [activeTab, setActiveTab] = useState<"orders" | "wishlist" | "address" | "concierge">("orders");
@@ -126,25 +125,6 @@ export default function AccountPage() {
         );
       } else {
         setOauthError(res.error || "Google Sign-In failed. Please sign in with email.");
-      }
-    }
-  };
-
-  // Handle Apple Sign-In
-  const handleAppleSignIn = async () => {
-    setOauthError(null);
-    setOauthLoading("apple");
-    const res = await signInWithApple();
-    setOauthLoading(null);
-    if (!res.success) {
-      if (res.error?.includes("provider is not enabled") || res.error?.includes("Unsupported provider")) {
-        setOauthError(
-          locale === "nl"
-            ? "Apple Inloggen configuratie: Schakel Apple Provider in via uw Supabase dashboard (Auth > Providers) met uw Apple Developer Service ID."
-            : "Apple Sign-In setup: Please enable Apple Provider in your Supabase Dashboard (Auth > Providers) with your Apple Developer Service ID."
-        );
-      } else {
-        setOauthError(res.error || "Apple Sign-In failed. Please sign in with email.");
       }
     }
   };
@@ -397,12 +377,12 @@ export default function AccountPage() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div>
               <button
                 type="button"
                 onClick={handleGoogleSignIn}
                 disabled={oauthLoading !== null}
-                className="flex items-center justify-center gap-2.5 border border-brown/20 bg-white/80 py-2.5 px-3 text-xs font-medium tracking-wider text-brown hover:bg-white transition-all shadow-sm disabled:opacity-60"
+                className="w-full flex items-center justify-center gap-2.5 border border-brown/20 bg-white/80 py-2.5 px-4 text-xs font-medium tracking-wider text-brown hover:bg-white transition-all shadow-sm disabled:opacity-60"
               >
                 {oauthLoading === "google" ? (
                   <span className="h-4 w-4 border-2 border-brown/30 border-t-brown rounded-full animate-spin inline-block" />
@@ -414,23 +394,7 @@ export default function AccountPage() {
                     <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
                   </svg>
                 )}
-                <span>Google</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleAppleSignIn}
-                disabled={oauthLoading !== null}
-                className="flex items-center justify-center gap-2.5 border border-brown/20 bg-brown text-cream py-2.5 px-3 text-xs font-medium tracking-wider hover:bg-black transition-all shadow-sm disabled:opacity-60"
-              >
-                {oauthLoading === "apple" ? (
-                  <span className="h-4 w-4 border-2 border-cream/30 border-t-cream rounded-full animate-spin inline-block" />
-                ) : (
-                  <svg className="h-4 w-4 fill-current shrink-0" viewBox="0 0 170 170">
-                    <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.69-3.04-7.67-7.81-11.96-14.34-6.3-9.61-11.49-20.73-15.56-33.36-4.08-12.63-6.12-24.71-6.12-36.23 0-14.37 3.58-26.4 10.74-36.09 7.16-9.69 16.29-14.65 27.38-14.88 4.7 0 10.02 1.25 15.98 3.76 5.96 2.5 9.77 3.82 11.43 3.94 1.86-.23 5.78-1.57 11.75-4.04 5.97-2.47 11.19-3.59 15.66-3.35 11.66.72 21.06 5.09 28.2 13.12-10.23 6.18-15.24 14.86-15.02 26.04.22 8.78 3.52 16.14 9.9 22.09 6.38 5.95 14.07 9.4 23.07 10.36-2.17 6.4-4.83 13.04-7.98 19.92zM119.22 31.84c0-7.39 2.67-14.38 8.01-20.97 5.34-6.59 11.94-10.6 19.8-12.03.22 1.44.33 2.76.33 3.96 0 7.39-2.73 14.43-8.19 21.12-5.46 6.69-12.18 10.64-20.16 11.86-.11-1.32-.17-2.64-.17-3.94z" />
-                  </svg>
-                )}
-                <span>Apple ID</span>
+                <span>{locale === "nl" ? "Doorgaan met Google" : "Continue with Google"}</span>
               </button>
             </div>
           </div>

@@ -166,7 +166,6 @@ export interface Translations {
     clientAccess: string;
     signInPrompt: string;
     continueGoogle: string;
-    continueApple: string;
     signInEmail: string;
     demoSession: string;
     vipClientDemo: string;
@@ -208,7 +207,6 @@ export interface Translations {
     createAccountTitle: string;
     subtitle: string;
     continueGoogle: string;
-    continueApple: string;
     orViaEmail: string;
     signInTab: string;
     registerTab: string;
@@ -577,9 +575,8 @@ export const dictionaries: Record<Locale, Translations> = {
     account: {
       portalTag: "CLIENT PORTAL",
       clientAccess: "CLIENT ACCESS",
-      signInPrompt: "Sign in with your Google, Apple, or YUPEK account to track order dispatches, manage your delivery addresses, and view private collections.",
+      signInPrompt: "Sign in with your Google or YUPEK account to track order dispatches, manage your delivery addresses, and view private collections.",
       continueGoogle: "CONTINUE WITH GOOGLE",
-      continueApple: "CONTINUE WITH APPLE",
       signInEmail: "SIGN IN WITH EMAIL",
       demoSession: "Instant Demo Session",
       vipClientDemo: "Log In As VIP Client",
@@ -621,7 +618,6 @@ export const dictionaries: Record<Locale, Translations> = {
       createAccountTitle: "CREATE ACCOUNT",
       subtitle: "Experience bespoke order tracking, saved archives, and private previews.",
       continueGoogle: "CONTINUE WITH GOOGLE",
-      continueApple: "CONTINUE WITH APPLE",
       orViaEmail: "OR VIA EMAIL",
       signInTab: "SIGN IN",
       registerTab: "REGISTER",
@@ -1129,9 +1125,8 @@ export const dictionaries: Record<Locale, Translations> = {
     account: {
       portalTag: "CLIENT PORTAL",
       clientAccess: "KLANTENTOEGANG",
-      signInPrompt: "Log in met uw Google-, Apple- of YUPEK-account om uw bestellingen te volgen, bezorgadressen te beheren en privécollecties te bekijken.",
+      signInPrompt: "Log in met uw Google- of YUPEK-account om uw bestellingen te volgen, bezorgadressen te beheren en privécollecties te bekijken.",
       continueGoogle: "DOORGAAN MET GOOGLE",
-      continueApple: "DOORGAAN MET APPLE",
       signInEmail: "INLOGGEN MET E-MAIL",
       demoSession: "Directe Demo Toegang",
       vipClientDemo: "Inloggen als VIP Klant",
@@ -1173,7 +1168,6 @@ export const dictionaries: Record<Locale, Translations> = {
       createAccountTitle: "ACCOUNT AANMAKEN",
       subtitle: "Ervaar persoonlijke orderopvolging, bewaarde favorieten en exclusieve previews.",
       continueGoogle: "DOORGAAN MET GOOGLE",
-      continueApple: "DOORGAAN MET APPLE",
       orViaEmail: "OF MET E-MAIL",
       signInTab: "INLOGGEN",
       registerTab: "REGISTREREN",
