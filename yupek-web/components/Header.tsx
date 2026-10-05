@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
@@ -90,7 +91,7 @@ export default function Header() {
 
         {/* Mobile Hamburger Button */}
         <button
-          className="md:hidden justify-self-start p-1.5 transition-transform active:scale-95"
+          className="md:hidden justify-self-start min-h-[44px] min-w-[44px] flex items-center justify-center p-1.5 transition-transform active:scale-95"
           aria-label={
             menuOpen
               ? locale === "nl" ? "Menu sluiten" : "Close menu"
@@ -109,18 +110,24 @@ export default function Header() {
           aria-label="YUPEK home"
         >
           {/* Light variant for dark hero transparent header */}
-          <img
+          <Image
             src="/images/logo-light.png"
             alt="YUPEK"
-            className={`transition-all duration-500 ease-out object-contain drop-shadow-sm ${
+            width={180}
+            height={55}
+            priority
+            className={`transition-all duration-500 ease-out object-contain drop-shadow-sm w-auto ${
               scrolled ? "h-11 md:h-13" : "h-12 md:h-15"
             } ${solid ? "opacity-0 absolute pointer-events-none scale-95" : "opacity-100 scale-100"} group-hover:scale-105`}
           />
           {/* Dark/Original variant for cream/solid header */}
-          <img
+          <Image
             src="/images/logo.png"
             alt="YUPEK"
-            className={`transition-all duration-500 ease-out object-contain drop-shadow-sm ${
+            width={180}
+            height={55}
+            priority
+            className={`transition-all duration-500 ease-out object-contain drop-shadow-sm w-auto ${
               scrolled ? "h-11 md:h-13" : "h-12 md:h-15"
             } ${solid ? "opacity-100 scale-100" : "opacity-0 absolute pointer-events-none scale-95"} group-hover:scale-105`}
           />

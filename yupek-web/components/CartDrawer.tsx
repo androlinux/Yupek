@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect } from "react";
 import { eur } from "@/lib/catalog";
@@ -143,9 +144,11 @@ export default function CartDrawer() {
 
         {lines.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-6 px-6 text-center">
-            <img
+            <Image
               src="/images/logo-symbol.png"
               alt=""
+              width={56}
+              height={56}
               className="h-14 w-14 object-contain opacity-75 animate-in fade-in zoom-in-95 duration-500"
               aria-hidden="true"
             />

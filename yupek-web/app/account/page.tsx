@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth, UserAddress } from "@/components/AuthContext";
@@ -548,7 +549,15 @@ export default function AccountPage() {
                   {order.items.map((item, idx) => (
                     <div key={idx} className="py-3 flex items-center gap-4">
                       <div className="relative h-16 w-12 bg-sand/30 overflow-hidden flex-shrink-0">
-                        <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
+                        {item.image && (
+                          <Image
+                            src={item.image}
+                            alt={item.name}
+                            fill
+                            sizes="48px"
+                            className="object-cover"
+                          />
+                        )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <Link

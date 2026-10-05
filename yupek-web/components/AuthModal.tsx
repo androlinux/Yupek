@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "./AuthContext";
@@ -113,9 +114,11 @@ export default function AuthModal() {
         </button>
 
         <div className="text-center">
-          <img
+          <Image
             src="/images/logo.png"
             alt="YUPEK"
+            width={160}
+            height={50}
             className="h-12 md:h-14 w-auto mx-auto mb-3 object-contain drop-shadow-sm"
           />
           <p className="label tracking-[.3em] text-burgundy text-[10px] uppercase font-semibold">
