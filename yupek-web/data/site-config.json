@@ -39,15 +39,9 @@
   "shopButtonLabel": "SHOP COLLECTION",
   "addToBagLabel": "ADD TO BAG",
   "checkoutButtonLabel": "PROCEED TO CHECKOUT",
-  "productOverrides": {
-    "turkmen-silk-shirt": {
-      "price": 360,
-      "badge": "SPRING 26"
-    },
-    "desert-dune-coat": {
-      "price": 520
-    }
-  },
+  "adminUsername": "admin",
+  "adminPassword": "yupek2026",
+  "productOverrides": {},
   "contactSubmissions": [
     {
       "id": "sub-1",

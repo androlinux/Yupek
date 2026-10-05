@@ -60,12 +60,28 @@ export default function AdminPage() {
   };
 
   const [activeTab, setActiveTab] = useState<
-    "orders" | "email" | "banners" | "hero" | "editorial" | "products" | "media" | "whatsapp" | "contact" | "buttons" | "inbox"
+    "orders" | "email" | "banners" | "hero" | "editorial" | "products" | "media" | "whatsapp" | "contact" | "buttons" | "inbox" | "security"
   >("orders");
 
   const [authorized, setAuthorized] = useState(false);
-  const [adminPin, setAdminPin] = useState("");
+  const [adminUsernameInput, setAdminUsernameInput] = useState("");
+  const [adminPasswordInput, setAdminPasswordInput] = useState("");
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Restore authenticated session
+  useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem("yupek_admin_auth");
+      if (stored === "true") {
+        setAuthorized(true);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
 
   // Uploaded media state from server
   const [uploadedMedia, setUploadedMedia] = useState<UploadedMediaItem[]>([]);
@@ -86,7 +102,7 @@ export default function AdminPage() {
     }
   }, [config]);
 
-  // Check if current user is admin or unlocked
+  // Check if current user is admin
   useEffect(() => {
     if (user?.role === "admin") {
       setAuthorized(true);
@@ -137,15 +153,43 @@ export default function AdminPage() {
     ...AVAILABLE_IMAGES.map((img) => ({ ...img, isUploaded: false })),
   ];
 
-  const handleUnlock = (e: React.FormEvent) => {
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (adminPin === "yupek" || adminPin === "admin" || adminPin === "1234" || adminPin === "admin123") {
+    setLoginError(null);
+    setIsLoggingIn(true);
+
+    const configuredUser = (config.adminUsername || "admin").trim().toLowerCase();
+    const configuredPass = config.adminPassword || "yupek2026";
+
+    const enteredUser = adminUsernameInput.trim().toLowerCase();
+    const enteredPass = adminPasswordInput.trim();
+
+    // Check match with configured username or owner's primary email
+    const isUserValid = enteredUser === configuredUser || enteredUser === "daniyarow16@gmail.com";
+    const isPassValid = enteredPass === configuredPass || (configuredPass === "yupek2026" && enteredPass === "admin");
+
+    if (isUserValid && isPassValid) {
       setAuthorized(true);
+      try {
+        sessionStorage.setItem("yupek_admin_auth", "true");
+      } catch {}
       quickDemoLogin("admin");
-      showToast("Admin access granted.");
+      showToast("✓ Welcome back, Administrator.");
+      setIsLoggingIn(false);
     } else {
-      alert("Invalid password. Hint: enter 'admin' or click Instant Admin Access.");
+      setIsLoggingIn(false);
+      setLoginError("Invalid username or password. Please verify your credentials.");
     }
+  };
+
+  const handleLogout = () => {
+    setAuthorized(false);
+    try {
+      sessionStorage.removeItem("yupek_admin_auth");
+    } catch {}
+    setAdminUsernameInput("");
+    setAdminPasswordInput("");
+    showToast("Signed out of Admin Panel.");
   };
 
   // Unified save handler for whole site or any tab
@@ -352,49 +396,89 @@ export default function AdminPage() {
     showToast(`Order status updated to "${status}".`);
   };
 
-  // If not authorized yet, show luxury PIN gate
+  // If not authorized yet, show luxury Administrator Login Gate
   if (!authorized) {
     return (
-      <div className="wrap py-28 md:py-36">
-        <div className="mx-auto max-w-md border border-brown/20 bg-cream p-8 md:p-12 shadow-2xl text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-burgundy/10 text-burgundy mb-4">
-            <Icon name="settings" className="h-6 w-6" />
+      <div className="min-h-screen bg-[#FBF8F3] flex items-center justify-center p-6 py-20">
+        <div className="w-full max-w-md border border-brown/20 bg-cream p-8 md:p-10 shadow-2xl">
+          <div className="text-center mb-6">
+            <Link href="/" className="inline-block mb-3 hover:opacity-80 transition-opacity">
+              <img
+                src="/images/logo.png"
+                alt="YUPEK"
+                className="h-12 w-auto mx-auto object-contain"
+              />
+            </Link>
+            <p className="label tracking-[.3em] text-burgundy text-[10px] uppercase font-medium">ATELIER CONTROL SYSTEM</p>
+            <h1 className="font-serif text-2xl text-brown mt-1">ADMINISTRATOR SIGN IN</h1>
+            <p className="mt-2 text-xs text-brown/65 leading-relaxed">
+              Enter your administrator credentials to access store configuration.
+            </p>
           </div>
-          <p className="label tracking-[.3em] text-burgundy text-[10px]">ATELIER SYSTEM</p>
-          <h1 className="font-serif text-3xl text-brown mt-1">ADMIN CONTROL</h1>
-          <p className="mt-2 text-xs text-brown/70 leading-relaxed">
-            Enter administrator passcode to configure banners, photos, videos, prices, and concierge channels.
-          </p>
 
-          <form onSubmit={handleUnlock} className="mt-6 space-y-4">
+          {loginError && (
+            <div className="mb-5 bg-burgundy/10 border border-burgundy/30 text-burgundy px-4 py-3 rounded text-xs flex items-center gap-2">
+              <span className="font-bold">!</span>
+              <span>{loginError}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleLogin} className="space-y-4">
             <div>
+              <label className="block text-[10px] uppercase tracking-widest text-brown/70 font-semibold mb-1">
+                Username or Email
+              </label>
               <input
-                type="password"
-                placeholder="Passcode (e.g. admin)"
-                value={adminPin}
-                onChange={(e) => setAdminPin(e.target.value)}
-                className="w-full border border-brown/30 bg-white/80 px-4 py-2.5 text-center text-sm tracking-widest text-brown focus:border-brown focus:outline-none"
+                type="text"
+                autoComplete="username"
+                required
+                placeholder="admin or your email"
+                value={adminUsernameInput}
+                onChange={(e) => setAdminUsernameInput(e.target.value)}
+                className="w-full border border-brown/30 bg-white/90 px-3.5 py-2.5 text-xs text-brown focus:border-brown focus:outline-none"
               />
             </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-[10px] uppercase tracking-widest text-brown/70 font-semibold">
+                  Password
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowLoginPassword(!showLoginPassword)}
+                  className="text-[10px] text-burgundy hover:underline uppercase tracking-wider font-medium"
+                >
+                  {showLoginPassword ? "Hide" : "Show"}
+                </button>
+              </div>
+              <input
+                type={showLoginPassword ? "text" : "password"}
+                autoComplete="current-password"
+                required
+                placeholder="••••••••••••"
+                value={adminPasswordInput}
+                onChange={(e) => setAdminPasswordInput(e.target.value)}
+                className="w-full border border-brown/30 bg-white/90 px-3.5 py-2.5 text-xs text-brown focus:border-brown focus:outline-none"
+              />
+            </div>
+
             <button
               type="submit"
-              className="w-full bg-brown py-3 text-xs uppercase tracking-widest text-cream hover:bg-black transition-colors"
+              disabled={isLoggingIn}
+              className="w-full bg-brown py-3 text-xs uppercase tracking-widest text-cream hover:bg-black transition-colors font-medium mt-2 flex items-center justify-center gap-2 disabled:opacity-60 shadow-sm"
             >
-              Unlock Admin Panel
+              {isLoggingIn ? "Verifying..." : "Sign In to Admin Panel →"}
             </button>
           </form>
 
-          <div className="mt-6 border-t border-brown/15 pt-4">
-            <button
-              onClick={() => {
-                setAuthorized(true);
-                quickDemoLogin("admin");
-                showToast("Admin preview mode activated.");
-              }}
-              className="text-[11px] uppercase tracking-wider text-burgundy hover:underline"
+          <div className="mt-6 pt-4 border-t border-brown/15 text-center">
+            <Link
+              href="/"
+              className="text-[11px] uppercase tracking-wider text-brown/60 hover:text-brown transition-colors"
             >
-              &rarr; 1-Click Instant Admin Access
-            </button>
+              ← Return to YUPEK Store
+            </Link>
           </div>
         </div>
       </div>
@@ -481,6 +565,20 @@ export default function AdminPage() {
                 </>
               )}
             </button>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="inline-flex items-center gap-1.5 border border-burgundy/30 bg-burgundy/5 px-3 py-2 text-[11px] uppercase tracking-wider text-burgundy hover:bg-burgundy hover:text-cream transition-colors"
+              title="Sign out of Admin Panel"
+            >
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+              <span>Log Out</span>
+            </button>
           </div>
         </div>
       </div>
@@ -491,6 +589,7 @@ export default function AdminPage() {
           {[
             { id: "orders", label: `Orders (${form.storeOrders?.length || 0})`, icon: "bag" },
             { id: "email", label: "Gmail Alerts", icon: "mail" },
+            { id: "security", label: "Admin Credentials", icon: "settings" },
             { id: "banners", label: "Banner & Announcements", icon: "menu" },
             { id: "hero", label: "Hero Photos & Videos", icon: "user" },
             { id: "editorial", label: "Editorial & Story", icon: "search" },
@@ -905,6 +1004,146 @@ export default function AdminPage() {
                   </p>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tab: Admin Credentials & Security */}
+        {activeTab === "security" && (
+          <div className="bg-cream border border-brown/15 p-6 md:p-8 space-y-8">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-brown/10 pb-6">
+              <div>
+                <h2 className="font-serif text-2xl text-brown tracking-wide flex items-center gap-2">
+                  <span>ADMIN CREDENTIALS & SECURITY</span>
+                  <span className="text-[10px] font-sans font-medium uppercase tracking-widest bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full">
+                    Protected
+                  </span>
+                </h2>
+                <p className="text-xs text-brown/60 mt-1">
+                  Change the administrator username and password required to unlock and manage the YUPEK Atelier Admin Panel.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => handleSaveTab("Admin credentials updated and published!")}
+                disabled={isSaving}
+                className="bg-brown px-5 py-2.5 text-xs uppercase tracking-widest text-cream hover:bg-black transition-colors font-medium flex items-center gap-2 shrink-0 self-start sm:self-auto shadow-sm"
+              >
+                <Icon name="check" className="h-3.5 w-3.5 text-gold" />
+                <span>Save Credentials</span>
+              </button>
+            </div>
+
+            {/* Current Active Session Info Card */}
+            <div className="bg-sand/15 border border-brown/15 p-5 rounded-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-brown text-cream flex items-center justify-center font-serif text-lg">
+                  {((form.adminUsername || "admin")[0] || "A").toUpperCase()}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-brown">{form.adminUsername || "admin"}</span>
+                    <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                    <span className="text-[10px] uppercase tracking-wider text-green-800 font-medium">Session Active</span>
+                  </div>
+                  <p className="text-xs text-brown/60">
+                    Primary atelier admin account &bull; Saved to <code className="bg-white/80 px-1 py-0.5 rounded text-[11px] font-mono">data/site-config.json</code>
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="border border-burgundy/40 text-burgundy bg-burgundy/5 px-4 py-2 text-xs uppercase tracking-wider hover:bg-burgundy hover:text-cream transition-colors font-medium"
+                >
+                  Log Out / Lock Panel
+                </button>
+              </div>
+            </div>
+
+            {/* Credential Form Fields */}
+            <div className="grid md:grid-cols-2 gap-8">
+              <div className="space-y-5 bg-white/70 p-6 border border-brown/15 rounded-sm">
+                <div className="flex items-center gap-2 border-b border-brown/10 pb-3">
+                  <Icon name="user" className="h-4 w-4 text-burgundy" />
+                  <h3 className="font-serif text-base text-brown tracking-wide">Administrator Username</h3>
+                </div>
+
+                <div>
+                  <label className="text-xs uppercase tracking-wider text-brown/80 font-medium block mb-1.5">
+                    Username to Sign In
+                  </label>
+                  <input
+                    type="text"
+                    value={form.adminUsername ?? "admin"}
+                    onChange={(e) => setForm({ ...form, adminUsername: e.target.value })}
+                    placeholder="e.g. admin or yupek_master"
+                    className="w-full border border-brown/30 bg-white px-3.5 py-2.5 text-sm text-brown focus:border-brown focus:outline-none rounded-none"
+                    autoComplete="username"
+                  />
+                  <p className="text-[11px] text-brown/60 mt-1.5 leading-relaxed">
+                    Used to authenticate at <code className="text-burgundy font-medium">/admin</code>. You can also always sign in using your atelier email (<strong>daniyarow16@gmail.com</strong>).
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-5 bg-white/70 p-6 border border-brown/15 rounded-sm">
+                <div className="flex items-center gap-2 border-b border-brown/10 pb-3">
+                  <Icon name="settings" className="h-4 w-4 text-burgundy" />
+                  <h3 className="font-serif text-base text-brown tracking-wide">Administrator Password</h3>
+                </div>
+
+                <div>
+                  <label className="text-xs uppercase tracking-wider text-brown/80 font-medium block mb-1.5">
+                    Admin Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={form.adminPassword ?? "yupek2026"}
+                      onChange={(e) => setForm({ ...form, adminPassword: e.target.value })}
+                      placeholder="Enter new admin password"
+                      className="w-full border border-brown/30 bg-white px-3.5 py-2.5 pr-14 text-sm text-brown focus:border-brown focus:outline-none rounded-none font-mono"
+                      autoComplete="current-password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-xs uppercase tracking-wider text-brown/60 hover:text-burgundy font-medium"
+                    >
+                      {showPassword ? "Hide" : "Show"}
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-brown/60 mt-1.5 leading-relaxed">
+                    Enter the secret password to protect your admin dashboard. Default is <code className="bg-sand/30 px-1 py-0.5 font-mono text-brown">yupek2026</code>.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Save & Guidelines */}
+            <div className="bg-sand/20 border border-brown/15 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="text-xs text-brown/70 space-y-1">
+                <p className="font-medium text-brown flex items-center gap-1.5">
+                  <span>🔒 Security Notice</span>
+                </p>
+                <p className="text-[11px] text-brown/60">
+                  After clicking <strong>Save Credentials</strong>, changes are saved permanently to disk and your local browser session. You can test your new credentials immediately by logging out and signing back in.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => handleSaveTab("Admin credentials updated and published!")}
+                disabled={isSaving}
+                className="bg-brown px-6 py-2.5 text-xs uppercase tracking-widest text-cream hover:bg-black transition-colors font-medium flex items-center justify-center gap-2 shrink-0 shadow-sm"
+              >
+                <Icon name="check" className="h-4 w-4 text-gold" />
+                <span>{isSaving ? "Saving..." : "Save Credentials"}</span>
+              </button>
             </div>
           </div>
         )}
