@@ -1,0 +1,8 @@
+fastapi==0.115.*
+uvicorn[standard]==0.32.*
+pyjwt[crypto]==2.9.*
+supabase==2.*
+python-dotenv==1.*
+pydantic[email]==2.*
+slowapi==0.1.*
+stripe==11.*
