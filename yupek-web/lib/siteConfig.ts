@@ -122,11 +122,17 @@ export interface SiteConfig {
   // Store Orders
   storeOrders: StoreOrder[];
 
+  // Admin Authentication
+  adminUsername?: string;
+  adminPassword?: string;
+
   // Last updated timestamp
   updatedAt?: string;
 }
 
 export const defaultSiteConfig: SiteConfig = {
+  adminUsername: "admin",
+  adminPassword: "yupek2026",
   announcementEnabled: true,
   announcementText: "COMPLIMENTARY SHIPPING ACROSS EUROPE ON ORDERS OVER €100 — PRIVATE ATELIER VIEWINGS AVAILABLE",
   announcementLink: "/shop",
