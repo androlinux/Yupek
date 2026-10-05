@@ -22,6 +22,11 @@ for r in (products.router, cart.router, wishlist.router, orders.router, admin.ro
     app.include_router(r)
 
 
+@app.get("/")
+def root():
+    return {"name": "YUPEK Atelier API", "status": "online", "docs": "/docs", "health": "/health"}
+
+
 @app.get("/health")
 def health():
     return {"ok": True, "payments": bool(config.STRIPE_SECRET_KEY)}
