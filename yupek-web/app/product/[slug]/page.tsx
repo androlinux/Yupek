@@ -148,6 +148,7 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
       type: "website",
       url: canonicalUrl,
       siteName: "YUPEK",
+      locale: "en_US",
       images: [
         {
           url: ogImageUrl,
@@ -162,6 +163,14 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
       title: `${p.name} | YUPEK`,
       description: `${p.descriptor} — ${p.description}`,
       images: [ogImageUrl],
+    },
+    other: {
+      "product:price:amount": p.price.toFixed(2),
+      "product:price:currency": "EUR",
+      "product:availability":
+        p.inventory !== undefined && p.inventory <= 0 ? "out of stock" : "in stock",
+      "product:condition": "new",
+      "product:brand": "YUPEK",
     },
   };
 }
