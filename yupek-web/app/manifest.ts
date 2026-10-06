@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "YUPEK — Eastern Heritage, European Style",
     short_name: "YUPEK",
     description:
-      "Contemporary fashion blending ancient Eastern silk heritage with refined European tailoring.",
+      "Contemporary clothing inspired by Eastern heritage, designed for modern European living. Discover YUPEK collections, timeless pieces and Eastern-inspired style.",
     start_url: "/",
     display: "standalone",
     background_color: "#F6F1E7",

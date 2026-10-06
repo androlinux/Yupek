@@ -56,14 +56,10 @@ export const metadata: Metadata = {
   category: "fashion",
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/favicon-32x32.png", type: "image/png", sizes: "32x32" },
-      { url: "/favicon-16x16.png", type: "image/png", sizes: "16x16" },
+      { url: "/icon.png", type: "image/png", sizes: "512x512" },
       { url: "/images/icon-192.png", type: "image/png", sizes: "192x192" },
-      { url: "/images/icon-512.png", type: "image/png", sizes: "512x512" },
     ],
-    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
-    shortcut: "/favicon.ico",
+    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
   },
   openGraph: {
     title,
@@ -71,7 +67,7 @@ export const metadata: Metadata = {
     siteName: "YUPEK",
     type: "website",
     locale: "en_US",
-    url: productionCanonical,
+    url: siteUrl,
     images: [
       {
         url: `${siteUrl}/images/og.jpg`,
@@ -104,7 +100,7 @@ const jsonLd = {
       "@id": `${siteUrl}/#organization`,
       name: "YUPEK",
       url: productionCanonical,
-      logo: `${siteUrl}/images/logo-dark.png`,
+      logo: `${siteUrl}/images/logo.png`,
       image: `${siteUrl}/images/og.jpg`,
       description,
       telephone: "+31644154126",
@@ -145,9 +141,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link
           rel="preload"
           as="image"
-          href="/_next/image?url=%2Fimages%2Flook-2.jpg&w=1920&q=75"
-          imageSrcSet="/_next/image?url=%2Fimages%2Flook-2.jpg&w=640&q=75 640w, /_next/image?url=%2Fimages%2Flook-2.jpg&w=750&q=75 750w, /_next/image?url=%2Fimages%2Flook-2.jpg&w=828&q=75 828w, /_next/image?url=%2Fimages%2Flook-2.jpg&w=1080&q=75 1080w, /_next/image?url=%2Fimages%2Flook-2.jpg&w=1200&q=75 1200w, /_next/image?url=%2Fimages%2Flook-2.jpg&w=1920&q=75 1920w"
-          imageSizes="100vw"
+          type="image/avif"
+          media="(max-width: 767px)"
+          href="/images/hero/hero_mobile.avif"
+          fetchPriority="high"
+        />
+        <link
+          rel="preload"
+          as="image"
+          type="image/avif"
+          media="(min-width: 768px)"
+          href="/images/hero/hero_desktop.avif"
           fetchPriority="high"
         />
         <script

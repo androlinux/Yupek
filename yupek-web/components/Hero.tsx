@@ -1,6 +1,5 @@
 "use client";
 import Link from "next/link";
-import Image from "next/image";
 import { useState } from "react";
 import { useSiteConfig } from "./ConfigContext";
 import { useLanguage } from "./LanguageContext";
@@ -74,15 +73,30 @@ export default function Hero() {
         </div>
       ) : (
         <div className="absolute inset-0 z-0 overflow-hidden">
-          <Image
-            src={config.heroImage || "/images/look-2.jpg"}
-            alt="YUPEK Heritage Collection"
-            fill
-            priority
-            fetchPriority="high"
-            sizes="100vw"
-            className="object-cover object-center transition-transform duration-1000 scale-105"
-          />
+          <picture className="block h-full w-full">
+            <source
+              media="(max-width: 767px)"
+              type="image/avif"
+              srcSet="/images/hero/hero_mobile.avif"
+            />
+            <source
+              media="(max-width: 767px)"
+              type="image/webp"
+              srcSet="/images/hero/hero_mobile.webp"
+            />
+            <source
+              type="image/avif"
+              srcSet="/images/hero/hero_desktop.avif"
+            />
+            <img
+              src="/images/hero/hero_desktop.webp"
+              alt="YUPEK — Silk Inspired Style"
+              fetchPriority="high"
+              loading="eager"
+              decoding="async"
+              className="h-full w-full object-cover object-center pointer-events-none select-none"
+            />
+          </picture>
         </div>
       )}
 
