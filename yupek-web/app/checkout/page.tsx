@@ -110,12 +110,15 @@ export default function Checkout() {
       const p = getProduct(l.slug);
       return {
         slug: l.slug,
-        name: p?.name || l.slug,
+        name: l.title || p?.name || l.slug,
         size: l.size,
         color: l.color,
         qty: l.qty,
-        price: p?.price || 0,
-        image: p?.images[0] || "/products/product-1-1.jpg",
+        price: l.price !== undefined ? l.price : (p?.price || 0),
+        image: l.image || p?.images[0] || "/products/product-1-1.jpg",
+        productId: l.productId || p?.id,
+        printifyProductId: l.printifyProductId || p?.supplierProductId,
+        printifyVariantId: l.printifyVariantId,
       };
     });
 
@@ -451,7 +454,7 @@ export default function Checkout() {
                     </p>
                   </div>
                 </div>
-                <span className="font-medium text-brown">{eur(p.price * l.qty)}</span>
+                <span className="font-medium text-brown">{eur((l.price !== undefined ? l.price : p.price) * l.qty)}</span>
               </li>
             );
           })}

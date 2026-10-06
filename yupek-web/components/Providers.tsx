@@ -5,7 +5,18 @@ import { AuthProvider } from "./AuthContext";
 import AuthModal from "./AuthModal";
 import WhatsAppButton from "./WhatsAppButton";
 
-export type CartLine = { slug: string; size: string; color: string; qty: number };
+export type CartLine = { 
+  slug: string; 
+  size: string; 
+  color: string; 
+  qty: number;
+  productId?: string;
+  printifyProductId?: string;
+  printifyVariantId?: string;
+  title?: string;
+  price?: number;
+  image?: string;
+};
 type Ctx = {
   lines: CartLine[]; count: number; wishlist: string[];
   add: (l: Omit<CartLine, "qty">, openDrawer?: boolean) => void; remove: (l: Omit<CartLine, "qty">) => void; setQty: (l: Omit<CartLine, "qty">, qty: number) => void;
