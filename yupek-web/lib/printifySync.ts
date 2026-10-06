@@ -311,7 +311,6 @@ export async function syncPrintifyProductLocal(
       title: v.title,
       size,
       color,
-      price: priceEur,
       price_cents: v.price || 0,
       is_enabled: isEnabled,
       is_available: isAvailable,

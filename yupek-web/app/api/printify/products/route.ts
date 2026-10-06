@@ -21,7 +21,6 @@ function normalizeRawProduct(raw: any) {
       variant_id: v.id,
       title: v.title || "",
       sku: v.sku || "",
-      price: priceEur,
       price_cents: priceCents,
       is_enabled: isEnabled,
       is_available: isAvailable,
@@ -32,7 +31,7 @@ function normalizeRawProduct(raw: any) {
   const basePrice =
     activePrices.length > 0
       ? Math.min(...activePrices)
-      : normVariants[0]?.price || 0;
+      : Math.round(Number(normVariants[0]?.price_cents || 0)) / 100;
 
   const rawImages = raw.images || [];
   const normImages = rawImages.map((img: any, idx: number) => ({

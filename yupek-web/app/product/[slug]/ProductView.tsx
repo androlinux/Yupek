@@ -13,6 +13,42 @@ import { Divider } from "@/components/ui/Pattern";
 import Icon from "@/components/ui/Icon";
 import { useAccessibility } from "@/components/AccessibilityContext";
 
+function sanitizePrintifyHtml(html: string) {
+  if (typeof window === "undefined") {
+    // Basic regex fallback for SSR to strip dangerous tags.
+    // In a real app, use a proper HTML parser/DOMPurify on server too.
+    return html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+               .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+               .replace(/on[a-z]+=["'][^"']*["']/gi, '')
+               .replace(/javascript:/gi, '');
+  }
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const allowedTags = ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'h3', 'h4'];
+  
+  function clean(node: Node) {
+    const children = Array.from(node.childNodes);
+    for (const child of children) {
+      if (child.nodeType === Node.ELEMENT_NODE) {
+        const el = child as HTMLElement;
+        const tag = el.tagName.toLowerCase();
+        if (!allowedTags.includes(tag)) {
+          // Replace disallowed element with its text content
+          const text = document.createTextNode(el.textContent || '');
+          el.parentNode?.replaceChild(text, el);
+          continue;
+        }
+        // Remove all attributes to prevent XSS (like onclick, style, etc)
+        while(el.attributes.length > 0) {
+          el.removeAttribute(el.attributes[0].name);
+        }
+        clean(el);
+      }
+    }
+  }
+  clean(doc.body);
+  return doc.body.innerHTML;
+}
+
 export default function ProductView({ p: initialProduct }: { p: Product }) {
   const { add } = useStore();
   const { getProduct, config } = useSiteConfig();
@@ -42,15 +78,16 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
   
   // Price is variant price if selected, otherwise fallback to minimum variant price, or product base price
   let displayPrice = p.price;
-  
-  // Helper to safely get a variant price, ignoring corrupted DB values < 5
-  const getValidPrice = (vPrice?: number) => (vPrice && vPrice > 5) ? vPrice : p.price;
+  let isFromPrice = false;
 
-  if (selectedVariant) {
-    displayPrice = getValidPrice(selectedVariant.price);
+  if (selectedVariant && selectedVariant.price_cents) {
+    displayPrice = selectedVariant.price_cents / 100;
   } else if (activeVariants.length > 0) {
-    const validPrices = activeVariants.map(v => getValidPrice(v.price));
-    displayPrice = Math.min(...validPrices);
+    const validPrices = activeVariants.map(v => (v.price_cents || 0) / 100).filter(p => p > 0);
+    if (validPrices.length > 0) {
+      displayPrice = Math.min(...validPrices);
+      isFromPrice = true;
+    }
   }
 
   // Update CartLine payload
@@ -131,13 +168,15 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
           </div>
           <WishlistButton slug={p.slug} className="border border-brown/20" />
         </div>
-        <p className="mt-4 text-xl font-light text-brown">{eur(displayPrice)}</p>
+        <p className="mt-4 text-xl font-light text-brown">
+          {isFromPrice ? `${(t.product as any).from || "From"} ` : ""}{eur(displayPrice)}
+        </p>
         <p className="label mt-3 text-gold">
           {locale === "nl" ? "OOSTERSE WORTELS / EUROPESE VORM" : "EASTERN ROOTS / EUROPEAN STYLE"}
         </p>
         <div 
           className="mt-6 text-sm leading-7 text-brown/80 font-light prose prose-sm max-w-none prose-p:mb-4 prose-ul:my-4 prose-li:my-1" 
-          dangerouslySetInnerHTML={{ __html: p.description }} 
+          dangerouslySetInnerHTML={{ __html: sanitizePrintifyHtml(p.description) }} 
         />
         
         {/* Audio Readout for Low-Vision & Reading Disabled */}

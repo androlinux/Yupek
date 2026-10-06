@@ -12,7 +12,6 @@ export type Product = {
     title?: string;
     size?: string;
     color?: string;
-    price?: number;
     price_cents?: number;
     is_enabled?: boolean;
     is_available?: boolean;

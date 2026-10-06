@@ -21,7 +21,6 @@ export interface NormalizedPrintifyProduct {
     variant_id: number | string;
     title: string;
     sku: string;
-    price: number;
     price_cents: number;
     is_enabled: boolean;
     is_available: boolean;

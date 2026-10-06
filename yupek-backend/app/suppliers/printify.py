@@ -699,7 +699,6 @@ def sync_printify_product(
             "title": v.get("title", ""),
             "size": size,
             "color": color,
-            "price": round(int(v.get("price") or 0) / 100.0, 2),
             "price_cents": int(v.get("price") or 0),
             "is_enabled": bool(v.get("is_enabled", True)),
             "is_available": bool(v.get("is_available", True)),
