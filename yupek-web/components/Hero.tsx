@@ -15,16 +15,23 @@ export default function Hero() {
 
   const isDefaultTagline1 = config.heroTaglineLine1 === "EASTERN ROOTS";
   const isDefaultTagline2 = config.heroTaglineLine2 === "EUROPEAN FORM";
+  const defaultSeoParagraph =
+    "YUPEK is a contemporary fashion brand inspired by Eastern heritage and designed for modern European living. Discover timeless clothing that blends traditional influences with clean, modern style.";
   const isDefaultDesc =
+    !config.heroDescription ||
     config.heroDescription.includes("Contemporary architectural clothing") ||
     config.heroDescription.includes("Contemporary clothing") ||
-    config.heroDescription.includes("Turkmen silk heritage");
+    config.heroDescription.includes("Turkmen silk heritage") ||
+    config.heroDescription.includes("contemporary fashion brand");
   const isDefaultBtn = config.heroButtonText === "SHOP COLLECTION";
   const isDefaultSecBtn = config.heroSecondaryButtonText === "DISCOVER YUPEK";
 
-  const tagline1 = isDefaultTagline1 || locale === "nl" ? t.hero.tagline1 : config.heroTaglineLine1;
-  const tagline2 = isDefaultTagline2 || locale === "nl" ? t.hero.tagline2 : config.heroTaglineLine2;
-  const description = isDefaultDesc || locale === "nl" ? t.hero.description : config.heroDescription;
+  const description =
+    locale === "nl"
+      ? t.hero.description
+      : isDefaultDesc
+      ? defaultSeoParagraph
+      : config.heroDescription;
   const buttonText = isDefaultBtn || locale === "nl" ? t.hero.shopBtn : config.heroButtonText;
   const secondaryButtonText = isDefaultSecBtn || locale === "nl" ? t.hero.discoverBtn : config.heroSecondaryButtonText;
 
@@ -92,34 +99,38 @@ export default function Hero() {
             {t.hero.heritageTag}
           </span>
 
-          <h1 className="fade-up mt-3 font-serif text-6xl font-light tracking-[.3em] md:text-8xl lg:text-9xl text-cream drop-shadow-md">
+          <div className="fade-up mt-3 font-serif text-6xl font-light tracking-[.3em] md:text-8xl lg:text-9xl text-cream drop-shadow-md">
             {config.heroTitle || "YUPEK"}
-          </h1>
+          </div>
 
-          <p className="label fade-up mt-5 text-xs md:text-sm tracking-[.28em] text-sand leading-relaxed [animation-delay:150ms]">
-            {tagline1}
-            <span className="mx-2 text-gold">&bull;</span>
-            {tagline2}
-          </p>
+          <h1 className="label fade-up mt-5 text-xs md:text-sm tracking-[.28em] text-sand leading-relaxed uppercase [animation-delay:150ms]">
+            Eastern Heritage, European Style
+          </h1>
 
           <p className="fade-up mt-4 max-w-lg text-sm md:text-base leading-relaxed text-cream/85 font-light [animation-delay:250ms]">
             {description}
           </p>
 
           {/* Action Buttons */}
-          <nav aria-label="Hero actions" className="fade-up mt-8 flex flex-col gap-3.5 sm:flex-row [animation-delay:350ms]">
-            <Link
-              href={config.heroButtonLink || "/shop"}
-              className="group relative inline-flex items-center justify-center overflow-hidden border border-cream bg-cream px-8 py-3.5 text-xs font-medium tracking-[.2em] text-brown transition-all duration-300 hover:bg-transparent hover:text-cream shadow-lg"
-            >
-              <span className="relative z-10">{buttonText}</span>
-            </Link>{" "}
-            <Link
-              href={config.heroSecondaryButtonLink || "/about"}
-              className="inline-flex items-center justify-center border border-cream/50 bg-brown/40 backdrop-blur-sm px-8 py-3.5 text-xs font-medium tracking-[.2em] text-cream transition-all duration-300 hover:border-cream hover:bg-cream/10"
-            >
-              {secondaryButtonText}
-            </Link>
+          <nav aria-label="Hero actions" className="fade-up mt-8 [animation-delay:350ms]">
+            <ul className="flex flex-col gap-3.5 sm:flex-row">
+              <li>
+                <Link
+                  href={config.heroButtonLink || "/shop"}
+                  className="group relative inline-flex items-center justify-center overflow-hidden border border-cream bg-cream px-8 py-3.5 text-xs font-medium tracking-[.2em] text-brown transition-all duration-300 hover:bg-transparent hover:text-cream shadow-lg"
+                >
+                  <span className="relative z-10">{buttonText}</span>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href={config.heroSecondaryButtonLink || "/about"}
+                  className="inline-flex items-center justify-center border border-cream/50 bg-brown/40 backdrop-blur-sm px-8 py-3.5 text-xs font-medium tracking-[.2em] text-cream transition-all duration-300 hover:border-cream hover:bg-cream/10"
+                >
+                  {secondaryButtonText}
+                </Link>
+              </li>
+            </ul>
           </nav>
         </div>
       </div>

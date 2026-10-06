@@ -84,27 +84,30 @@ export default function Header() {
     >
       <div className="wrap grid h-16 grid-cols-3 items-center md:h-20 transition-all duration-300">
         {/* Left: Desktop Navigation */}
-        <nav aria-label="Primary" className="hidden items-center gap-7 md:flex">
-          {navLinks.map((n) => {
-            const active = path === n.href;
-            return (
-              <Link
-                key={n.href}
-                href={n.href}
-                className="group relative py-1 text-[11px] uppercase tracking-[.22em] transition-opacity duration-300 hover:opacity-100"
-              >
-                <span className={active ? "font-semibold" : "opacity-80 group-hover:opacity-100"}>
-                  {n.label}
-                </span>
-                {/* Animated delicate underline */}
-                <span
-                  className={`absolute bottom-0 left-0 h-[1.5px] bg-current transition-all duration-300 ease-out ${
-                    active ? "w-full" : "w-0 group-hover:w-full"
-                  }`}
-                />
-              </Link>
-            );
-          })}
+        <nav aria-label="Primary" className="hidden md:flex">
+          <ul className="flex items-center gap-7">
+            {navLinks.map((n) => {
+              const active = path === n.href;
+              return (
+                <li key={n.href}>
+                  <Link
+                    href={n.href}
+                    className="group relative py-1 text-[11px] uppercase tracking-[.22em] transition-opacity duration-300 hover:opacity-100"
+                  >
+                    <span className={active ? "font-semibold" : "opacity-80 group-hover:opacity-100"}>
+                      {n.label}
+                    </span>
+                    {/* Animated delicate underline */}
+                    <span
+                      className={`absolute bottom-0 left-0 h-[1.5px] bg-current transition-all duration-300 ease-out ${
+                        active ? "w-full" : "w-0 group-hover:w-full"
+                      }`}
+                    />
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
         </nav>
 
         {/* Mobile Hamburger Button */}
@@ -298,25 +301,28 @@ export default function Header() {
             <LanguageSwitcher />
           </div>
 
-          {[
-            { label: t.nav.shop, href: "/shop" },
-            { label: t.nav.collections, href: "/lookbook" },
-            { label: t.nav.journal, href: "/journal" },
-            { label: t.nav.about, href: "/about" },
-            { label: t.nav.contact, href: "/contact" },
-            { label: `${t.nav.wishlist} (${wishlist.length})`, href: "/wishlist" },
-          ].map((n, idx) => (
-            <Link
-              key={n.label}
-              href={n.href}
-              style={{ transitionDelay: `${idx * 40}ms` }}
-              className={`font-serif text-xl tracking-[.15em] transition-transform duration-300 hover:translate-x-2 ${
-                path === n.href ? "text-burgundy font-medium" : "text-brown"
-              }`}
-            >
-              {n.label}
-            </Link>
-          ))}
+          <ul className="flex flex-col gap-4">
+            {[
+              { label: t.nav.shop, href: "/shop" },
+              { label: t.nav.collections, href: "/lookbook" },
+              { label: t.nav.journal, href: "/journal" },
+              { label: t.nav.about, href: "/about" },
+              { label: t.nav.contact, href: "/contact" },
+              { label: `${t.nav.wishlist} (${wishlist.length})`, href: "/wishlist" },
+            ].map((n, idx) => (
+              <li key={n.label}>
+                <Link
+                  href={n.href}
+                  style={{ transitionDelay: `${idx * 40}ms` }}
+                  className={`font-serif text-xl tracking-[.15em] transition-transform duration-300 hover:translate-x-2 block ${
+                    path === n.href ? "text-burgundy font-medium" : "text-brown"
+                  }`}
+                >
+                  {n.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
 
           {/* Mobile Auth button */}
           <div className="mt-4 border-t border-brown/10 pt-4 flex items-center justify-between">

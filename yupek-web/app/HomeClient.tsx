@@ -30,7 +30,7 @@ export default function HomeClient() {
       {/* 2. Brand Manifesto with Scroll Reveal */}
       <section className="wrap py-24 text-center md:py-36">
         <ScrollReveal>
-          <span className="label tracking-[.3em] text-burgundy text-[10px]">{t.manifesto.tag}</span>
+          <p className="label tracking-[.3em] text-burgundy text-[10px]">{t.manifesto.tag}</p>
           <h2 className="h-display mt-2 text-4xl md:text-7xl text-brown whitespace-pre-line">
             {t.manifesto.title}
           </h2>
