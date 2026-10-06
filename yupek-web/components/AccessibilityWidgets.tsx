@@ -1,11 +1,10 @@
 "use client";
 
-import dynamic from "next/dynamic";
+import React from "react";
 import { useAccessibility } from "./AccessibilityContext";
 import ColorBlindFilters from "./ColorBlindFilters";
-
-const ReadingGuide = dynamic(() => import("./ReadingGuide"), { ssr: false });
-const AccessibilityDrawer = dynamic(() => import("./AccessibilityDrawer"), { ssr: false });
+import ReadingGuide from "./ReadingGuide";
+import AccessibilityDrawer from "./AccessibilityDrawer";
 
 export default function AccessibilityWidgets() {
   const { readingGuide } = useAccessibility();
