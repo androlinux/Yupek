@@ -33,10 +33,14 @@ def _safe_read_file(self, file_name):
 starlette.config.Config._read_file = _safe_read_file
 
 
+import urllib.parse
+
+
 class VercelPathMiddleware:
-    """Restores the original request path from Vercel's x-matched-path header.
-    When Vercel rewrites requests to /api/index.py, scope['path'] is rewritten
-    to '/api/index.py' while the true requested path is passed in 'x-matched-path'.
+    """Restores the original request path when running on Vercel.
+    Handles both:
+    1. Query string rewrite: /api/index.py?__path=$1
+    2. Vercel edge header: x-matched-path
     """
 
     def __init__(self, app: ASGIApp):
@@ -44,12 +48,34 @@ class VercelPathMiddleware:
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope.get("type") in ("http", "websocket"):
-            headers = dict(scope.get("headers", []))
-            matched_path = headers.get(b"x-matched-path")
-            if matched_path:
-                decoded = matched_path.decode("utf-8").split("?")[0]
-                scope["path"] = decoded
-                scope["raw_path"] = decoded.encode("utf-8")
+            # 1. Check if rewritten with __path parameter
+            qs_bytes = scope.get("query_string", b"")
+            restored = False
+            if qs_bytes:
+                try:
+                    params = urllib.parse.parse_qs(qs_bytes.decode("utf-8"), keep_blank_values=True)
+                    raw_path = params.pop("__path", [None])[0]
+                    if raw_path is not None:
+                        clean_path = "/" + raw_path.lstrip("/")
+                        scope["path"] = clean_path
+                        scope["raw_path"] = clean_path.encode("utf-8")
+                        new_qs = urllib.parse.urlencode([(k, v) for k, vs in params.items() for v in vs])
+                        scope["query_string"] = new_qs.encode("utf-8")
+                        restored = True
+                except Exception:
+                    pass
+
+            # 2. Check x-matched-path header fallback
+            if not restored:
+                headers = dict(scope.get("headers", []))
+                matched_path = headers.get(b"x-matched-path")
+                if matched_path:
+                    decoded = matched_path.decode("utf-8").split("?")[0]
+                    if decoded and decoded not in ("/api/index.py", "/api/index"):
+                        clean_path = "/" + decoded.lstrip("/")
+                        scope["path"] = clean_path
+                        scope["raw_path"] = clean_path.encode("utf-8")
+
         await self.app(scope, receive, send)
 
 
