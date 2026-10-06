@@ -142,14 +142,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="preload"
           as="image"
           type="image/avif"
-          media="(max-width: 767px)"
-          href="/images/hero/hero_mobile.avif"
-          fetchPriority="high"
-        />
-        <link
-          rel="preload"
-          as="image"
-          type="image/avif"
           media="(min-width: 768px)"
           href="/images/hero/hero_desktop.avif"
           fetchPriority="high"
