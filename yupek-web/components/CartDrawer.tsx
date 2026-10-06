@@ -27,7 +27,7 @@ export function CartLines() {
         return (
           <li key={`${l.slug}-${l.size}-${l.color}`} className="flex gap-4 py-5">
             <div className="relative h-28 w-20 aspect-[5/7] shrink-0 bg-sand/30 overflow-hidden">
-              <ProductImage src={p.images[0]} alt={p.name} width={80} height={112} sizes="80px" />
+              <ProductImage src={l.image || p.images[0]} alt={p.name} width={80} height={112} sizes="80px" />
             </div>
             <div className="flex flex-1 flex-col justify-between text-xs">
               <div>

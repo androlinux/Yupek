@@ -253,6 +253,7 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
       printifyVariantId: selectedVariant?.variant_id != null ? String(selectedVariant.variant_id) : "",
       title: p.name,
       price: displayPrice,
+      price_cents: selectedVariant?.price_cents ?? Math.round(displayPrice * 100),
       image: galleryImages[0] || p.images[0] || "/images/look-1.jpg",
     });
     return true;
@@ -275,6 +276,7 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
         printifyVariantId: selectedVariant?.variant_id != null ? String(selectedVariant.variant_id) : "",
         title: p.name,
         price: displayPrice,
+        price_cents: selectedVariant?.price_cents ?? Math.round(displayPrice * 100),
         image: galleryImages[0] || p.images[0] || "/images/look-1.jpg",
       },
       false
