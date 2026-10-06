@@ -1,5 +1,5 @@
 import { MetadataRoute } from "next";
-import { products } from "@/data/products";
+import { getCatalogProducts } from "@/lib/catalog";
 
 /**
  * Production sitemap for https://www.yupek.shop
@@ -76,18 +76,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ];
 
   // ─── Dynamic product routes ───────────────────────────────────────────────
-  // Products are sourced from @/data/products.ts (the canonical product catalog).
-  // Each product slug maps to a statically pre-rendered page at /product/[slug].
-  // All 8 current products are included:
-  //   yupek-heritage-tee, yupek-eastern-oversized-tee, yupek-heritage-sweatshirt,
-  //   yupek-signature-shirt, yupek-heritage-trousers, yupek-eastern-denim,
-  //   yupek-silk-inspired-shirt, yupek-heritage-tote
-  const productRoutes: MetadataRoute.Sitemap = products.map((p) => ({
+  // Products are sourced dynamically from the real catalog via getCatalogProducts().
+  const catalogProducts = getCatalogProducts();
+  const productRoutes: MetadataRoute.Sitemap = catalogProducts.map((p) => ({
     url: `${PRODUCTION_URL}/product/${p.slug}`,
     lastModified: SITE_LAUNCH_DATE,
     changeFrequency: "weekly" as const,
     priority: 0.9,
   }));
+
 
   return [...staticRoutes, ...productRoutes];
 }
