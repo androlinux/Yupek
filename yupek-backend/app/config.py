@@ -6,7 +6,8 @@ load_dotenv()
 SUPABASE_URL = os.getenv("SUPABASE_URL", "").rstrip("/")
 SERVICE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
 JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET", "")
-CORS_ORIGINS = [o.strip() for o in os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",") if o.strip()]
+DEFAULT_CORS = "http://localhost:3000,http://127.0.0.1:3000,https://www.yupek.shop,https://yupek.shop"
+CORS_ORIGINS = [o.strip() for o in os.getenv("CORS_ORIGINS", DEFAULT_CORS).split(",") if o.strip()]
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "")
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
 CRON_SECRET = os.getenv("CRON_SECRET", "")

@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { readSyncMetadata } from "@/lib/printifySync";
+import { getBackendApiUrl } from "@/lib/apiConfig";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const backendUrl = process.env.BACKEND_URL;
+  const backendUrl = getBackendApiUrl();
   if (backendUrl) {
     try {
       const res = await fetch(`${backendUrl}/api/printify/status`, { cache: "no-store" });

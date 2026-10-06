@@ -1,8 +1,27 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import { getBackendApiUrl } from "@/lib/apiConfig";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const backendUrl = getBackendApiUrl();
+
+  // 1. Try FastAPI backend if configured
+  if (backendUrl) {
+    try {
+      const res = await fetch(`${backendUrl}/api/printify/webhooks`, {
+        cache: "no-store",
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return NextResponse.json(data);
+      }
+    } catch (err: any) {
+      console.warn(`[Printify Webhooks] Backend GET failed at ${backendUrl}:`, err.message);
+    }
+  }
+
+  // 2. Server-side direct Printify query fallback
   const token = process.env.PRINTIFY_API_TOKEN;
   if (!token) {
     return NextResponse.json({ error: "PRINTIFY_API_TOKEN not configured" }, { status: 500 });
@@ -38,6 +57,28 @@ export async function GET() {
 }
 
 export async function POST() {
+  const backendUrl = getBackendApiUrl();
+
+  // 1. Try FastAPI backend if configured
+  if (backendUrl) {
+    try {
+      const res = await fetch(
+        `${backendUrl}/api/printify/webhooks/ensure?shop_id=29215191&url=https://www.yupek.shop/api/printify/webhook`,
+        {
+          method: "POST",
+          cache: "no-store",
+        }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        return NextResponse.json(data);
+      }
+    } catch (err: any) {
+      console.warn(`[Printify Webhooks] Backend POST failed at ${backendUrl}:`, err.message);
+    }
+  }
+
+  // 2. Server-side direct Printify registration fallback
   const token = process.env.PRINTIFY_API_TOKEN;
   const secret = process.env.PRINTIFY_WEBHOOK_SECRET;
 
@@ -57,7 +98,6 @@ export async function POST() {
   const targetUrl = "https://www.yupek.shop/api/printify/webhook";
 
   try {
-    // 1. Get existing webhooks
     const listRes = await fetch("https://api.printify.com/v1/shops/29215191/webhooks.json", {
       headers: {
         Authorization: `Bearer ${token}`,
