@@ -21,29 +21,72 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
   const p = getProduct(initialProduct.slug) || initialProduct;
 
   const [size, setSize] = useState("");
-  const [color, setColor] = useState(p.colors[0]);
+  const [color, setColor] = useState(p.colors[0] || "");
   const [err, setErr] = useState(false);
   const [guide, setGuide] = useState(false);
 
+  const activeVariants = p.variants?.filter(v => v.is_enabled && v.is_available) || [];
+
+  const availableSizes = activeVariants.length > 0
+    ? Array.from(new Set(activeVariants.map(v => v.size).filter(Boolean))) as string[]
+    : p.sizes;
+
+  const availableColors = activeVariants.length > 0
+    ? Array.from(new Set(activeVariants.map(v => v.color).filter(Boolean))) as string[]
+    : p.colors;
+
   const imgs = p.images.length ? p.images : [undefined, undefined, undefined, undefined];
 
+  // Selected variant based on size and color
+  const selectedVariant = activeVariants.find(v => v.size === size && v.color === color);
+  
+  // Price is variant price if selected, otherwise fallback to minimum variant price, or product base price
+  let displayPrice = p.price;
+  if (selectedVariant && selectedVariant.price) {
+    displayPrice = selectedVariant.price;
+  } else if (activeVariants.length > 0) {
+    const minPrice = Math.min(...activeVariants.map(v => v.price || p.price));
+    displayPrice = minPrice;
+  }
+
+  // Update CartLine payload
   const pick = (): boolean => {
-    if (!size) {
+    if (!size && availableSizes.length > 0) {
       setErr(true);
       return false;
     }
     setErr(false);
-    add({ slug: p.slug, size, color });
+    add({ 
+      slug: p.slug, 
+      size, 
+      color, 
+      productId: p.id,
+      printifyProductId: p.supplierProductId,
+      printifyVariantId: selectedVariant?.variant_id || "",
+      title: p.name,
+      price: displayPrice,
+      image: p.images[0]
+    });
     return true;
   };
 
   const pickQuiet = (): boolean => {
-    if (!size) {
+    if (!size && availableSizes.length > 0) {
       setErr(true);
       return false;
     }
     setErr(false);
-    add({ slug: p.slug, size, color }, false);
+    add({ 
+      slug: p.slug, 
+      size, 
+      color,
+      productId: p.id,
+      printifyProductId: p.supplierProductId,
+      printifyVariantId: selectedVariant?.variant_id || "",
+      title: p.name,
+      price: displayPrice,
+      image: p.images[0]
+    }, false);
     return true;
   };
 
@@ -84,7 +127,7 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
           </div>
           <WishlistButton slug={p.slug} className="border border-brown/20" />
         </div>
-        <p className="mt-4 text-xl font-light text-brown">{eur(p.price)}</p>
+        <p className="mt-4 text-xl font-light text-brown">{eur(displayPrice)}</p>
         <p className="label mt-3 text-gold">
           {locale === "nl" ? "OOSTERSE WORTELS / EUROPESE VORM" : "EASTERN ROOTS / EUROPEAN STYLE"}
         </p>
@@ -97,7 +140,7 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
               if (isSpeaking) {
                 stopSpeech();
               } else {
-                speakText(`${p.name}. Price ${eur(p.price)}. ${p.description}. Material: ${p.material}. Available in sizes ${p.sizes.join(", ")}.`);
+                speakText(`${p.name}. Price ${eur(displayPrice)}. ${p.description}. Material: ${p.material}. Available in sizes ${availableSizes.join(", ")}.`);
               }
             }}
             aria-label={isSpeaking
@@ -121,19 +164,23 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
         <p className="label mb-3">
           {t.product.colorLabel} — <span className="text-brown/60">{color.toUpperCase()}</span>
         </p>
-        <div className="flex gap-2">
-          {p.colors.map((c) => (
+        <div className="flex flex-wrap gap-2">
+          {availableColors.map((c) => {
+            const isAvailable = activeVariants.length === 0 || activeVariants.some(v => v.color === c && (!size || v.size === size));
+            return (
             <button
               key={c}
               aria-pressed={color === c}
+              disabled={!isAvailable}
               onClick={() => setColor(c)}
               className={`border px-4 py-2 text-[10px] uppercase tracking-[.18em] transition-colors ${
-                color === c ? "border-brown bg-brown text-cream" : "border-brown/25 hover:border-brown"
+                color === c ? "border-brown bg-brown text-cream" : isAvailable ? "border-brown/25 hover:border-brown" : "border-brown/10 text-brown/30 cursor-not-allowed line-through"
               }`}
             >
               {c}
             </button>
-          ))}
+            );
+          })}
         </div>
 
         {/* Size Selector */}
@@ -148,21 +195,25 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
           </button>
         </div>
         <div className="flex flex-wrap gap-2" role="group" aria-label="Size">
-          {p.sizes.map((s) => (
+          {availableSizes.map((s) => {
+            const isAvailable = activeVariants.length === 0 || activeVariants.some(v => v.size === s && (!color || v.color === color));
+            return (
             <button
               key={s}
               aria-pressed={size === s}
+              disabled={!isAvailable}
               onClick={() => {
                 setSize(s);
                 setErr(false);
               }}
               className={`min-w-12 border px-3 py-3 text-[11px] tracking-widest transition-colors ${
-                size === s ? "border-brown bg-brown text-cream" : "border-brown/25 hover:border-brown"
+                size === s ? "border-brown bg-brown text-cream" : isAvailable ? "border-brown/25 hover:border-brown" : "border-brown/10 text-brown/30 cursor-not-allowed line-through"
               }`}
             >
               {s}
             </button>
-          ))}
+            );
+          })}
         </div>
         {err && <p role="alert" className="mt-3 text-xs text-burgundy">{t.product.selectSizeError}</p>}
 

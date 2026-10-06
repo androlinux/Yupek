@@ -11,7 +11,7 @@ import { useLanguage } from "./LanguageContext";
 
 export function useCartTotal(lines: CartLine[]) {
   const { getProduct } = useSiteConfig();
-  return lines.reduce((s, l) => s + (getProduct(l.slug)?.price ?? 0) * l.qty, 0);
+  return lines.reduce((s, l) => s + (l.price !== undefined ? l.price : (getProduct(l.slug)?.price ?? 0)) * l.qty, 0);
 }
 
 export function CartLines() {
@@ -65,7 +65,7 @@ export function CartLines() {
                 </button>
               </div>
             </div>
-            <p className="text-sm font-medium text-brown">{eur(p.price * l.qty)}</p>
+            <p className="text-sm font-medium text-brown">{eur((l.price !== undefined ? l.price : p.price) * l.qty)}</p>
           </li>
         );
       })}

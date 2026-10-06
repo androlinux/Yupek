@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { products, type Product } from "@/data/products";
-import { getProduct, related } from "@/lib/catalog";
+import { type Product } from "@/data/products";
+import { related } from "@/lib/catalog";
+import { getProductServer, getCatalogProductsServer } from "@/lib/catalogServer";
 import ProductGrid from "@/components/ProductGrid";
 import SectionHeading from "@/components/SectionHeading";
 import ProductView from "./ProductView";
@@ -121,10 +122,13 @@ function buildProductJsonLd(p: Product, baseUrl: string) {
   };
 }
 
-export const generateStaticParams = () => products.map((p) => ({ slug: p.slug }));
+export const generateStaticParams = async () => {
+  const products = await getCatalogProductsServer();
+  return products.map((p) => ({ slug: p.slug }));
+};
 
-export function generateMetadata({ params }: { params: { slug: string } }): Metadata {
-  const p = getProduct(params.slug);
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const p = await getProductServer(params.slug);
   if (!p) return {};
 
   const title = p.name;
@@ -175,8 +179,8 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
   };
 }
 
-export default function ProductPage({ params }: { params: { slug: string } }) {
-  const p = getProduct(params.slug);
+export default async function ProductPage({ params }: { params: { slug: string } }) {
+  const p = await getProductServer(params.slug);
   if (!p) notFound();
 
   const ld = buildProductJsonLd(p, PRODUCTION_URL);
