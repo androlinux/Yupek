@@ -208,13 +208,21 @@ export type Filters = {
 
 export function filterProducts(f: Filters, list: Product[] = products): Product[] {
   let r = list.filter(
-    (p) =>
-      (!f.category || p.category === f.category) &&
+    (p) => {
+      const pSizes = (p.variants && p.variants.length > 0) 
+        ? p.variants.filter((v) => v.is_enabled !== false && v.is_available !== false).map((v) => v.size as string)
+        : (p.sizes || []);
+      const pColors = (p.variants && p.variants.length > 0)
+        ? p.variants.filter((v) => v.is_enabled !== false && v.is_available !== false).map((v) => v.color as string)
+        : (p.colors || []);
+        
+      return (!f.category || p.category === f.category) &&
       (!f.gender || p.gender === f.gender || p.gender === "unisex") &&
-      (!f.size || p.sizes.includes(f.size)) &&
-      (!f.color || p.colors.includes(f.color)) &&
+      (!f.size || pSizes.includes(f.size)) &&
+      (!f.color || pColors.includes(f.color)) &&
       (!f.max || p.price <= f.max) &&
       (!f.isNew || p.newArrival)
+    }
   );
   if (f.sort === "price-asc") r = [...r].sort((a, b) => a.price - b.price);
   else if (f.sort === "price-desc") r = [...r].sort((a, b) => b.price - a.price);

@@ -558,6 +558,15 @@ def _get_site_config_path() -> str:
 
 
 def _read_site_config() -> dict[str, Any]:
+    try:
+        from app.db import get_db
+        db = get_db()
+        res = db.table("site_config").select("value").eq("key", "global").execute()
+        if res.data and len(res.data) > 0 and isinstance(res.data[0].get("value"), dict):
+            return res.data[0]["value"]
+    except Exception as exc:
+        logger.error(f"Error reading site_config from Supabase: {exc}")
+
     path = _get_site_config_path()
     try:
         if os.path.exists(path):
@@ -569,6 +578,18 @@ def _read_site_config() -> dict[str, Any]:
 
 
 def _write_site_config(cfg: dict[str, Any]) -> None:
+    now_iso = datetime.now(timezone.utc).isoformat()
+    try:
+        from app.db import get_db
+        db = get_db()
+        db.table("site_config").upsert({
+            "key": "global",
+            "value": cfg,
+            "updated_at": now_iso
+        }).execute()
+    except Exception as exc:
+        logger.error(f"Error writing site_config to Supabase: {exc}")
+
     path = _get_site_config_path()
     try:
         os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -657,15 +678,34 @@ def sync_printify_product(
     # Extract distinct sizes and colors from variants
     sizes_set = []
     colors_set = []
+    norm_variants_list = []
     for v in raw_normalized.get("variants", []):
         for opt in v.get("options", []):
             pass
         title_parts = [p.strip() for p in v.get("title", "").split("/") if p.strip()]
+        size = ""
+        color = ""
         if len(title_parts) == 1:
-            sizes_set.append(title_parts[0])
+            size = title_parts[0]
+            sizes_set.append(size)
         elif len(title_parts) >= 2:
-            colors_set.append(title_parts[0])
-            sizes_set.append(title_parts[1])
+            color = title_parts[0]
+            size = title_parts[1]
+            colors_set.append(color)
+            sizes_set.append(size)
+
+        norm_variants_list.append({
+            "variant_id": v.get("id"),
+            "title": v.get("title", ""),
+            "size": size,
+            "color": color,
+            "price": round(int(v.get("price") or 0) / 100.0, 2),
+            "price_cents": int(v.get("price") or 0),
+            "is_enabled": bool(v.get("is_enabled", True)),
+            "is_available": bool(v.get("is_available", True)),
+            "sku": v.get("sku", ""),
+            "options": v.get("options", []),
+        })
 
     distinct_sizes = list(dict.fromkeys(sizes_set)) or ["S", "M", "L", "XL"]
     distinct_colors = list(dict.fromkeys(colors_set)) or ["Black"]
@@ -694,6 +734,7 @@ def sync_printify_product(
         "description": raw_normalized.get("description") or "Contemporary garment crafted through Printify custom production.",
         "material": "100% premium quality fabric tailored for modern living.",
         "images": image_urls,
+        "variants": norm_variants_list,
         "featured": False,
         "newArrival": True,
         "badge": "NEW" if event_type == "product:created" else None,

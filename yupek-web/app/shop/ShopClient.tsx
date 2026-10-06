@@ -20,8 +20,28 @@ export default function ShopClient({ initial }: { initial: Filters }) {
   const set = (k: keyof Filters, v: string | number | boolean | undefined) =>
     setF((p) => ({ ...p, [k]: p[k] === v ? undefined : v }));
 
-  const sizes = uniq(allProducts.flatMap((p) => p.sizes));
-  const colors = uniq(allProducts.flatMap((p) => p.colors));
+  const sizes = uniq(
+    allProducts.flatMap((p) => {
+      if (p.variants && p.variants.length > 0) {
+        return p.variants
+          .filter((v) => v.is_enabled !== false && v.is_available !== false && v.size)
+          .map((v) => v.size as string);
+      }
+      return p.sizes || [];
+    })
+  );
+  
+  const colors = uniq(
+    allProducts.flatMap((p) => {
+      if (p.variants && p.variants.length > 0) {
+        return p.variants
+          .filter((v) => v.is_enabled !== false && v.is_available !== false && v.color)
+          .map((v) => v.color as string);
+      }
+      return p.colors || [];
+    })
+  );
+
   const cats = uniq(allProducts.map((p) => p.category));
 
   const chip = (on: boolean) =>
