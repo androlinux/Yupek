@@ -3,6 +3,7 @@ import { promises as fs } from "fs";
 import path from "path";
 import { defaultSiteConfig, SiteConfig } from "@/lib/siteConfig";
 import { getSupabaseServerClient } from "@/lib/supabaseServer";
+import { isExcludedSize } from "@/lib/catalog";
 
 const CONFIG_FILE_PATH = path.join(process.cwd(), "data", "site-config.json");
 const STATUS_FILE_PATH = path.join(process.cwd(), "data", "printify-sync-status.json");
@@ -335,6 +336,11 @@ export async function syncPrintifyProductLocal(
       }
     }
 
+    // Completely exclude oversized garments (3XL, 4XL, 5XL)
+    if (isExcludedSize(size) || isExcludedSize(v.title)) {
+      continue;
+    }
+
     normVariants.push({
       variant_id: v.id,
       title: v.title,
@@ -361,6 +367,7 @@ export async function syncPrintifyProductLocal(
   if (distinctSizes.length === 0) {
     distinctSizes = Array.from(new Set(enabledVariants.map((v) => v.size).filter(Boolean)));
   }
+  distinctSizes = distinctSizes.filter((s) => !isExcludedSize(s));
   if (distinctSizes.length === 0) {
     distinctSizes = ["S", "M", "L", "XL"];
   }
@@ -409,7 +416,14 @@ export async function syncPrintifyProductLocal(
     material: "100% premium quality fabric tailored for modern living.",
     images: imageUrls,
     detailedImages,
-    options: raw.options || [],
+    options: (raw.options || []).map((opt: any) => {
+      const isSizeOpt = opt.type?.toLowerCase() === "size" || opt.name?.toLowerCase() === "size";
+      if (!isSizeOpt || !opt.values) return opt;
+      return {
+        ...opt,
+        values: opt.values.filter((val: any) => !isExcludedSize(val.title)),
+      };
+    }),
     variants: normVariants,
     featured: false,
     newArrival: true,

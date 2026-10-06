@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import type { Product } from "@/data/products";
-import { eur } from "@/lib/catalog";
+import { eur, isExcludedSize } from "@/lib/catalog";
 import { useStore } from "@/components/Providers";
 import { useSiteConfig } from "@/components/ConfigContext";
 import { useLanguage } from "@/components/LanguageContext";
@@ -74,9 +74,11 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
   // Real-time catalog product merge
   const p = getProduct(initialProduct.slug) || initialProduct;
 
-  // 1. Filter enabled & available variants
+  // 1. Filter enabled & available variants (strictly excluding 3XL, 4XL, 5XL)
   const activeVariants = useMemo(() => {
-    return (p.variants || []).filter((v) => v.is_enabled !== false && v.is_available !== false);
+    return (p.variants || [])
+      .filter((v) => v.is_enabled !== false && v.is_available !== false)
+      .filter((v) => !isExcludedSize(v.size) && !isExcludedSize(v.title));
   }, [p.variants]);
 
   // 2. Compute ordered available colors
@@ -90,16 +92,19 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
     return Array.from(colorsPresent) as string[];
   }, [activeVariants, p.colors]);
 
-  // Helper: Get valid sizes for a specific color
+  // Helper: Get valid sizes for a specific color (strictly excluding 3XL, 4XL, 5XL)
   const getValidSizesForColor = useCallback(
     (colorName: string): string[] => {
-      if (activeVariants.length === 0) return p.sizes;
+      if (activeVariants.length === 0) return (p.sizes || []).filter((s) => !isExcludedSize(s));
       const sizesForColor = new Set(
-        activeVariants.filter((v) => v.color === colorName).map((v) => v.size).filter(Boolean)
+        activeVariants
+          .filter((v) => v.color === colorName)
+          .map((v) => v.size)
+          .filter((s): s is string => Boolean(s) && !isExcludedSize(s))
       );
-      const ordered = (p.sizes || []).filter((s) => sizesForColor.has(s));
+      const ordered = (p.sizes || []).filter((s) => !isExcludedSize(s) && sizesForColor.has(s));
       if (ordered.length > 0) return ordered;
-      return Array.from(sizesForColor) as string[];
+      return Array.from(sizesForColor);
     },
     [activeVariants, p.sizes]
   );
@@ -522,9 +527,6 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
                     ["L", "110", "72"],
                     ["XL", "116", "74"],
                     ["2XL", "122", "76"],
-                    ["3XL", "128", "78"],
-                    ["4XL", "134", "80"],
-                    ["5XL", "140", "82"],
                   ].map((r) => (
                     <tr key={r[0]}>
                       {r.map((c, i) => (

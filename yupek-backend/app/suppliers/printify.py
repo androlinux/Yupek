@@ -116,6 +116,12 @@ def normalize_printify_product(raw: dict[str, Any]) -> dict[str, Any]:
     for v in raw_variants:
         var_id = v.get("id")
         var_title = v.get("title", "")
+
+        # Exclude oversized garments (3XL, 4XL, 5XL)
+        upper_title = var_title.upper()
+        if any(bad in upper_title for bad in ["3XL", "4XL", "5XL", "XXXL", "XXXXL", "XXXXXL"]):
+            continue
+
         sku = v.get("sku", "")
         price_cents = int(v.get("price") or 0)
         price_eur = round(price_cents / 100.0, 2)

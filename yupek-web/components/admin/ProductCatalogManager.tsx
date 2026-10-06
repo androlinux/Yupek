@@ -8,7 +8,7 @@ import { eur } from "@/lib/catalog";
 import ImageUploader from "@/components/admin/ImageUploader";
 import Icon from "@/components/ui/Icon";
 
-const STANDARD_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "3XL", "ONE SIZE"];
+const STANDARD_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "ONE SIZE"];
 const POPULAR_COLORS = [
   { name: "Black", hex: "#111111" },
   { name: "Sand", hex: "#D6C7B2" },

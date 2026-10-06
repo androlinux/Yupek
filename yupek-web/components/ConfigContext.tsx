@@ -2,6 +2,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, useMemo, ReactNode } from "react";
 import { SiteConfig, defaultSiteConfig, getLocalSiteConfig, saveLocalSiteConfig, ProductOverride, ContactSubmission, StoreOrder } from "@/lib/siteConfig";
 import { products as baseProducts, Product } from "@/data/products";
+import { sanitizeProductSizes } from "@/lib/catalog";
 
 interface ConfigContextType {
   config: SiteConfig;
@@ -270,7 +271,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
         images: override.images && override.images.length > 0 ? override.images : p.images,
         isDeleted: Boolean(override.deleted),
       };
-    });
+    }).map((p) => sanitizeProductSizes(p) as Product & { isDeleted?: boolean });
   }, [config.productOverrides, config.customProducts]);
 
   // Active storefront products (excluding deleted ones)

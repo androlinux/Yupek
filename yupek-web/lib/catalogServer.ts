@@ -1,5 +1,6 @@
 import { products, type Product } from "@/data/products";
 import { getOrMigrateSiteConfig } from "@/lib/siteConfigServer";
+import { sanitizeProductSizes } from "@/lib/catalog";
 
 export async function getCatalogProductsServer(): Promise<Product[]> {
   try {
@@ -31,7 +32,8 @@ export async function getCatalogProductsServer(): Promise<Product[]> {
           options: p.options,
           variants: p.variants,
         };
-      });
+      })
+      .map(sanitizeProductSizes);
   } catch {
     return products;
   }

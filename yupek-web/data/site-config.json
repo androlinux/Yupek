@@ -110,10 +110,7 @@
         "M",
         "L",
         "XL",
-        "2XL",
-        "3XL",
-        "4XL",
-        "5XL"
+        "2XL"
       ],
       "colors": [
         "White",
@@ -322,18 +319,6 @@
             {
               "id": 18,
               "title": "2XL"
-            },
-            {
-              "id": 19,
-              "title": "3XL"
-            },
-            {
-              "id": 20,
-              "title": "4XL"
-            },
-            {
-              "id": 21,
-              "title": "5XL"
             }
           ],
           "display_in_preview": false
@@ -417,20 +402,6 @@
         },
         {
           "sku": "",
-          "size": "3XL",
-          "color": "Dark Chocolate",
-          "title": "Dark Chocolate / 3XL",
-          "options": [
-            362,
-            19
-          ],
-          "is_enabled": false,
-          "variant_id": 11901,
-          "price_cents": 3130,
-          "is_available": true
-        },
-        {
-          "sku": "",
           "size": "L",
           "color": "Dark Heather",
           "title": "Dark Heather / L",
@@ -497,20 +468,6 @@
           "is_enabled": false,
           "variant_id": 11906,
           "price_cents": 2838,
-          "is_available": true
-        },
-        {
-          "sku": "",
-          "size": "3XL",
-          "color": "Dark Heather",
-          "title": "Dark Heather / 3XL",
-          "options": [
-            367,
-            19
-          ],
-          "is_enabled": false,
-          "variant_id": 11907,
-          "price_cents": 3126,
           "is_available": true
         },
         {
@@ -724,20 +681,6 @@
           "is_available": true
         },
         {
-          "sku": "98925831982730922702",
-          "size": "3XL",
-          "color": "Light Pink",
-          "title": "Light Pink / 3XL",
-          "options": [
-            433,
-            19
-          ],
-          "is_enabled": true,
-          "variant_id": 11967,
-          "price_cents": 2699,
-          "is_available": true
-        },
-        {
           "sku": "",
           "size": "L",
           "color": "Maroon",
@@ -805,20 +748,6 @@
           "is_enabled": false,
           "variant_id": 11978,
           "price_cents": 2838,
-          "is_available": true
-        },
-        {
-          "sku": "",
-          "size": "3XL",
-          "color": "Maroon",
-          "title": "Maroon / 3XL",
-          "options": [
-            395,
-            19
-          ],
-          "is_enabled": false,
-          "variant_id": 11979,
-          "price_cents": 3178,
           "is_available": true
         },
         {
@@ -959,20 +888,6 @@
           "is_enabled": false,
           "variant_id": 11990,
           "price_cents": 2838,
-          "is_available": true
-        },
-        {
-          "sku": "",
-          "size": "3XL",
-          "color": "Navy",
-          "title": "Navy / 3XL",
-          "options": [
-            511,
-            19
-          ],
-          "is_enabled": false,
-          "variant_id": 11991,
-          "price_cents": 3126,
           "is_available": true
         },
         {
@@ -1117,20 +1032,6 @@
         },
         {
           "sku": "",
-          "size": "3XL",
-          "color": "Purple",
-          "title": "Purple / 3XL",
-          "options": [
-            398,
-            19
-          ],
-          "is_enabled": false,
-          "variant_id": 12021,
-          "price_cents": 3130,
-          "is_available": true
-        },
-        {
-          "sku": "",
           "size": "L",
           "color": "Red",
           "title": "Red / L",
@@ -1197,20 +1098,6 @@
           "is_enabled": false,
           "variant_id": 12026,
           "price_cents": 2838,
-          "is_available": true
-        },
-        {
-          "sku": "",
-          "size": "3XL",
-          "color": "Red",
-          "title": "Red / 3XL",
-          "options": [
-            423,
-            19
-          ],
-          "is_enabled": false,
-          "variant_id": 12027,
-          "price_cents": 3126,
           "is_available": true
         },
         {
@@ -1284,20 +1171,6 @@
           "is_available": true
         },
         {
-          "sku": "",
-          "size": "3XL",
-          "color": "Royal",
-          "title": "Royal / 3XL",
-          "options": [
-            425,
-            19
-          ],
-          "is_enabled": false,
-          "variant_id": 12033,
-          "price_cents": 3126,
-          "is_available": true
-        },
-        {
           "sku": "16548264019547618704",
           "size": "L",
           "color": "Sand",
@@ -1364,20 +1237,6 @@
           ],
           "is_enabled": true,
           "variant_id": 12056,
-          "price_cents": 2699,
-          "is_available": true
-        },
-        {
-          "sku": "21748146168502558093",
-          "size": "3XL",
-          "color": "Sand",
-          "title": "Sand / 3XL",
-          "options": [
-            421,
-            19
-          ],
-          "is_enabled": true,
-          "variant_id": 12057,
           "price_cents": 2699,
           "is_available": true
         },
@@ -1452,20 +1311,6 @@
           "is_available": true
         },
         {
-          "sku": "",
-          "size": "3XL",
-          "color": "Sport Grey",
-          "title": "Sport Grey / 3XL",
-          "options": [
-            358,
-            19
-          ],
-          "is_enabled": false,
-          "variant_id": 12075,
-          "price_cents": 3130,
-          "is_available": true
-        },
-        {
           "sku": "90451792048258202060",
           "size": "L",
           "color": "White",
@@ -1532,20 +1377,6 @@
           ],
           "is_enabled": true,
           "variant_id": 12104,
-          "price_cents": 2699,
-          "is_available": true
-        },
-        {
-          "sku": "29536298394252064592",
-          "size": "3XL",
-          "color": "White",
-          "title": "White / 3XL",
-          "options": [
-            521,
-            19
-          ],
-          "is_enabled": true,
-          "variant_id": 12105,
           "price_cents": 2699,
           "is_available": true
         },
@@ -1621,20 +1452,6 @@
         },
         {
           "sku": "",
-          "size": "3XL",
-          "color": "Black",
-          "title": "Black / 3XL",
-          "options": [
-            418,
-            19
-          ],
-          "is_enabled": false,
-          "variant_id": 12129,
-          "price_cents": 2838,
-          "is_available": true
-        },
-        {
-          "sku": "",
           "size": "L",
           "color": "Forest Green",
           "title": "Forest Green / L",
@@ -1701,20 +1518,6 @@
           "is_enabled": false,
           "variant_id": 12146,
           "price_cents": 2838,
-          "is_available": true
-        },
-        {
-          "sku": "",
-          "size": "3XL",
-          "color": "Forest Green",
-          "title": "Forest Green / 3XL",
-          "options": [
-            416,
-            19
-          ],
-          "is_enabled": false,
-          "variant_id": 12147,
-          "price_cents": 3240,
           "is_available": true
         },
         {
@@ -1858,328 +1661,6 @@
           "is_available": true
         },
         {
-          "sku": "",
-          "size": "3XL",
-          "color": "Military Green",
-          "title": "Military Green / 3XL",
-          "options": [
-            364,
-            19
-          ],
-          "is_enabled": false,
-          "variant_id": 12195,
-          "price_cents": 3126,
-          "is_available": true
-        },
-        {
-          "sku": "",
-          "size": "4XL",
-          "color": "Dark Heather",
-          "title": "Dark Heather / 4XL",
-          "options": [
-            367,
-            20
-          ],
-          "is_enabled": false,
-          "variant_id": 23965,
-          "price_cents": 3240,
-          "is_available": true
-        },
-        {
-          "sku": "25052048285304048184",
-          "size": "4XL",
-          "color": "Light Pink",
-          "title": "Light Pink / 4XL",
-          "options": [
-            433,
-            20
-          ],
-          "is_enabled": true,
-          "variant_id": 23985,
-          "price_cents": 2699,
-          "is_available": true
-        },
-        {
-          "sku": "",
-          "size": "4XL",
-          "color": "Navy",
-          "title": "Navy / 4XL",
-          "options": [
-            511,
-            20
-          ],
-          "is_enabled": false,
-          "variant_id": 23993,
-          "price_cents": 3126,
-          "is_available": true
-        },
-        {
-          "sku": "",
-          "size": "4XL",
-          "color": "Red",
-          "title": "Red / 4XL",
-          "options": [
-            423,
-            20
-          ],
-          "is_enabled": false,
-          "variant_id": 24005,
-          "price_cents": 3178,
-          "is_available": true
-        },
-        {
-          "sku": "",
-          "size": "4XL",
-          "color": "Royal",
-          "title": "Royal / 4XL",
-          "options": [
-            425,
-            20
-          ],
-          "is_enabled": false,
-          "variant_id": 24007,
-          "price_cents": 3178,
-          "is_available": true
-        },
-        {
-          "sku": "30150487342980513350",
-          "size": "4XL",
-          "color": "Sand",
-          "title": "Sand / 4XL",
-          "options": [
-            421,
-            20
-          ],
-          "is_enabled": true,
-          "variant_id": 24015,
-          "price_cents": 2699,
-          "is_available": true
-        },
-        {
-          "sku": "",
-          "size": "4XL",
-          "color": "Sport Grey",
-          "title": "Sport Grey / 4XL",
-          "options": [
-            358,
-            20
-          ],
-          "is_enabled": false,
-          "variant_id": 24021,
-          "price_cents": 3240,
-          "is_available": true
-        },
-        {
-          "sku": "26646920032332605517",
-          "size": "4XL",
-          "color": "White",
-          "title": "White / 4XL",
-          "options": [
-            521,
-            20
-          ],
-          "is_enabled": true,
-          "variant_id": 24031,
-          "price_cents": 2699,
-          "is_available": true
-        },
-        {
-          "sku": "",
-          "size": "4XL",
-          "color": "Black",
-          "title": "Black / 4XL",
-          "options": [
-            418,
-            20
-          ],
-          "is_enabled": false,
-          "variant_id": 24039,
-          "price_cents": 3126,
-          "is_available": true
-        },
-        {
-          "sku": "",
-          "size": "4XL",
-          "color": "Forest Green",
-          "title": "Forest Green / 4XL",
-          "options": [
-            416,
-            20
-          ],
-          "is_enabled": false,
-          "variant_id": 24045,
-          "price_cents": 3240,
-          "is_available": true
-        },
-        {
-          "sku": "",
-          "size": "4XL",
-          "color": "Military Green",
-          "title": "Military Green / 4XL",
-          "options": [
-            364,
-            20
-          ],
-          "is_enabled": false,
-          "variant_id": 24060,
-          "price_cents": 3240,
-          "is_available": true
-        },
-        {
-          "sku": "",
-          "size": "5XL",
-          "color": "Dark Heather",
-          "title": "Dark Heather / 5XL",
-          "options": [
-            367,
-            21
-          ],
-          "is_enabled": false,
-          "variant_id": 24099,
-          "price_cents": 3240,
-          "is_available": true
-        },
-        {
-          "sku": "29894161102225194159",
-          "size": "5XL",
-          "color": "Light Pink",
-          "title": "Light Pink / 5XL",
-          "options": [
-            433,
-            21
-          ],
-          "is_enabled": true,
-          "variant_id": 24118,
-          "price_cents": 2699,
-          "is_available": true
-        },
-        {
-          "sku": "",
-          "size": "5XL",
-          "color": "Navy",
-          "title": "Navy / 5XL",
-          "options": [
-            511,
-            21
-          ],
-          "is_enabled": false,
-          "variant_id": 24126,
-          "price_cents": 3126,
-          "is_available": true
-        },
-        {
-          "sku": "",
-          "size": "5XL",
-          "color": "Red",
-          "title": "Red / 5XL",
-          "options": [
-            423,
-            21
-          ],
-          "is_enabled": false,
-          "variant_id": 24138,
-          "price_cents": 3178,
-          "is_available": true
-        },
-        {
-          "sku": "",
-          "size": "5XL",
-          "color": "Royal",
-          "title": "Royal / 5XL",
-          "options": [
-            425,
-            21
-          ],
-          "is_enabled": false,
-          "variant_id": 24140,
-          "price_cents": 3178,
-          "is_available": true
-        },
-        {
-          "sku": "97890931142976177428",
-          "size": "5XL",
-          "color": "Sand",
-          "title": "Sand / 5XL",
-          "options": [
-            421,
-            21
-          ],
-          "is_enabled": true,
-          "variant_id": 24147,
-          "price_cents": 2699,
-          "is_available": true
-        },
-        {
-          "sku": "",
-          "size": "5XL",
-          "color": "Sport Grey",
-          "title": "Sport Grey / 5XL",
-          "options": [
-            358,
-            21
-          ],
-          "is_enabled": false,
-          "variant_id": 24153,
-          "price_cents": 3240,
-          "is_available": true
-        },
-        {
-          "sku": "10366007908822986136",
-          "size": "5XL",
-          "color": "White",
-          "title": "White / 5XL",
-          "options": [
-            521,
-            21
-          ],
-          "is_enabled": true,
-          "variant_id": 24164,
-          "price_cents": 2699,
-          "is_available": true
-        },
-        {
-          "sku": "",
-          "size": "5XL",
-          "color": "Black",
-          "title": "Black / 5XL",
-          "options": [
-            418,
-            21
-          ],
-          "is_enabled": false,
-          "variant_id": 24171,
-          "price_cents": 3126,
-          "is_available": true
-        },
-        {
-          "sku": "",
-          "size": "5XL",
-          "color": "Forest Green",
-          "title": "Forest Green / 5XL",
-          "options": [
-            416,
-            21
-          ],
-          "is_enabled": false,
-          "variant_id": 24178,
-          "price_cents": 3240,
-          "is_available": true
-        },
-        {
-          "sku": "",
-          "size": "5XL",
-          "color": "Military Green",
-          "title": "Military Green / 5XL",
-          "options": [
-            364,
-            21
-          ],
-          "is_enabled": false,
-          "variant_id": 24194,
-          "price_cents": 3240,
-          "is_available": true
-        },
-        {
           "sku": "23715977536944415378",
           "size": "S",
           "color": "Ash",
@@ -2246,20 +1727,6 @@
           ],
           "is_enabled": true,
           "variant_id": 42720,
-          "price_cents": 2699,
-          "is_available": true
-        },
-        {
-          "sku": "20655745818320179458",
-          "size": "3XL",
-          "color": "Ash",
-          "title": "Ash / 3XL",
-          "options": [
-            451,
-            19
-          ],
-          "is_enabled": true,
-          "variant_id": 42721,
           "price_cents": 2699,
           "is_available": true
         }
@@ -3743,342 +3210,6 @@
             18,
             364
           ]
-        },
-        {
-          "variant_id": 25532,
-          "title": "3XL / Ash",
-          "size": "3XL",
-          "color": "Ash",
-          "price_cents": 5471,
-          "is_enabled": false,
-          "is_available": true,
-          "sku": "",
-          "options": [
-            19,
-            451
-          ]
-        },
-        {
-          "variant_id": 25538,
-          "title": "3XL / Heliconia",
-          "size": "3XL",
-          "color": "Heliconia",
-          "price_cents": 5471,
-          "is_enabled": false,
-          "is_available": true,
-          "sku": "",
-          "options": [
-            19,
-            429
-          ]
-        },
-        {
-          "variant_id": 25539,
-          "title": "3XL / Irish Green",
-          "size": "3XL",
-          "color": "Irish Green",
-          "price_cents": 5471,
-          "is_enabled": false,
-          "is_available": true,
-          "sku": "",
-          "options": [
-            19,
-            369
-          ]
-        },
-        {
-          "variant_id": 25540,
-          "title": "3XL / Light Blue",
-          "size": "3XL",
-          "color": "Light Blue",
-          "price_cents": 5471,
-          "is_enabled": false,
-          "is_available": true,
-          "sku": "",
-          "options": [
-            19,
-            392
-          ]
-        },
-        {
-          "variant_id": 25541,
-          "title": "3XL / Light Pink",
-          "size": "3XL",
-          "color": "Light Pink",
-          "price_cents": 5471,
-          "is_enabled": false,
-          "is_available": true,
-          "sku": "",
-          "options": [
-            19,
-            433
-          ]
-        },
-        {
-          "variant_id": 25542,
-          "title": "3XL / Maroon",
-          "size": "3XL",
-          "color": "Maroon",
-          "price_cents": 5471,
-          "is_enabled": false,
-          "is_available": true,
-          "sku": "",
-          "options": [
-            19,
-            395
-          ]
-        },
-        {
-          "variant_id": 25543,
-          "title": "3XL / Navy",
-          "size": "3XL",
-          "color": "Navy",
-          "price_cents": 5590,
-          "is_enabled": false,
-          "is_available": true,
-          "sku": "",
-          "options": [
-            19,
-            511
-          ]
-        },
-        {
-          "variant_id": 25546,
-          "title": "3XL / Red",
-          "size": "3XL",
-          "color": "Red",
-          "price_cents": 5590,
-          "is_enabled": false,
-          "is_available": true,
-          "sku": "",
-          "options": [
-            19,
-            423
-          ]
-        },
-        {
-          "variant_id": 25549,
-          "title": "3XL / Sand",
-          "size": "3XL",
-          "color": "Sand",
-          "price_cents": 5590,
-          "is_enabled": false,
-          "is_available": true,
-          "sku": "",
-          "options": [
-            19,
-            421
-          ]
-        },
-        {
-          "variant_id": 25550,
-          "title": "3XL / Sport Grey",
-          "size": "3XL",
-          "color": "Sport Grey",
-          "price_cents": 5590,
-          "is_enabled": false,
-          "is_available": true,
-          "sku": "",
-          "options": [
-            19,
-            358
-          ]
-        },
-        {
-          "variant_id": 25551,
-          "title": "3XL / White",
-          "size": "3XL",
-          "color": "White",
-          "price_cents": 5590,
-          "is_enabled": false,
-          "is_available": true,
-          "sku": "",
-          "options": [
-            19,
-            521
-          ]
-        },
-        {
-          "variant_id": 25552,
-          "title": "3XL / Black",
-          "size": "3XL",
-          "color": "Black",
-          "price_cents": 5590,
-          "is_enabled": false,
-          "is_available": true,
-          "sku": "",
-          "options": [
-            19,
-            418
-          ]
-        },
-        {
-          "variant_id": 25555,
-          "title": "3XL / Forest Green",
-          "size": "3XL",
-          "color": "Forest Green",
-          "price_cents": 5471,
-          "is_enabled": false,
-          "is_available": true,
-          "sku": "",
-          "options": [
-            19,
-            416
-          ]
-        },
-        {
-          "variant_id": 25559,
-          "title": "3XL / Military Green",
-          "size": "3XL",
-          "color": "Military Green",
-          "price_cents": 5590,
-          "is_enabled": false,
-          "is_available": true,
-          "sku": "",
-          "options": [
-            19,
-            364
-          ]
-        },
-        {
-          "variant_id": 25574,
-          "title": "4XL / Navy",
-          "size": "4XL",
-          "color": "Navy",
-          "price_cents": 5590,
-          "is_enabled": false,
-          "is_available": true,
-          "sku": "",
-          "options": [
-            20,
-            511
-          ]
-        },
-        {
-          "variant_id": 25577,
-          "title": "4XL / Red",
-          "size": "4XL",
-          "color": "Red",
-          "price_cents": 5590,
-          "is_enabled": false,
-          "is_available": true,
-          "sku": "",
-          "options": [
-            20,
-            423
-          ]
-        },
-        {
-          "variant_id": 25581,
-          "title": "4XL / Sport Grey",
-          "size": "4XL",
-          "color": "Sport Grey",
-          "price_cents": 5590,
-          "is_enabled": false,
-          "is_available": true,
-          "sku": "",
-          "options": [
-            20,
-            358
-          ]
-        },
-        {
-          "variant_id": 25582,
-          "title": "4XL / White",
-          "size": "4XL",
-          "color": "White",
-          "price_cents": 5590,
-          "is_enabled": false,
-          "is_available": true,
-          "sku": "",
-          "options": [
-            20,
-            521
-          ]
-        },
-        {
-          "variant_id": 25583,
-          "title": "4XL / Black",
-          "size": "4XL",
-          "color": "Black",
-          "price_cents": 5590,
-          "is_enabled": false,
-          "is_available": true,
-          "sku": "",
-          "options": [
-            20,
-            418
-          ]
-        },
-        {
-          "variant_id": 25605,
-          "title": "5XL / Navy",
-          "size": "5XL",
-          "color": "Navy",
-          "price_cents": 5590,
-          "is_enabled": false,
-          "is_available": true,
-          "sku": "",
-          "options": [
-            21,
-            511
-          ]
-        },
-        {
-          "variant_id": 25608,
-          "title": "5XL / Red",
-          "size": "5XL",
-          "color": "Red",
-          "price_cents": 5590,
-          "is_enabled": false,
-          "is_available": true,
-          "sku": "",
-          "options": [
-            21,
-            423
-          ]
-        },
-        {
-          "variant_id": 25612,
-          "title": "5XL / Sport Grey",
-          "size": "5XL",
-          "color": "Sport Grey",
-          "price_cents": 5590,
-          "is_enabled": false,
-          "is_available": true,
-          "sku": "",
-          "options": [
-            21,
-            358
-          ]
-        },
-        {
-          "variant_id": 25613,
-          "title": "5XL / White",
-          "size": "5XL",
-          "color": "White",
-          "price_cents": 5590,
-          "is_enabled": false,
-          "is_available": true,
-          "sku": "",
-          "options": [
-            21,
-            521
-          ]
-        },
-        {
-          "variant_id": 25614,
-          "title": "5XL / Black",
-          "size": "5XL",
-          "color": "Black",
-          "price_cents": 5590,
-          "is_enabled": false,
-          "is_available": true,
-          "sku": "",
-          "options": [
-            21,
-            418
-          ]
         }
       ],
       "inventory": 50,
@@ -4341,18 +3472,6 @@
             {
               "id": 18,
               "title": "2XL"
-            },
-            {
-              "id": 19,
-              "title": "3XL"
-            },
-            {
-              "id": 20,
-              "title": "4XL"
-            },
-            {
-              "id": 21,
-              "title": "5XL"
             }
           ],
           "display_in_preview": false

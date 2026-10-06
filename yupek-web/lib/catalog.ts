@@ -37,6 +37,39 @@ export interface NormalizedPrintifyProduct {
 
 export const eur = (n: number) => `€${n.toFixed(2)}`;
 
+export const EXCLUDED_SIZES = new Set(["3XL", "4XL", "5XL", "XXXL", "XXXXL", "XXXXXL"]);
+
+export function isExcludedSize(size?: string | null): boolean {
+  if (!size) return false;
+  const s = String(size).toUpperCase().trim();
+  return EXCLUDED_SIZES.has(s) || s === "3XL" || s === "4XL" || s === "5XL";
+}
+
+export function sanitizeProductSizes(p: Product): Product {
+  const cleanSizes = (p.sizes || []).filter((s) => !isExcludedSize(s));
+  const cleanVariants = (p.variants || []).filter((v) => {
+    if (isExcludedSize(v.size)) return false;
+    const title = String(v.title || "").toUpperCase();
+    if (title.includes("3XL") || title.includes("4XL") || title.includes("5XL")) return false;
+    return true;
+  });
+  const cleanOptions = (p.options || []).map((opt) => {
+    const isSizeOpt = opt.type?.toLowerCase() === "size" || opt.name?.toLowerCase() === "size";
+    if (!isSizeOpt || !opt.values) return opt;
+    return {
+      ...opt,
+      values: opt.values.filter((val) => !isExcludedSize(val.title)),
+    };
+  });
+
+  return {
+    ...p,
+    sizes: cleanSizes,
+    variants: cleanVariants,
+    options: cleanOptions,
+  };
+}
+
 export function getCatalogProducts(): Product[] {
   try {
     const custom: Product[] = (initialSiteConfig as any).customProducts || [];
@@ -63,7 +96,8 @@ export function getCatalogProducts(): Product[] {
           inventory: ov.inventory !== undefined ? ov.inventory : p.inventory,
           images: ov.images && ov.images.length > 0 ? ov.images : p.images,
         };
-      });
+      })
+      .map(sanitizeProductSizes);
   } catch {}
   return products;
 }
