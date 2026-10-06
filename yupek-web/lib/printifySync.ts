@@ -278,11 +278,26 @@ export async function syncPrintifyProductLocal(
   const tags: string[] = raw.tags || [];
   const category = inferCategory(title, tags);
 
-  // Extract variants & prices
+  // Extract variants & prices using actual Printify option metadata
   const variants = raw.variants || [];
   const activePrices: number[] = [];
-  const sizesSet: string[] = [];
-  const colorsSet: string[] = [];
+
+  const colorOpt = (raw.options || []).find((o: any) => o.type === "color" || /color/i.test(o.name));
+  const sizeOpt = (raw.options || []).find((o: any) => o.type === "size" || /size/i.test(o.name));
+
+  const colorMap = new Map<number, string>();
+  if (colorOpt?.values) {
+    for (const val of colorOpt.values) {
+      colorMap.set(val.id, String(val.title).trim());
+    }
+  }
+
+  const sizeMap = new Map<number, string>();
+  if (sizeOpt?.values) {
+    for (const val of sizeOpt.values) {
+      sizeMap.set(val.id, String(val.title).trim());
+    }
+  }
 
   const normVariants: any[] = [];
 
@@ -293,19 +308,33 @@ export async function syncPrintifyProductLocal(
     if (isEnabled && isAvailable && priceEur > 0) {
       activePrices.push(priceEur);
     }
-    const parts = String(v.title || "").split("/").map((s) => s.trim()).filter(Boolean);
-    let size = "";
+
     let color = "";
-    if (parts.length === 1) {
-      size = parts[0];
-      sizesSet.push(size);
+    let size = "";
+
+    if (Array.isArray(v.options)) {
+      for (const optId of v.options) {
+        if (colorMap.has(optId)) {
+          color = colorMap.get(optId)!;
+        }
+        if (sizeMap.has(optId)) {
+          size = sizeMap.get(optId)!;
+        }
+      }
     }
-    else if (parts.length >= 2) {
-      color = parts[0];
-      size = parts[1];
-      colorsSet.push(color);
-      sizesSet.push(size);
+
+    // Resilient fallback only if options ID didn't resolve
+    if (!color || !size) {
+      const parts = String(v.title || "").split("/").map((s) => s.trim()).filter(Boolean);
+      for (const p of parts) {
+        if (!color && Array.from(colorMap.values()).includes(p)) {
+          color = p;
+        } else if (!size && Array.from(sizeMap.values()).includes(p)) {
+          size = p;
+        }
+      }
     }
+
     normVariants.push({
       variant_id: v.id,
       title: v.title,
@@ -319,12 +348,50 @@ export async function syncPrintifyProductLocal(
     });
   }
 
-  const basePrice = activePrices.length > 0 ? Math.min(...activePrices) : 49;
-  const distinctSizes = Array.from(new Set(sizesSet)).length > 0 ? Array.from(new Set(sizesSet)) : ["S", "M", "L", "XL"];
-  const distinctColors = Array.from(new Set(colorsSet)).length > 0 ? Array.from(new Set(colorsSet)) : ["Black"];
-  const imageUrls = (raw.images || []).map((img: any) => img.src).filter(Boolean);
-  const firstSku = variants[0]?.sku || "YPK-PFY";
+  const enabledVariants = normVariants.filter((v) => v.is_enabled && v.is_available);
 
+  // Natural ordered sizes from sizeOpt.values
+  let distinctSizes: string[] = [];
+  if (sizeOpt?.values) {
+    const presentSizes = new Set(enabledVariants.map((v) => v.size).filter(Boolean));
+    distinctSizes = sizeOpt.values
+      .map((v: any) => String(v.title).trim())
+      .filter((t: string) => presentSizes.has(t));
+  }
+  if (distinctSizes.length === 0) {
+    distinctSizes = Array.from(new Set(enabledVariants.map((v) => v.size).filter(Boolean)));
+  }
+  if (distinctSizes.length === 0) {
+    distinctSizes = ["S", "M", "L", "XL"];
+  }
+
+  // Natural ordered colors from colorOpt.values
+  let distinctColors: string[] = [];
+  if (colorOpt?.values) {
+    const presentColors = new Set(enabledVariants.map((v) => v.color).filter(Boolean));
+    distinctColors = colorOpt.values
+      .map((v: any) => String(v.title).trim())
+      .filter((t: string) => presentColors.has(t));
+  }
+  if (distinctColors.length === 0) {
+    distinctColors = Array.from(new Set(enabledVariants.map((v) => v.color).filter(Boolean)));
+  }
+  if (distinctColors.length === 0) {
+    distinctColors = ["White"];
+  }
+
+  const detailedImages = (raw.images || [])
+    .map((img: any) => ({
+      src: img.src,
+      variant_ids: img.variant_ids || [],
+      position: img.position || "front",
+      is_default: Boolean(img.is_default),
+    }))
+    .filter((img: any) => Boolean(img.src));
+
+  const imageUrls = detailedImages.map((img: any) => img.src);
+  const basePrice = activePrices.length > 0 ? Math.min(...activePrices) : 49;
+  const firstSku = variants[0]?.sku || "YPK-PFY";
   const isPublishReview = eventType === "product:publish:started";
 
   const newOrUpdatedProduct = {
@@ -341,6 +408,8 @@ export async function syncPrintifyProductLocal(
     description: raw.description || "Contemporary garment crafted through Printify custom production.",
     material: "100% premium quality fabric tailored for modern living.",
     images: imageUrls,
+    detailedImages,
+    options: raw.options || [],
     variants: normVariants,
     featured: false,
     newArrival: true,

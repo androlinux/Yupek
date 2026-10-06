@@ -177,6 +177,7 @@ def normalize_printify_product(raw: dict[str, Any]) -> dict[str, Any]:
         # Original metadata
         "blueprint_id": raw.get("blueprint_id"),
         "print_provider_id": raw.get("print_provider_id"),
+        "options": raw.get("options") or [],
         "created_at": raw.get("created_at"),
         "updated_at": raw.get("updated_at"),
     }
@@ -675,24 +676,39 @@ def sync_printify_product(
     norm_tags = raw_normalized["tags"]
     norm_category = infer_category(norm_title, norm_tags)
 
-    # Extract distinct sizes and colors from variants
-    sizes_set = []
-    colors_set = []
+    # Extract distinct sizes and colors from options & variants metadata
+    raw_options = raw_normalized.get("options") or []
+    color_opt = next((o for o in raw_options if o.get("type") == "color" or "color" in o.get("name", "").lower()), None)
+    size_opt = next((o for o in raw_options if o.get("type") == "size" or "size" in o.get("name", "").lower()), None)
+
+    color_map: dict[int, str] = {}
+    if color_opt and color_opt.get("values"):
+        for val in color_opt["values"]:
+            color_map[val["id"]] = str(val.get("title", "")).strip()
+
+    size_map: dict[int, str] = {}
+    if size_opt and size_opt.get("values"):
+        for val in size_opt["values"]:
+            size_map[val["id"]] = str(val.get("title", "")).strip()
+
     norm_variants_list = []
     for v in raw_normalized.get("variants", []):
-        for opt in v.get("options", []):
-            pass
-        title_parts = [p.strip() for p in v.get("title", "").split("/") if p.strip()]
+        variant_options = v.get("options", [])
         size = ""
         color = ""
-        if len(title_parts) == 1:
-            size = title_parts[0]
-            sizes_set.append(size)
-        elif len(title_parts) >= 2:
-            color = title_parts[0]
-            size = title_parts[1]
-            colors_set.append(color)
-            sizes_set.append(size)
+        for opt_id in variant_options:
+            if opt_id in color_map:
+                color = color_map[opt_id]
+            if opt_id in size_map:
+                size = size_map[opt_id]
+
+        if not color or not size:
+            title_parts = [p.strip() for p in v.get("title", "").split("/") if p.strip()]
+            for p in title_parts:
+                if not color and p in color_map.values():
+                    color = p
+                elif not size and p in size_map.values():
+                    size = p
 
         norm_variants_list.append({
             "variant_id": v.get("id"),
@@ -703,12 +719,37 @@ def sync_printify_product(
             "is_enabled": bool(v.get("is_enabled", True)),
             "is_available": bool(v.get("is_available", True)),
             "sku": v.get("sku", ""),
-            "options": v.get("options", []),
+            "options": variant_options,
         })
 
-    distinct_sizes = list(dict.fromkeys(sizes_set)) or ["S", "M", "L", "XL"]
-    distinct_colors = list(dict.fromkeys(colors_set)) or ["Black"]
-    image_urls = [img["src"] for img in raw_normalized.get("images", []) if img.get("src")]
+    enabled_variants = [v for v in norm_variants_list if v["is_enabled"] and v["is_available"]]
+
+    if size_opt and size_opt.get("values"):
+        present_sizes = {v["size"] for v in enabled_variants if v["size"]}
+        distinct_sizes = [str(val["title"]).strip() for val in size_opt["values"] if str(val["title"]).strip() in present_sizes]
+    else:
+        distinct_sizes = list(dict.fromkeys(v["size"] for v in enabled_variants if v["size"]))
+    if not distinct_sizes:
+        distinct_sizes = ["S", "M", "L", "XL"]
+
+    if color_opt and color_opt.get("values"):
+        present_colors = {v["color"] for v in enabled_variants if v["color"]}
+        distinct_colors = [str(val["title"]).strip() for val in color_opt["values"] if str(val["title"]).strip() in present_colors]
+    else:
+        distinct_colors = list(dict.fromkeys(v["color"] for v in enabled_variants if v["color"]))
+    if not distinct_colors:
+        distinct_colors = ["White"]
+
+    detailed_images = [
+        {
+            "src": img["src"],
+            "variant_ids": img.get("variant_ids", []),
+            "position": img.get("position", "front"),
+            "is_default": bool(img.get("is_default", False)),
+        }
+        for img in raw_normalized.get("images", []) if img.get("src")
+    ]
+    image_urls = [img["src"] for img in detailed_images]
 
     # Determine publication status
     # product:publish:started -> 'draft' (awaiting publication review, not immediately public)
