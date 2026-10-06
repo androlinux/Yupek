@@ -6,15 +6,15 @@ export const metadata: Metadata = {
     absolute: "YUPEK — Eastern Heritage, European Style",
   },
   description:
-    "Contemporary fashion blending ancient Eastern silk heritage with refined European tailoring. Architectural silhouettes crafted from organic cotton, linen, and artisanal textiles.",
+    "Contemporary clothing inspired by Turkmen silk heritage, designed for modern European living. Discover YUPEK collections, timeless pieces and Eastern-inspired style.",
   alternates: {
-    canonical: "https://www.yupek.shop",
+    canonical: "https://www.yupek.shop/",
   },
   openGraph: {
     title: "YUPEK — Eastern Heritage, European Style",
     description:
-      "Contemporary fashion blending ancient Eastern silk heritage with refined European tailoring.",
-    url: "https://www.yupek.shop",
+      "Contemporary clothing inspired by Turkmen silk heritage, designed for modern European living. Discover YUPEK collections, timeless pieces and Eastern-inspired style.",
+    url: "https://www.yupek.shop/",
     siteName: "YUPEK",
     type: "website",
     locale: "en_US",
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "YUPEK — Eastern Heritage, European Style",
     description:
-      "Contemporary fashion blending ancient Eastern silk heritage with refined European tailoring.",
+      "Contemporary clothing inspired by Turkmen silk heritage, designed for modern European living. Discover YUPEK collections, timeless pieces and Eastern-inspired style.",
     images: ["https://www.yupek.shop/images/og.jpg"],
   },
 };
