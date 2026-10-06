@@ -15,6 +15,7 @@ export type CartLine = {
   printifyVariantId?: string;
   title?: string;
   price?: number;
+  price_cents?: number;
   image?: string;
 };
 type Ctx = {
