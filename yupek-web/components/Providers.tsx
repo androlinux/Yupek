@@ -1,9 +1,11 @@
 "use client";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import dynamic from "next/dynamic";
 import { ConfigProvider } from "./ConfigContext";
 import { AuthProvider } from "./AuthContext";
-import AuthModal from "./AuthModal";
 import WhatsAppButton from "./WhatsAppButton";
+
+const AuthModal = dynamic(() => import("./AuthModal"), { ssr: false });
 
 export type CartLine = { slug: string; size: string; color: string; qty: number };
 type Ctx = {
