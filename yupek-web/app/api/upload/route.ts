@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
+import { getSupabaseServerClient } from "@/lib/supabaseServer";
 
 export const dynamic = "force-dynamic";
 
@@ -41,9 +42,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No image file provided in upload" }, { status: 400 });
     }
 
-    // Ensure upload dir exists
-    await fs.mkdir(UPLOAD_DIR, { recursive: true });
-
     const savedFiles: Array<{
       url: string;
       filename: string;
@@ -52,8 +50,11 @@ export async function POST(request: NextRequest) {
       type: string;
     }> = [];
 
+    const isServerlessOrProd =
+      Boolean(process.env.VERCEL) || process.env.NODE_ENV === "production";
+
     for (const file of files) {
-      // Validate file is an image (allow common image extensions or MIME types)
+      // Validate file is an image
       const isImage =
         file.type.startsWith("image/") ||
         /\.(jpe?g|png|webp|gif|svg|avif|heic|heif)$/i.test(file.name);
@@ -71,20 +72,67 @@ export async function POST(request: NextRequest) {
       }
 
       const cleanFilename = sanitizeFilename(file.name);
-      const filePath = path.join(UPLOAD_DIR, cleanFilename);
-
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
 
-      await fs.writeFile(filePath, buffer);
+      // 1. PRIMARY PRODUCTION PERSISTENCE: Try Supabase Storage (bucket "media")
+      try {
+        const supabase = getSupabaseServerClient();
+        const { error: sbStorageErr } = await supabase.storage
+          .from("media")
+          .upload(cleanFilename, buffer, {
+            contentType: file.type || "image/jpeg",
+            upsert: true,
+          });
 
-      savedFiles.push({
-        url: `/uploads/${cleanFilename}`,
-        filename: cleanFilename,
-        originalName: file.name,
-        size: file.size,
-        type: file.type || "image/jpeg",
-      });
+        if (!sbStorageErr) {
+          const { data: publicUrlData } = supabase.storage
+            .from("media")
+            .getPublicUrl(cleanFilename);
+
+          savedFiles.push({
+            url: publicUrlData.publicUrl,
+            filename: cleanFilename,
+            originalName: file.name,
+            size: file.size,
+            type: file.type || "image/jpeg",
+          });
+          continue;
+        }
+      } catch (sbErr) {
+        console.warn("[Upload] Supabase Storage upload error:", sbErr);
+      }
+
+      // 2. LOCAL DEV ONLY: Save to local public/uploads directory
+      if (!isServerlessOrProd) {
+        try {
+          await fs.mkdir(UPLOAD_DIR, { recursive: true });
+          const filePath = path.join(UPLOAD_DIR, cleanFilename);
+          await fs.writeFile(filePath, buffer);
+
+          savedFiles.push({
+            url: `/uploads/${cleanFilename}`,
+            filename: cleanFilename,
+            originalName: file.name,
+            size: file.size,
+            type: file.type || "image/jpeg",
+          });
+          continue;
+        } catch (diskErr) {
+          console.warn("[Upload] Local disk write error:", diskErr);
+        }
+      }
+
+      // If running on Vercel and Supabase bucket isn't available:
+      if (isServerlessOrProd) {
+        return NextResponse.json(
+          {
+            error:
+              "Persistent file uploads require a Supabase Storage bucket named 'media'. Please create a public bucket named 'media' in your Supabase Dashboard.",
+          },
+          { status: 500 }
+        );
+      }
     }
 
     if (savedFiles.length === 0) {
@@ -109,34 +157,69 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
-    await fs.mkdir(UPLOAD_DIR, { recursive: true });
-    const dirEntries = await fs.readdir(UPLOAD_DIR, { withFileTypes: true });
+    const isServerlessOrProd =
+      Boolean(process.env.VERCEL) || process.env.NODE_ENV === "production";
 
-    const imageFiles = [];
-    for (const entry of dirEntries) {
-      if (entry.isFile() && /\.(jpe?g|png|webp|gif|svg|avif)$/i.test(entry.name)) {
-        try {
-          const stats = await fs.stat(path.join(UPLOAD_DIR, entry.name));
-          imageFiles.push({
-            url: `/uploads/${entry.name}`,
-            filename: entry.name,
-            size: stats.size,
-            mtime: stats.mtime.toISOString(),
+    // 1. Try listing from Supabase Storage
+    try {
+      const supabase = getSupabaseServerClient();
+      const { data: storageList, error: storageErr } = await supabase.storage
+        .from("media")
+        .list("", { limit: 100, sortBy: { column: "created_at", order: "desc" } });
+
+      if (!storageErr && Array.isArray(storageList) && storageList.length > 0) {
+        const files = storageList
+          .filter((f) => f.name && !f.name.startsWith("."))
+          .map((f) => {
+            const { data } = supabase.storage.from("media").getPublicUrl(f.name);
+            return {
+              url: data.publicUrl,
+              filename: f.name,
+              size: f.metadata?.size || 0,
+              mtime: f.created_at || new Date().toISOString(),
+            };
           });
-        } catch {
-          // ignore stat error
+
+        return NextResponse.json({
+          success: true,
+          count: files.length,
+          files,
+        });
+      }
+    } catch {}
+
+    // 2. Fallback to local directory
+    if (!isServerlessOrProd) {
+      await fs.mkdir(UPLOAD_DIR, { recursive: true });
+      const dirEntries = await fs.readdir(UPLOAD_DIR, { withFileTypes: true });
+
+      const imageFiles = [];
+      for (const entry of dirEntries) {
+        if (entry.isFile() && /\.(jpe?g|png|webp|gif|svg|avif)$/i.test(entry.name)) {
+          try {
+            const stats = await fs.stat(path.join(UPLOAD_DIR, entry.name));
+            imageFiles.push({
+              url: `/uploads/${entry.name}`,
+              filename: entry.name,
+              size: stats.size,
+              mtime: stats.mtime.toISOString(),
+            });
+          } catch {
+            // ignore stat error
+          }
         }
       }
+
+      imageFiles.sort((a, b) => new Date(b.mtime).getTime() - new Date(a.mtime).getTime());
+
+      return NextResponse.json({
+        success: true,
+        count: imageFiles.length,
+        files: imageFiles,
+      });
     }
 
-    // Sort newest first
-    imageFiles.sort((a, b) => new Date(b.mtime).getTime() - new Date(a.mtime).getTime());
-
-    return NextResponse.json({
-      success: true,
-      count: imageFiles.length,
-      files: imageFiles,
-    });
+    return NextResponse.json({ success: true, count: 0, files: [] });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to list media";
     return NextResponse.json({ error: message }, { status: 500 });
@@ -146,8 +229,7 @@ export async function GET() {
 export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const paramFilename = searchParams.get("filename");
-    let filename = paramFilename;
+    let filename = searchParams.get("filename");
 
     if (!filename) {
       const body = await request.json().catch(() => ({}));
@@ -158,16 +240,27 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "Filename is required" }, { status: 400 });
     }
 
-    // Strip any URL prefix if passed as "/uploads/..."
     const cleanName = path.basename(filename);
-    const filePath = path.join(UPLOAD_DIR, cleanName);
 
-    // Prevent directory traversal
-    if (!filePath.startsWith(UPLOAD_DIR)) {
-      return NextResponse.json({ error: "Invalid path" }, { status: 400 });
+    // Try deleting from Supabase Storage
+    try {
+      const supabase = getSupabaseServerClient();
+      await supabase.storage.from("media").remove([cleanName]);
+    } catch {}
+
+    // Also delete local file if present and writable
+    const isServerlessOrProd =
+      Boolean(process.env.VERCEL) || process.env.NODE_ENV === "production";
+
+    if (!isServerlessOrProd) {
+      try {
+        const filePath = path.join(UPLOAD_DIR, cleanName);
+        if (filePath.startsWith(UPLOAD_DIR)) {
+          await fs.unlink(filePath);
+        }
+      } catch {}
     }
 
-    await fs.unlink(filePath);
     return NextResponse.json({ success: true, deleted: cleanName });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to delete file";

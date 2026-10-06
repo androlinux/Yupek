@@ -42,6 +42,7 @@
   "addToBagLabel": "ADD TO BAG",
   "checkoutButtonLabel": "PROCEED TO CHECKOUT",
   "productOverrides": {},
+  "customProducts": [],
   "contactSubmissions": [
     {
       "id": "sub-1",
@@ -90,6 +91,6 @@
       "emailNotificationRecipient": "daniyarow16@gmail.com"
     }
   ],
-  "updatedAt": "2026-10-05T23:07:15.726Z",
+  "updatedAt": "2026-10-06T00:52:51.961Z",
   "_reset": true
 }

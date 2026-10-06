@@ -3,6 +3,7 @@ import nodemailer from "nodemailer";
 import { promises as fs } from "fs";
 import path from "path";
 import { StoreOrder, defaultSiteConfig, SiteConfig } from "@/lib/siteConfig";
+import { getSupabaseServerClient } from "@/lib/supabaseServer";
 
 export const dynamic = "force-dynamic";
 
@@ -339,19 +340,58 @@ export async function POST(request: NextRequest) {
       console.log(`[ORDER PLACED] ${newOrder.orderNumber} by ${newOrder.customer.firstName} ${newOrder.customer.lastName} (€${newOrder.total}). Waiting for Gmail credentials.`);
     }
 
-    // Persist order to data/site-config.json
+    // 1. Persist order to Supabase site_config
     try {
-      const configPath = path.join(process.cwd(), "data", "site-config.json");
-      const raw = await fs.readFile(configPath, "utf-8");
-      const parsed = JSON.parse(raw);
-      const orders = Array.isArray(parsed.storeOrders) ? parsed.storeOrders : [];
-      parsed.storeOrders = [
-        newOrder,
-        ...orders.filter((o: any) => o.id !== newOrder.id && o.orderNumber !== newOrder.orderNumber),
-      ];
-      await fs.writeFile(configPath, JSON.stringify(parsed, null, 2), "utf-8");
-    } catch (saveErr) {
-      console.warn("[Orders save to disk warning]", saveErr);
+      const supabase = getSupabaseServerClient();
+      const { data } = await supabase
+        .from("site_config")
+        .select("value")
+        .eq("key", "global")
+        .maybeSingle();
+
+      if (data?.value && typeof data.value === "object") {
+        const currentCfg = data.value as any;
+        const existingOrders = Array.isArray(currentCfg.storeOrders) ? currentCfg.storeOrders : [];
+        const updatedOrders = [
+          newOrder,
+          ...existingOrders.filter(
+            (o: any) => o.id !== newOrder.id && o.orderNumber !== newOrder.orderNumber
+          ),
+        ];
+
+        await supabase.from("site_config").upsert({
+          key: "global",
+          value: {
+            ...currentCfg,
+            storeOrders: updatedOrders,
+          },
+          updated_at: new Date().toISOString(),
+        });
+      }
+    } catch (sbErr) {
+      console.warn("[Orders save to Supabase notice]", sbErr);
+    }
+
+    // 2. Local development disk mirror only (NEVER on Vercel / production)
+    const isServerlessOrProd =
+      Boolean(process.env.VERCEL) || process.env.NODE_ENV === "production";
+
+    if (!isServerlessOrProd) {
+      try {
+        const configPath = path.join(process.cwd(), "data", "site-config.json");
+        const raw = await fs.readFile(configPath, "utf-8");
+        const parsed = JSON.parse(raw);
+        const orders = Array.isArray(parsed.storeOrders) ? parsed.storeOrders : [];
+        parsed.storeOrders = [
+          newOrder,
+          ...orders.filter(
+            (o: any) => o.id !== newOrder.id && o.orderNumber !== newOrder.orderNumber
+          ),
+        ];
+        await fs.writeFile(configPath, JSON.stringify(parsed, null, 2), "utf-8");
+      } catch (saveErr) {
+        console.warn("[Orders save to disk warning]", saveErr);
+      }
     }
 
     return NextResponse.json({

@@ -48,8 +48,15 @@ async function readClients(): Promise<StoredClient[]> {
 }
 
 async function writeClients(clients: StoredClient[]): Promise<void> {
-  await fs.mkdir(path.dirname(CLIENTS_FILE_PATH), { recursive: true });
-  await fs.writeFile(CLIENTS_FILE_PATH, JSON.stringify(clients, null, 2), "utf-8");
+  const isServerlessOrProd =
+    Boolean(process.env.VERCEL) || process.env.NODE_ENV === "production";
+  if (isServerlessOrProd) {
+    return;
+  }
+  try {
+    await fs.mkdir(path.dirname(CLIENTS_FILE_PATH), { recursive: true });
+    await fs.writeFile(CLIENTS_FILE_PATH, JSON.stringify(clients, null, 2), "utf-8");
+  } catch {}
 }
 
 async function getClientOrders(email: string) {
