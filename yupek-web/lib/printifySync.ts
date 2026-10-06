@@ -1,14 +1,12 @@
 import crypto from "crypto";
 import { promises as fs } from "fs";
 import path from "path";
-import { createClient } from "@supabase/supabase-js";
 import { defaultSiteConfig, SiteConfig } from "@/lib/siteConfig";
+import { getSupabaseServerClient } from "@/lib/supabaseServer";
 
 const CONFIG_FILE_PATH = path.join(process.cwd(), "data", "site-config.json");
 const STATUS_FILE_PATH = path.join(process.cwd(), "data", "printify-sync-status.json");
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://umopnncjoswyilibslep.supabase.co";
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "sb_publishable_xGCmb036JS-dQiAi0KxWVw_LKUjQyfB";
 
 export interface PrintifySyncMetadata {
   processed_event_ids: string[];
@@ -70,6 +68,11 @@ export async function readSyncMetadata(): Promise<PrintifySyncMetadata> {
 }
 
 export async function saveSyncMetadata(meta: PrintifySyncMetadata): Promise<void> {
+  const isServerlessOrProd =
+    Boolean(process.env.VERCEL) || process.env.NODE_ENV === "production";
+  if (isServerlessOrProd) {
+    return;
+  }
   try {
     await fs.mkdir(path.dirname(STATUS_FILE_PATH), { recursive: true });
     // Keep bounded history
@@ -120,7 +123,7 @@ export async function recordEvent(
 
   // Sync to Supabase if table exists
   try {
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    const supabase = getSupabaseServerClient();
     await supabase.from("webhook_events").upsert({
       event_id: eventId,
       event_type: eventType,
@@ -166,6 +169,22 @@ function inferCategory(title: string, tags: string[]): "tees" | "shirts" | "swea
 
 async function readSiteConfig(): Promise<SiteConfig> {
   try {
+    const supabase = getSupabaseServerClient();
+    const { data } = await supabase
+      .from("site_config")
+      .select("value")
+      .eq("key", "global")
+      .maybeSingle();
+
+    if (data?.value && typeof data.value === "object") {
+      return {
+        ...defaultSiteConfig,
+        ...(data.value as any),
+      };
+    }
+  } catch {}
+
+  try {
     const raw = await fs.readFile(CONFIG_FILE_PATH, "utf-8");
     return JSON.parse(raw);
   } catch {
@@ -175,9 +194,24 @@ async function readSiteConfig(): Promise<SiteConfig> {
 
 async function writeSiteConfig(cfg: SiteConfig): Promise<void> {
   try {
-    await fs.mkdir(path.dirname(CONFIG_FILE_PATH), { recursive: true });
-    await fs.writeFile(CONFIG_FILE_PATH, JSON.stringify(cfg, null, 2), "utf-8");
-  } catch {}
+    const supabase = getSupabaseServerClient();
+    await supabase.from("site_config").upsert({
+      key: "global",
+      value: cfg,
+      updated_at: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.warn("[printifySync] Supabase config upsert error:", err);
+  }
+
+  const isServerlessOrProd =
+    Boolean(process.env.VERCEL) || process.env.NODE_ENV === "production";
+  if (!isServerlessOrProd) {
+    try {
+      await fs.mkdir(path.dirname(CONFIG_FILE_PATH), { recursive: true });
+      await fs.writeFile(CONFIG_FILE_PATH, JSON.stringify(cfg, null, 2), "utf-8");
+    } catch {}
+  }
 }
 
 export async function syncPrintifyProductLocal(
@@ -325,7 +359,7 @@ export async function syncPrintifyProductLocal(
 
   // Sync to Supabase if configured
   try {
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    const supabase = getSupabaseServerClient();
     await supabase.from("products").upsert({
       slug,
       name: title,

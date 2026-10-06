@@ -23,6 +23,18 @@ interface ConfigContextType {
 
 const ConfigContext = createContext<ConfigContextType | null>(null);
 
+function getAdminHeaders(): Record<string, string> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (typeof window !== "undefined") {
+    try {
+      if (sessionStorage.getItem("yupek_admin_auth") === "true") {
+        headers["x-yupek-admin-auth"] = "true";
+      }
+    } catch {}
+  }
+  return headers;
+}
+
 export function ConfigProvider({ children }: { children: ReactNode }) {
   const [config, setConfig] = useState<SiteConfig>(defaultSiteConfig);
 
@@ -32,8 +44,11 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     const initial = getLocalSiteConfig();
     setConfig(initial);
 
-    // 2. Fetch from API route to sync with persistent disk storage
-    fetch("/api/site-config")
+    // 2. Fetch from API route to sync with persistent Supabase storage
+    fetch("/api/site-config", {
+      headers: getAdminHeaders(),
+      cache: "no-store",
+    })
       .then((res) => res.json())
       .then((serverData) => {
         if (serverData && !serverData.error) {
@@ -89,11 +104,11 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     setConfig(nextConfig);
     saveLocalSiteConfig(nextConfig);
 
-    // Also persist to server disk storage
+    // Also persist to server Supabase storage
     try {
       const res = await fetch("/api/site-config", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getAdminHeaders(),
         body: JSON.stringify(partial),
       });
       const data = await res.json();
@@ -108,7 +123,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
       return { success: true, config: nextConfig };
     } catch (err: unknown) {
       console.error("[ConfigContext updateConfig error]:", err);
-      const msg = err instanceof Error ? err.message : "Failed to persist to disk";
+      const msg = err instanceof Error ? err.message : "Failed to persist to database";
       return { success: false, error: msg };
     }
   }, []);
@@ -131,11 +146,11 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     setConfig(nextConfig);
     saveLocalSiteConfig(nextConfig);
 
-    // Async push to server disk storage
+    // Async push to server Supabase storage
     try {
       const res = await fetch("/api/site-config", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getAdminHeaders(),
         body: JSON.stringify({ productOverrides: { [slug]: override } }),
       });
       const data = await res.json();
@@ -156,7 +171,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     try {
       await fetch("/api/site-config", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getAdminHeaders(),
         body: JSON.stringify({ ...defaultSiteConfig, _reset: true }),
       });
     } catch {}
@@ -209,7 +224,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
 
     fetch("/api/site-config", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: getAdminHeaders(),
       body: JSON.stringify({ contactSubmissions: updated }),
     }).catch(() => {});
   }, []);
@@ -223,7 +238,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
 
     fetch("/api/site-config", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: getAdminHeaders(),
       body: JSON.stringify({ contactSubmissions: updated }),
     }).catch(() => {});
   }, []);
@@ -292,7 +307,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     try {
       const res = await fetch("/api/site-config", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getAdminHeaders(),
         body: JSON.stringify({ customProducts: nextCustom }),
       });
       const data = await res.json();
@@ -324,7 +339,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
 
     fetch("/api/site-config", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: getAdminHeaders(),
       body: JSON.stringify({ storeOrders: updated }),
     }).catch(() => {});
   }, []);
@@ -340,7 +355,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
 
     fetch("/api/site-config", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: getAdminHeaders(),
       body: JSON.stringify({ storeOrders: updated }),
     }).catch(() => {});
   }, []);

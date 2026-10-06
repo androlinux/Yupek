@@ -1063,7 +1063,7 @@ export default function AdminPage() {
                     <span className="text-[10px] uppercase tracking-wider text-green-800 font-medium">Session Active</span>
                   </div>
                   <p className="text-xs text-brown/60">
-                    Primary admin account &bull; Saved to <code className="bg-white/80 px-1 py-0.5 rounded text-[11px] font-mono">data/site-config.json</code>
+                    Primary admin account &bull; Saved to <code className="bg-white/80 px-1 py-0.5 rounded text-[11px] font-mono">Supabase (site_config)</code>
                   </p>
                 </div>
               </div>
