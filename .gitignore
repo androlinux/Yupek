@@ -17,7 +17,9 @@ dist/
 *.tsbuildinfo
 
 # Local Environment Variables
-.env*.local
+.env
+.env.*
+!.env.example
 
 # Archives
 *.zip

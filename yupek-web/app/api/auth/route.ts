@@ -268,9 +268,9 @@ export async function POST(req: NextRequest) {
             createdAt: new Date().toISOString(),
             address: {
               fullName: "YUPEK",
-              street: config.contactAddress || "Keizersgracht 482",
+              street: config.contactAddress || "",
               city: "Amsterdam",
-              postalCode: "1016 GD",
+              postalCode: "",
               country: "Netherlands",
               phone: config.contactPhone || "+31644154126",
             },

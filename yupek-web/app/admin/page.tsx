@@ -6,6 +6,7 @@ import { useSiteConfig } from "@/components/ConfigContext";
 import { useAuth } from "@/components/AuthContext";
 import Icon from "@/components/ui/Icon";
 import ImageUploader from "@/components/admin/ImageUploader";
+import ProductCatalogManager from "@/components/admin/ProductCatalogManager";
 import { eur } from "@/lib/catalog";
 import { SiteConfig, ProductOverride } from "@/lib/siteConfig";
 
@@ -543,6 +544,14 @@ export default function AdminPage() {
           </div>
 
           <div className="flex items-center gap-3">
+            <Link
+              href="/admin/printify"
+              className="inline-flex items-center gap-1.5 border border-gold/60 bg-gold/10 px-3.5 py-2 text-[11px] uppercase tracking-wider text-brown hover:bg-gold/20 transition-colors font-medium"
+            >
+              <span>Printify Sync</span>
+              <span className="text-[10px] font-bold">&rarr;</span>
+            </Link>
+
             <Link
               href="/"
               target="_blank"
@@ -1260,9 +1269,9 @@ export default function AdminPage() {
                   Quick Presets
                 </span>
                 {[
-                  "COMPLIMENTARY SHIPPING ACROSS EUROPE ON ORDERS OVER €100 — PRIVATE SHOWROOM VIEWINGS AVAILABLE",
+                  "COMPLIMENTARY SHIPPING ACROSS EUROPE ON ORDERS OVER €100 — CLIENT CONCIERGE ASSISTANCE AVAILABLE",
                   "NEW SEASON: SILK ROUTE CAPSULE NOW AVAILABLE IN LIMITED QUANTITIES",
-                  "INVITATION ONLY: AMSTERDAM SHOWROOM RESERVATIONS OPEN",
+                  "CLIENT CONCIERGE: PERSONAL SIZING & FIT ASSISTANCE AVAILABLE",
                   "SPRING ARCHIVES: RECEIVE A SIGNATURE SILK POCKET SQUARE WITH ORDERS OVER €200",
                 ].map((preset, idx) => (
                   <button
@@ -1719,160 +1728,13 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* Tab 4: Products & Prices (Full Catalog Management) */}
+        {/* Tab 4: Products & Prices (Full Catalog & Customization Management) */}
         {activeTab === "products" && (
-          <div className="bg-cream border border-brown/15 p-6 md:p-8 space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h2 className="font-serif text-2xl text-brown tracking-wide">PRODUCT CATALOG & PRICING</h2>
-                <p className="text-xs text-brown/60 mt-1">
-                  Change garment prices, promotional badges (NEW, SALE), stock status, and featured toggles.
-                </p>
-              </div>
-              <span className="text-xs text-brown/70 bg-sand/30 px-3 py-1.5 rounded border border-brown/15">
-                Total Products: {allProducts.length}
-              </span>
-            </div>
-
-            <div className="divide-y divide-brown/15 border border-brown/20 bg-white/70 overflow-hidden">
-              {allProducts.map((p) => {
-                const override = form.productOverrides?.[p.slug] || {};
-                const currentPrice = override.price ?? p.price;
-                const currentBadge = override.badge !== undefined ? override.badge : p.badge;
-                const currentFeatured = override.featured ?? p.featured;
-
-                return (
-                  <div key={p.slug} className="p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-sand/10 transition-colors">
-                    {/* Product visual & details */}
-                    <div className="flex items-center gap-4 min-w-[280px]">
-                      <div className="h-16 w-12 bg-sand/30 overflow-hidden relative border border-brown/10 flex-shrink-0 group">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={override.images?.[0] || p.images[0] || "/images/collection.jpg"}
-                          alt={p.name}
-                          className="h-full w-full object-cover"
-                        />
-                        {override.images && override.images.length > 0 && (
-                          <span className="absolute bottom-0 inset-x-0 bg-burgundy text-cream text-[7px] text-center font-bold uppercase py-0.5 tracking-wider">
-                            Custom
-                          </span>
-                        )}
-                      </div>
-                      <div>
-                        <Link href={`/product/${p.slug}`} className="text-xs uppercase tracking-wider font-semibold text-brown hover:text-burgundy">
-                          {p.name}
-                        </Link>
-                        <p className="text-[11px] text-brown/60 capitalize">{p.category} &bull; {p.gender}</p>
-                        <div className="flex items-center gap-2 mt-1.5">
-                          <ImageUploader
-                            compact
-                            buttonText="Upload Photo"
-                            onUploaded={(url) => handleProductImageUpload(p.slug, url)}
-                          />
-                          {override.images && override.images.length > 0 && (
-                            <button
-                              type="button"
-                              onClick={() => handleProductResetImages(p.slug)}
-                              className="text-[9px] uppercase tracking-wider text-burgundy hover:underline"
-                            >
-                              Reset
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Price editor */}
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] uppercase tracking-wider text-brown/60">Price (€):</span>
-                      <input
-                        type="number"
-                        min="1"
-                        value={currentPrice}
-                        onChange={(e) => {
-                          isDirtyRef.current = true;
-                          const val = Number(e.target.value);
-                          setForm((prev) => ({
-                            ...prev,
-                            productOverrides: {
-                              ...prev.productOverrides,
-                              [p.slug]: {
-                                ...(prev.productOverrides?.[p.slug] || {}),
-                                price: val,
-                              },
-                            },
-                          }));
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            const val = Number((e.target as HTMLInputElement).value);
-                            if (!isNaN(val) && val > 0) {
-                              handleProductPriceChange(p.slug, val);
-                            }
-                          }
-                        }}
-                        onBlur={(e) => {
-                          const val = Number(e.target.value);
-                          if (!isNaN(val) && val > 0) {
-                            handleProductPriceChange(p.slug, val);
-                          }
-                        }}
-                        className="w-20 border border-brown/30 bg-white px-2 py-1 text-xs text-brown text-right font-medium focus:border-brown focus:outline-none"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const val = Number(form.productOverrides?.[p.slug]?.price ?? currentPrice);
-                          if (!isNaN(val) && val > 0) {
-                            handleProductPriceChange(p.slug, val);
-                          }
-                        }}
-                        className="text-[10px] bg-brown text-cream px-2 py-1 hover:bg-black"
-                      >
-                        Set
-                      </button>
-                    </div>
-
-                    {/* Badge editor */}
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] uppercase tracking-wider text-brown/60">Badge:</span>
-                      <select
-                        value={currentBadge || ""}
-                        onChange={(e) => {
-                          const b = e.target.value;
-                          handleProductBadgeChange(p.slug, b);
-                        }}
-                        className="border border-brown/30 bg-white px-2 py-1 text-xs text-brown focus:border-brown focus:outline-none"
-                      >
-                        <option value="">(None)</option>
-                        <option value="NEW">NEW</option>
-                        <option value="SPRING 26">SPRING 26</option>
-                        <option value="HERITAGE">HERITAGE</option>
-                        <option value="LIMITED">LIMITED</option>
-                        <option value="SALE -20%">SALE -20%</option>
-                        <option value="ARCHIVE">ARCHIVE</option>
-                      </select>
-                    </div>
-
-                    {/* Featured toggle */}
-                    <div className="flex items-center gap-3">
-                      <button
-                        type="button"
-                        onClick={() => handleProductToggleFeatured(p.slug, currentFeatured)}
-                        className={`text-[10px] uppercase tracking-wider px-3 py-1 border transition-colors ${
-                          currentFeatured
-                            ? "bg-gold/25 border-gold text-brown font-semibold"
-                            : "border-brown/20 text-brown/50 hover:bg-sand/30"
-                        }`}
-                      >
-                        {currentFeatured ? "★ Featured" : "Standard"}
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          <ProductCatalogManager
+            allGalleryImages={allGalleryImages}
+            fetchUploadedMedia={fetchUploadedMedia}
+            showToast={showToast}
+          />
         )}
 
         {/* Tab: Media & Photo Library (PC & Phone Uploads) */}
@@ -2156,13 +2018,13 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* Tab 6: Contact Form & Studio Details */}
+        {/* Tab 6: Store Contact & Client Concierge */}
         {activeTab === "contact" && (
           <div className="bg-cream border border-brown/15 p-6 md:p-8 space-y-6">
             <div>
               <h2 className="font-serif text-2xl text-brown tracking-wide">STORE CONTACT & INQUIRIES</h2>
               <p className="text-xs text-brown/60 mt-1">
-                Manage contact address, phone, email, opening hours, and brand video tour.
+                Manage contact email, phone, and customer care hours for the client concierge.
               </p>
             </div>
 
@@ -2193,19 +2055,7 @@ export default function AdminPage() {
 
               <div>
                 <label className="block text-[10px] uppercase tracking-widest text-brown/70 mb-1">
-                  Physical Studio Address
-                </label>
-                <input
-                  type="text"
-                  value={form.contactAddress}
-                  onChange={(e) => setForm({ ...form, contactAddress: e.target.value })}
-                  className="w-full border border-brown/20 bg-white/70 px-3 py-2 text-xs text-brown focus:border-brown focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] uppercase tracking-widest text-brown/70 mb-1">
-                  Opening Hours
+                  Customer Care Hours
                 </label>
                 <input
                   type="text"

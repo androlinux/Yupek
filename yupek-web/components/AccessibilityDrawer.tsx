@@ -88,8 +88,7 @@ export default function AccessibilityDrawer() {
   return (
     <>
       {/* Floating Accessibility Trigger Button (Bottom Left) */}
-      <aside
-        aria-label={a.floatingButtonLabel}
+      <div
         className="fixed bottom-6 left-6 z-40 flex items-center gap-3"
         onMouseEnter={() => setTooltipVisible(true)}
         onMouseLeave={() => setTooltipVisible(false)}
@@ -120,6 +119,7 @@ export default function AccessibilityDrawer() {
           className={`hidden sm:flex items-center gap-2 rounded-full border border-brown/15 bg-cream/95 px-3.5 py-1.5 shadow-lg backdrop-blur transition-all duration-300 ${
             tooltipVisible ? "translate-x-0 opacity-100" : "-translate-x-2 opacity-0 pointer-events-none"
           }`}
+          aria-hidden="true"
         >
           <span className="text-[11px] font-medium tracking-wider text-brown">
             {a.floatingTooltip}
@@ -130,7 +130,7 @@ export default function AccessibilityDrawer() {
             </span>
           )}
         </div>
-      </aside>
+      </div>
 
       {/* Backdrop */}
       {drawerOpen && (
@@ -146,6 +146,8 @@ export default function AccessibilityDrawer() {
         role="dialog"
         aria-modal="true"
         aria-label={a.drawerTitle}
+        aria-hidden={!drawerOpen}
+        inert={!drawerOpen || undefined}
         className={`fixed top-0 bottom-0 left-0 z-50 w-full max-w-md bg-cream text-brown border-r border-brown/20 shadow-2xl flex flex-col transition-transform duration-300 ease-out ${
           drawerOpen ? "translate-x-0" : "-translate-x-full pointer-events-none"
         }`}
@@ -238,6 +240,7 @@ export default function AccessibilityDrawer() {
                   {isPaused ? (
                     <button
                       onClick={resumeSpeech}
+                      aria-label={a.resumeSpeechBtn}
                       className="px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider bg-brown text-cream hover:bg-gold hover:text-brown transition-colors"
                     >
                       {a.resumeSpeechBtn}
@@ -245,6 +248,7 @@ export default function AccessibilityDrawer() {
                   ) : (
                     <button
                       onClick={pauseSpeech}
+                      aria-label={a.pauseSpeechBtn}
                       className="px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider bg-brown text-cream hover:bg-gold hover:text-brown transition-colors"
                     >
                       {a.pauseSpeechBtn}
@@ -252,6 +256,7 @@ export default function AccessibilityDrawer() {
                   )}
                   <button
                     onClick={stopSpeech}
+                    aria-label={a.stopSpeechBtn}
                     className="px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider border border-brown/30 text-brown hover:bg-brown/10 transition-colors"
                   >
                     {a.stopSpeechBtn}

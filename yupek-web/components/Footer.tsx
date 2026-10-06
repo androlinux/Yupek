@@ -111,9 +111,10 @@ export default function Footer() {
             </Link>
             <button
               onClick={openDrawer}
+              aria-label={t.a11y.floatingButtonLabel}
               className="hover:text-cream transition-colors uppercase inline-flex items-center gap-1.5 text-gold"
             >
-              <Icon name="accessibility" className="w-3 h-3 text-gold" />
+              <Icon name="accessibility" className="w-3 h-3 text-gold" aria-hidden="true" />
               <span>{t.a11y.drawerTitle}</span>
             </button>
           </div>

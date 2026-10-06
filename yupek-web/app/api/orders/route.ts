@@ -157,7 +157,7 @@ function generateOrderHtml(order: StoreOrder): string {
             <td style="background-color: #F6F1E7; padding: 20px 30px; text-align: center; border-top: 1px solid #E8DFD5;">
               <p style="font-size: 11px; color: #7A695C; margin: 0; line-height: 1.5;">
                 YUPEK &bull; Eastern Roots / European Style<br/>
-                Keizersgracht 482, 1016 GD Amsterdam &bull; concierge@yupek.eu
+                Online Boutique &bull; concierge@yupek.eu
               </p>
             </td>
           </tr>

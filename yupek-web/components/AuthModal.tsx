@@ -101,10 +101,16 @@ export default function AuthModal() {
       <div
         className="fixed inset-0 bg-brown/70 backdrop-blur-sm transition-opacity duration-300"
         onClick={() => setAuthModalOpen(false)}
+        aria-hidden="true"
       />
 
       {/* Modal Dialog */}
-      <div className="relative w-full max-w-md overflow-hidden bg-cream p-6 shadow-2xl transition-all duration-300 sm:p-8 border border-brown/15">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="auth-modal-title"
+        className="relative w-full max-w-md overflow-hidden bg-cream p-6 shadow-2xl transition-all duration-300 sm:p-8 border border-brown/15"
+      >
         <button
           onClick={() => setAuthModalOpen(false)}
           className="absolute right-5 top-5 p-1 text-brown/60 hover:text-brown transition-colors"
@@ -124,7 +130,7 @@ export default function AuthModal() {
           <p className="label tracking-[.3em] text-burgundy text-[10px] uppercase font-semibold">
             {t.auth.brandTag}
           </p>
-          <h2 className="font-serif text-2xl sm:text-3xl tracking-wide text-brown mt-1">
+          <h2 id="auth-modal-title" className="font-serif text-2xl sm:text-3xl tracking-wide text-brown mt-1">
             {tab === "signin" ? t.auth.clientAccessTitle : t.auth.createAccountTitle}
           </h2>
           <p className="mt-2 text-xs text-brown/70 max-w-xs mx-auto leading-relaxed">
@@ -133,9 +139,12 @@ export default function AuthModal() {
         </div>
 
         {/* Tab switch */}
-        <div className="mt-6 mb-4 grid grid-cols-2 border border-brown/20 p-1 bg-sand/20 text-xs">
+        <div role="tablist" aria-label="Authentication options" className="mt-6 mb-4 grid grid-cols-2 border border-brown/20 p-1 bg-sand/20 text-xs">
           <button
+            role="tab"
             type="button"
+            aria-selected={tab === "signin"}
+            aria-controls="auth-panel"
             onClick={() => {
               setTab("signin");
               setError(null);
@@ -147,7 +156,10 @@ export default function AuthModal() {
             {t.auth.signInTab}
           </button>
           <button
+            role="tab"
             type="button"
+            aria-selected={tab === "signup"}
+            aria-controls="auth-panel"
             onClick={() => {
               setTab("signup");
               setError(null);
@@ -161,14 +173,15 @@ export default function AuthModal() {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-3.5">
+        <form id="auth-panel" onSubmit={handleSubmit} className="space-y-3.5">
           {tab === "signup" && (
             <>
               <div>
-                <label className="block text-[10px] uppercase tracking-widest text-brown/70 font-semibold mb-1">
+                <label htmlFor="auth-name" className="block text-[10px] uppercase tracking-widest text-brown/70 font-semibold mb-1">
                   {t.auth.fullNameLabel}
                 </label>
                 <input
+                  id="auth-name"
                   type="text"
                   required
                   autoComplete="name"
@@ -180,10 +193,11 @@ export default function AuthModal() {
               </div>
 
               <div>
-                <label className="block text-[10px] uppercase tracking-widest text-brown/70 font-semibold mb-1">
+                <label htmlFor="auth-phone" className="block text-[10px] uppercase tracking-widest text-brown/70 font-semibold mb-1">
                   {locale === "nl" ? "Telefoonnummer (Optioneel)" : "Phone Number (Optional)"}
                 </label>
                 <input
+                  id="auth-phone"
                   type="tel"
                   autoComplete="tel"
                   value={phone}
@@ -196,10 +210,11 @@ export default function AuthModal() {
           )}
 
           <div>
-            <label className="block text-[10px] uppercase tracking-widest text-brown/70 font-semibold mb-1">
+            <label htmlFor="auth-email" className="block text-[10px] uppercase tracking-widest text-brown/70 font-semibold mb-1">
               {t.auth.emailLabel}
             </label>
             <input
+              id="auth-email"
               type="email"
               required
               autoComplete="email"
@@ -212,18 +227,24 @@ export default function AuthModal() {
 
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="text-[10px] uppercase tracking-widest text-brown/70 font-semibold">
+              <label htmlFor="auth-password" className="text-[10px] uppercase tracking-widest text-brown/70 font-semibold">
                 {t.auth.passwordLabel}
               </label>
               <button
                 type="button"
+                aria-label={showPassword
+                  ? (locale === "nl" ? "Wachtwoord verbergen" : "Hide password")
+                  : (locale === "nl" ? "Wachtwoord tonen" : "Show password")}
+                aria-pressed={showPassword}
+                aria-controls="auth-password"
                 onClick={() => setShowPassword(!showPassword)}
                 className="text-[10px] uppercase tracking-wider text-burgundy hover:underline font-medium"
               >
-                {showPassword ? "Hide" : "Show"}
+                {showPassword ? (locale === "nl" ? "Verbergen" : "Hide") : (locale === "nl" ? "Tonen" : "Show")}
               </button>
             </div>
             <input
+              id="auth-password"
               type={showPassword ? "text" : "password"}
               required
               minLength={6}
@@ -236,13 +257,13 @@ export default function AuthModal() {
           </div>
 
           {error && (
-            <p className="text-[11px] text-burgundy bg-burgundy/10 p-2.5 border border-burgundy/20">
+            <p role="alert" className="text-[11px] text-burgundy bg-burgundy/10 p-2.5 border border-burgundy/20">
               {error}
             </p>
           )}
 
           {successMsg && (
-            <p className="text-[11px] text-green-800 bg-green-50 p-2.5 border border-green-200">
+            <p role="status" className="text-[11px] text-green-800 bg-green-50 p-2.5 border border-green-200">
               {successMsg}
             </p>
           )}

@@ -243,12 +243,20 @@ export interface Translations {
     visitingHours: string;
     directWhatsAppBtn: string;
     studioTour: string;
+    cardTitle?: string;
+    cardDescription?: string;
     subjects: {
-      appointment: string;
-      garments: string;
-      order: string;
-      press: string;
-      wholesale: string;
+      appointment?: string;
+      garments?: string;
+      order?: string;
+      press?: string;
+      wholesale?: string;
+      productInfo?: string;
+      sizingFit?: string;
+      orderSupport?: string;
+      shippingDelivery?: string;
+      returnsExchanges?: string;
+      generalEnquiry?: string;
     };
   };
   about: {
@@ -430,7 +438,7 @@ export const dictionaries: Record<Locale, Translations> = {
       bag: "Bag",
     },
     announcement: {
-      text: "COMPLIMENTARY SHIPPING ACROSS EUROPE ON ORDERS OVER €100 — PRIVATE SHOWROOM VIEWINGS AVAILABLE",
+      text: "COMPLIMENTARY SHIPPING ACROSS EUROPE ON ORDERS OVER €100 — CLIENT CONCIERGE ASSISTANCE AVAILABLE",
       badge: "SPRING CAPSULE",
     },
     hero: {
@@ -467,7 +475,7 @@ export const dictionaries: Record<Locale, Translations> = {
       heritageDesc1: "YUPEK draws from a visual language shaped by silk, woven textiles, traditional geometric patterns and generations of craftsmanship.",
       heritageDesc2: "Rather than reproducing heritage literally, we reinterpret it. The result is clothing that carries a sense of origin while belonging naturally in modern Europe.",
       ourStoryBtn: "OUR BRAND STORY",
-      visitShowroomBtn: "VISIT SHOWROOM",
+      visitShowroomBtn: "CLIENT CONCIERGE",
       visualLookbook: "VISUAL LOOKBOOK",
       visualLookbookSub: "SPRING / SUMMER 2026 CAPSULE",
       viewLookbookBtn: "VIEW FULL LOOKBOOK",
@@ -608,9 +616,9 @@ export const dictionaries: Record<Locale, Translations> = {
       cancelBtn: "Cancel",
       conciergeTag: "PRIVATE CLIENT ADVISORY",
       conciergeTitle: "YUPEK CLIENT CONCIERGE",
-      conciergeDesc: "As a registered client, you have direct priority access to our Amsterdam team. We assist with bespoke sizing, private showroom viewings, and expedited courier requests.",
-      whatsAppConciergeBtn: "WhatsApp Private Concierge",
-      bookAppointmentBtn: "Book Private Appointment",
+      conciergeDesc: "As a registered client, you have direct priority access to our client concierge team. We assist with bespoke sizing, product details, and expedited courier requests.",
+      whatsAppConciergeBtn: "WhatsApp Client Concierge",
+      bookAppointmentBtn: "Contact Concierge",
     },
     auth: {
       brandTag: "YUPEK",
@@ -632,11 +640,11 @@ export const dictionaries: Record<Locale, Translations> = {
       adminDemoBtn: "Admin Demo",
     },
     contact: {
-      tag: "DIRECT INQUIRIES",
+      tag: "DIGITAL CLIENT CARE",
       title: "CLIENT CONCIERGE",
-      subtitle: "Whether you wish to schedule a private viewing in our Amsterdam studio, discuss bespoke sizing, or request international courier options, our concierge team is at your disposal.",
+      subtitle: "Whether you have a question about sizing, product details, an order, or international delivery, our client concierge team is here to assist.\n\nFor private product questions or styling enquiries, customers can contact us directly by email or WhatsApp.",
       formTitle: "TRANSMIT AN INQUIRY",
-      formSubtitle: "Our private client team typically responds within two hours during customer care hours.",
+      formSubtitle: "Our client concierge team typically responds within two hours during customer care hours.",
       fullName: "Full Name *",
       email: "Email Address *",
       phone: "Telephone (Optional)",
@@ -647,19 +655,23 @@ export const dictionaries: Record<Locale, Translations> = {
       thankYouTitle: "Thank you for your message",
       thankYouDesc: "Your inquiry has been registered with client concierge. A confirmation email and response will follow shortly.",
       sendAnother: "Send another message",
-      headquartersTag: "HEADQUARTERS & STUDIO",
-      studioTitle: "AMSTERDAM STUDIO",
-      conciergeEmail: "Concierge Email",
-      telephoneLine: "Telephone & Courier Line",
-      visitingHours: "Visiting & Telephone Hours",
-      directWhatsAppBtn: "DIRECT CHAT VIA WHATSAPP",
-      studioTour: "Studio Tour",
+      headquartersTag: "DIGITAL CLIENT CONCIERGE",
+      studioTitle: "YUPEK CLIENT CONCIERGE",
+      conciergeEmail: "EMAIL",
+      telephoneLine: "WHATSAPP",
+      visitingHours: "CUSTOMER CARE",
+      directWhatsAppBtn: "CONTACT VIA WHATSAPP",
+      studioTour: "Customer Care",
+      cardTitle: "YUPEK CLIENT CONCIERGE",
+      cardDescription: "Our client concierge team is available to assist with orders, sizing, product details, shipping and general enquiries.",
       subjects: {
-        appointment: "Private Showroom Appointment",
-        garments: "Garment Inquiries & Fabric Care",
-        order: "Order Tracking & Courier Delivery",
-        press: "Press, Styling & Editorial Requests",
-        wholesale: "Wholesale & Stockist Partnerships",
+        productInfo: "Product Information",
+        sizingFit: "Sizing & Fit",
+        orderSupport: "Order Support",
+        shippingDelivery: "Shipping & Delivery",
+        returnsExchanges: "Returns & Exchanges",
+        wholesale: "Wholesale / Collaboration",
+        generalEnquiry: "General Enquiry",
       },
     },
     about: {
@@ -672,7 +684,7 @@ export const dictionaries: Record<Locale, Translations> = {
       experienceCapsule: "EXPERIENCE THE CAPSULE",
       experienceSubtitle: "Limited batch production engineered for longevity.",
       shopCollectionBtn: "SHOP THE COLLECTION",
-      visitStudioBtn: "VISIT SHOWROOM",
+      visitStudioBtn: "CLIENT CONCIERGE",
       blocks: [
         {
           title: "THE ROOTS",
@@ -764,7 +776,7 @@ export const dictionaries: Record<Locale, Translations> = {
     newsletter: {
       tag: "ORDER DISPATCH",
       title: "JOIN THE PRIVATE YUPEK CIRCLE",
-      subtitle: "Subscribers receive private previews of seasonal capsules, invitations to showroom viewings, and textile essays.",
+      subtitle: "Subscribers receive private previews of seasonal capsules, special announcements, and textile essays.",
       emailPlaceholder: "YOUR EMAIL ADDRESS",
       subscribeBtn: "JOIN CIRCLE",
       thankYou: "WELCOME TO THE YUPEK CIRCLE",
@@ -836,7 +848,7 @@ export const dictionaries: Record<Locale, Translations> = {
           directive: "Regulation (EU) 2023/988 / GPSR",
           title: "General Product Safety & Traceability",
           scope: "Consumer Protection & Accountability",
-          description: "Products are designed, manufactured, and inspected to the highest European safety standards. Responsible economic operator established in the European Union: YUPEK B.V., Keizersgracht 482, 1016 GD Amsterdam, The Netherlands.",
+          description: "Products are designed, manufactured, and inspected to the highest European safety standards. Responsible economic operator established in the European Union: YUPEK (Client Concierge: daniyarov16@gmail.com / WhatsApp: +31644154126).",
         },
         {
           directive: "Directive 2000/31/EC & GDPR",
@@ -861,7 +873,7 @@ export const dictionaries: Record<Locale, Translations> = {
         {
           stepNumber: "03",
           title: "Courier Dispatch",
-          desc: "Affix the return address and dispatch via insured tracked courier (DHL, PostNL, UPS) to our Amsterdam address.",
+          desc: "Affix the prepaid return label provided by our concierge and hand over to your nearest courier depot (DHL, PostNL, UPS).",
         },
         {
           stepNumber: "04",
@@ -869,17 +881,16 @@ export const dictionaries: Record<Locale, Translations> = {
           desc: "Upon receipt, our master tailors inspect the piece within 48 hours. Reimbursement is promptly released to your original payment method.",
         },
       ],
-      addressTitle: "RETURN DESTINATION",
-      addressSubtitle: "Official European Union return headquarters",
+      addressTitle: "RETURN PROCESSING",
+      addressSubtitle: "Digital concierge return process",
       addressLines: [
-        "YUPEK B.V.",
-        "Attn: Returns & Quality Inspection",
-        "Keizersgracht 482",
-        "1016 GD Amsterdam",
-        "The Netherlands",
+        "YUPEK Returns & Quality Inspection",
+        "Returns are processed via prepaid tracked courier labels.",
+        "Request your complimentary return label by contacting our client concierge.",
+        "Online Customer Care: daniyarov16@gmail.com",
       ],
       conciergeTitle: "NEED PERSONAL ASSISTANCE?",
-      conciergeSubtitle: "Our Amsterdam concierge is at your disposal for sizing exchanges, return labels, or technical inquiries.",
+      conciergeSubtitle: "Our client concierge is at your disposal for sizing exchanges, return labels, or technical inquiries.",
       contactEmailBtn: "EMAIL CONCIERGE",
       contactWhatsAppBtn: "WHATSAPP CONCIERGE",
       odrTitle: "EUROPEAN ONLINE DISPUTE RESOLUTION (ODR)",
@@ -980,7 +991,7 @@ export const dictionaries: Record<Locale, Translations> = {
       bag: "Winkelmand",
     },
     announcement: {
-      text: "GRATIS VERZENDING BINNEN EUROPA BIJ BESTELLINGEN VANAF €100 — PRIVÉ SHOWROOM BEZOEKEN BESCHIKBAAR",
+      text: "GRATIS VERZENDING BINNEN EUROPA BIJ BESTELLINGEN VANAF €100 — CLIËNT CONCIËRGE BESCHIKBAAR",
       badge: "LENTE CAPSULE",
     },
     hero: {
@@ -1017,7 +1028,7 @@ export const dictionaries: Record<Locale, Translations> = {
       heritageDesc1: "YUPEK put uit een beeldtaal gevormd door zijde, geweven textiel, traditionele geometrische motieven en generaties van meesterlijk handwerk.",
       heritageDesc2: "In plaats van erfgoed letterlijk te kopiëren, herinterpreteren we het. Het resultaat is kleding met een diepe herkomst die volkomen natuurlijk aanvoelt in hedendaags Europa.",
       ourStoryBtn: "ONS MERKVERHAAL",
-      visitShowroomBtn: "BEZOEK SHOWROOM",
+      visitShowroomBtn: "CLIËNT CONCIËRGE",
       visualLookbook: "VISUEEL LOOKBOOK",
       visualLookbookSub: "LENTE / ZOMER 2026 CAPSULE",
       viewLookbookBtn: "BEKIJK VOLLEDIG LOOKBOOK",
@@ -1158,9 +1169,9 @@ export const dictionaries: Record<Locale, Translations> = {
       cancelBtn: "Annuleren",
       conciergeTag: "PRIVÉ KLANTENADVICE",
       conciergeTitle: "YUPEK CLIËNT CONCIËRGE",
-      conciergeDesc: "Als geregistreerde cliënt heeft u directe voorrang bij ons Amsterdamse team. Wij assisteren bij maatmaatwerk, privé showroombezichtigingen en spoedkoeriers.",
+      conciergeDesc: "Als geregistreerde cliënt heeft u directe voorrang bij ons team. Wij assisteren bij maatadvies, productdetails en bestellingen.",
       whatsAppConciergeBtn: "WhatsApp Privé Conciërge",
-      bookAppointmentBtn: "Boek Privé Afspraak",
+      bookAppointmentBtn: "Contact Conciërge",
     },
     auth: {
       brandTag: "YUPEK",
@@ -1182,11 +1193,11 @@ export const dictionaries: Record<Locale, Translations> = {
       adminDemoBtn: "Beheerder Demo",
     },
     contact: {
-      tag: "DIRECT CONTACT",
+      tag: "DIGITALE KLANTENSERVICE",
       title: "CLIËNT CONCIËRGE",
-      subtitle: "Of u nu een privéafspraak wilt in onze Amsterdamse studio, maatspecificaties wilt bespreken of internationale koeriersopties wilt aanvragen: ons team staat tot uw beschikking.",
+      subtitle: "Of u nu een vraag heeft over maten, productdetails, een bestelling of internationale bezorging: ons cliënt conciërgeteam staat voor u klaar.\n\nVoor specifieke productvragen of stylingadvies kunnen klanten rechtstreeks contact met ons opnemen via e-mail of WhatsApp.",
       formTitle: "STUUR EEN BERICHT",
-      formSubtitle: "Ons particuliere klantenteam reageert doorgaans binnen twee uur tijdens kantooruren.",
+      formSubtitle: "Ons cliënt conciërgeteam reageert doorgaans binnen twee uur tijdens klantenservice-uren.",
       fullName: "Volledige Naam *",
       email: "E-mailadres *",
       phone: "Telefoonnummer (Optioneel)",
@@ -1195,21 +1206,25 @@ export const dictionaries: Record<Locale, Translations> = {
       transmitting: "BERICHT VERZENDEN...",
       sendInquiryBtn: "VERSTUUR AANVRAAG",
       thankYouTitle: "Hartelijk dank voor uw bericht",
-      thankYouDesc: "Uw aanvraag is geregistreerd bij de conciërge. U ontvangt spoedig een bevestiging per e-mail.",
+      thankYouDesc: "Uw aanvraag is geregistreerd bij de cliënt conciërge. U ontvangt spoedig een bevestiging per e-mail.",
       sendAnother: "Nog een bericht versturen",
-      headquartersTag: "HOOFDKANTOOR & STUDIO",
-      studioTitle: "AMSTERDAM STUDIO",
-      conciergeEmail: "Conciërge E-mail",
-      telephoneLine: "Telefoon & Koeriersdienst",
-      visitingHours: "Bezoek- & Openingstijden",
-      directWhatsAppBtn: "DIRECT CHATTEN VIA WHATSAPP",
-      studioTour: "Studio Tour",
+      headquartersTag: "DIGITALE CLIËNT CONCIËRGE",
+      studioTitle: "YUPEK CLIËNT CONCIËRGE",
+      conciergeEmail: "E-MAIL",
+      telephoneLine: "WHATSAPP",
+      visitingHours: "KLANTENSERVICE",
+      directWhatsAppBtn: "CONTACT VIA WHATSAPP",
+      studioTour: "Klantenservice",
+      cardTitle: "YUPEK CLIËNT CONCIËRGE",
+      cardDescription: "Ons cliënt conciërgeteam staat klaar om u te helpen met bestellingen, maten, productdetails, verzending en algemene vragen.",
       subjects: {
-        appointment: "Privé Showroom Afspraak",
-        garments: "Vragen over Kleding & Stoffenverzorging",
-        order: "Bestelling Volgen & Koeriersdienst",
-        press: "Pers-, Styling- & Redactieaanvragen",
-        wholesale: "Groothandel & Boetiek Partnerschappen",
+        productInfo: "Productinformatie",
+        sizingFit: "Maatadvies & Pasvorm",
+        orderSupport: "Ondersteuning bij Bestelling",
+        shippingDelivery: "Verzending & Bezorging",
+        returnsExchanges: "Retourneren & Ruilen",
+        wholesale: "Groothandel / Samenwerking",
+        generalEnquiry: "Algemene Vraag",
       },
     },
     about: {
@@ -1222,7 +1237,7 @@ export const dictionaries: Record<Locale, Translations> = {
       experienceCapsule: "ERVAAR DE CAPSULE",
       experienceSubtitle: "Gelimiteerde productie gebouwd voor een lange levensduur.",
       shopCollectionBtn: "SHOP DE COLLECTIE",
-      visitStudioBtn: "BEZOEK SHOWROOM",
+      visitStudioBtn: "CLIËNT CONCIËRGE",
       blocks: [
         {
           title: "DE WORTELS",
@@ -1314,7 +1329,7 @@ export const dictionaries: Record<Locale, Translations> = {
     newsletter: {
       tag: "MEDEDELING",
       title: "WORD LID VAN DE YUPEK CIRCLE",
-      subtitle: "Leden ontvangen exclusieve previews van seizoenscapsules, uitnodigingen voor showroombezichtigingen en textielessays.",
+      subtitle: "Leden ontvangen exclusieve previews van seizoenscapsules, speciale aankondigingen en textielessays.",
       emailPlaceholder: "UW E-MAILADRES",
       subscribeBtn: "AANMELDEN",
       thankYou: "WELKOM BIJ DE YUPEK CIRCLE",
@@ -1386,7 +1401,7 @@ export const dictionaries: Record<Locale, Translations> = {
           directive: "Verordening (EU) 2023/988 / GPSR",
           title: "Algemene Productveiligheid & Traceerbaarheid",
           scope: "Consumentenbescherming",
-          description: "Artikelen zijn ontworpen en vervaardigd volgens de hoogste Europese kwaliteits- en veiligheidseisen. Verantwoordelijke marktdeelnemer in de Europese Unie: YUPEK B.V., Keizersgracht 482, 1016 GD Amsterdam, Nederland.",
+          description: "Artikelen zijn ontworpen en vervaardigd volgens de hoogste Europese kwaliteits- en veiligheidseisen. Verantwoordelijke marktdeelnemer in de Europese Unie: YUPEK (Cliënt Conciërge: daniyarov16@gmail.com / WhatsApp: +31644154126).",
         },
         {
           directive: "Richtlijn 2000/31/EG & AVG/GDPR",
@@ -1411,7 +1426,7 @@ export const dictionaries: Record<Locale, Translations> = {
         {
           stepNumber: "03",
           title: "Verzending via Koerier",
-          desc: "Voorzie het pakket van het retouradres en verzend via een betrouwbare koeriersdienst (PostNL, DHL, UPS) naar Amsterdam.",
+          desc: "Breng het door onze conciërge verstrekte retourlabel aan en geef het pakket af bij een koerierspunt (PostNL, DHL, UPS).",
         },
         {
           stepNumber: "04",
@@ -1419,17 +1434,16 @@ export const dictionaries: Record<Locale, Translations> = {
           desc: "Na ontvangst controleren onze meester-kleermakers het artikel binnen 48 uur. Het aankoopbedrag wordt direct gecrediteerd via uw betaalmethode.",
         },
       ],
-      addressTitle: "RETOURADRES",
-      addressSubtitle: "Officieel retouradres binnen de Europese Unie",
+      addressTitle: "RETOURVERWERKING",
+      addressSubtitle: "Digitale conciërge retourprocedure",
       addressLines: [
-        "YUPEK B.V.",
-        "T.a.v. Afdeling Retouren & Kwaliteitscontrole",
-        "Keizersgracht 482",
-        "1016 GD Amsterdam",
-        "Nederland",
+        "YUPEK Retouren & Kwaliteitscontrole",
+        "Retouren worden verwerkt via voorgefrankeerde retourlabels.",
+        "Vraag eenvoudig uw kosteloze retourlabel aan via onze cliënt conciërge.",
+        "Klantenservice: daniyarov16@gmail.com",
       ],
       conciergeTitle: "PERSOONLIJKE ONDERSTEUNING NODIG?",
-      conciergeSubtitle: "Onze Amsterdamse conciërge staat voor u klaar bij maatruilingen, retourlabels of vragen over EU-rechten.",
+      conciergeSubtitle: "Onze cliënt conciërge staat voor u klaar bij maatruilingen, retourlabels of vragen over EU-rechten.",
       contactEmailBtn: "E-MAIL CONCIËRGE",
       contactWhatsAppBtn: "WHATSAPP CONCIËRGE",
       odrTitle: "EUROPESE ONLINE GESCHILLENBESLECHTING (ODR)",

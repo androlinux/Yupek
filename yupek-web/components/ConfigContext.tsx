@@ -7,6 +7,9 @@ interface ConfigContextType {
   config: SiteConfig;
   updateConfig: (partial: Partial<SiteConfig>) => Promise<{ success: boolean; config?: SiteConfig; error?: string }>;
   updateProductOverride: (slug: string, override: ProductOverride) => Promise<{ success: boolean }>;
+  addProduct: (product: Product) => Promise<{ success: boolean; error?: string }>;
+  deleteProduct: (slug: string) => Promise<{ success: boolean }>;
+  restoreProduct: (slug: string) => Promise<{ success: boolean }>;
   resetToDefaults: () => void;
   submitContact: (form: { name: string; email: string; phone?: string; subject?: string; message: string }) => Promise<{ success: boolean; error?: string }>;
   markSubmissionRead: (id: string) => void;
@@ -14,6 +17,7 @@ interface ConfigContextType {
   addStoreOrder: (order: StoreOrder) => void;
   updateOrderStatus: (orderId: string, status: StoreOrder["status"]) => void;
   allProducts: Product[];
+  catalogProducts: (Product & { isDeleted?: boolean })[];
   getProduct: (slug: string) => Product | undefined;
 }
 
@@ -43,6 +47,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
                 ...(prev.productOverrides || {}),
                 ...(serverData.productOverrides || {}),
               },
+              customProducts: serverData.customProducts || prev.customProducts || [],
               storeOrders: serverData.storeOrders || prev.storeOrders || [],
               contactSubmissions: serverData.contactSubmissions || prev.contactSubmissions || [],
             };
@@ -223,11 +228,14 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     }).catch(() => {});
   }, []);
 
-  // Merge base products with any dynamic overrides from admin
-  const allProducts = useMemo(() => {
-    return baseProducts.map((p) => {
-      const override = config.productOverrides[p.slug];
-      if (!override) return p;
+  // Combine base products + custom products and apply dynamic overrides
+  const catalogProducts = useMemo(() => {
+    const custom = config.customProducts || [];
+    const combined = [...baseProducts, ...custom];
+
+    return combined.map((p) => {
+      const override = config.productOverrides?.[p.slug];
+      if (!override) return { ...p, isDeleted: false };
 
       return {
         ...p,
@@ -237,17 +245,75 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
         badge: override.badge !== undefined ? override.badge : p.badge,
         featured: override.featured ?? p.featured,
         newArrival: override.newArrival ?? p.newArrival,
+        category: (override.category as any) ?? p.category,
+        gender: (override.gender as any) ?? p.gender,
+        sizes: override.sizes && override.sizes.length > 0 ? override.sizes : p.sizes,
+        colors: override.colors && override.colors.length > 0 ? override.colors : p.colors,
+        description: override.description ?? p.description,
+        material: override.material ?? p.material,
+        inventory: override.inventory !== undefined ? override.inventory : p.inventory,
         images: override.images && override.images.length > 0 ? override.images : p.images,
+        isDeleted: Boolean(override.deleted),
       };
     });
-  }, [config.productOverrides]);
+  }, [config.productOverrides, config.customProducts]);
+
+  // Active storefront products (excluding deleted ones)
+  const allProducts = useMemo(() => {
+    return catalogProducts.filter((p) => !p.isDeleted);
+  }, [catalogProducts]);
 
   const getProduct = useCallback(
     (slug: string) => {
-      return allProducts.find((p) => p.slug === slug);
+      return allProducts.find((p) => p.slug === slug) || catalogProducts.find((p) => p.slug === slug);
     },
-    [allProducts]
+    [allProducts, catalogProducts]
   );
+
+  const addProduct = useCallback(async (product: Product): Promise<{ success: boolean; error?: string }> => {
+    const current = getLocalSiteConfig();
+    const existing = (current.customProducts || []).some((p) => p.slug === product.slug) ||
+      baseProducts.some((p) => p.slug === product.slug);
+
+    if (existing) {
+      return { success: false, error: `A garment with slug "${product.slug}" already exists.` };
+    }
+
+    const nextCustom = [...(current.customProducts || []), product];
+    const nextConfig: SiteConfig = {
+      ...current,
+      customProducts: nextCustom,
+      updatedAt: new Date().toISOString(),
+    };
+
+    setConfig(nextConfig);
+    saveLocalSiteConfig(nextConfig);
+
+    try {
+      const res = await fetch("/api/site-config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ customProducts: nextCustom }),
+      });
+      const data = await res.json();
+      if (data.config) {
+        saveLocalSiteConfig(data.config);
+        setConfig(data.config);
+      }
+      return { success: true };
+    } catch (err: unknown) {
+      console.error("[addProduct error]:", err);
+      return { success: false, error: "Failed to persist new product" };
+    }
+  }, []);
+
+  const deleteProduct = useCallback(async (slug: string): Promise<{ success: boolean }> => {
+    return updateProductOverride(slug, { deleted: true });
+  }, [updateProductOverride]);
+
+  const restoreProduct = useCallback(async (slug: string): Promise<{ success: boolean }> => {
+    return updateProductOverride(slug, { deleted: false });
+  }, [updateProductOverride]);
 
   const addStoreOrder = useCallback((order: StoreOrder) => {
     const current = getLocalSiteConfig();
@@ -285,6 +351,9 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
         config,
         updateConfig,
         updateProductOverride,
+        addProduct,
+        deleteProduct,
+        restoreProduct,
         resetToDefaults,
         submitContact,
         markSubmissionRead,
@@ -292,6 +361,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
         addStoreOrder,
         updateOrderStatus,
         allProducts,
+        catalogProducts,
         getProduct,
       }}
     >

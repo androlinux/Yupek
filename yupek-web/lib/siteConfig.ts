@@ -1,3 +1,5 @@
+import type { Product } from "@/data/products";
+
 export interface ProductOverride {
   price?: number;
   compareAtPrice?: number;
@@ -6,7 +8,15 @@ export interface ProductOverride {
   newArrival?: boolean;
   name?: string;
   descriptor?: string;
+  category?: "tees" | "shirts" | "sweatshirts" | "trousers" | "denim" | "accessories" | string;
+  gender?: "men" | "women" | "unisex";
+  sizes?: string[];
+  colors?: string[];
+  description?: string;
+  material?: string;
+  inventory?: number;
   images?: string[];
+  deleted?: boolean;
 }
 
 export interface ContactSubmission {
@@ -116,6 +126,9 @@ export interface SiteConfig {
   // Dynamic Product Overrides (by slug)
   productOverrides: Record<string, ProductOverride>;
 
+  // Custom products created in admin
+  customProducts?: Product[];
+
   // Contact Submissions
   contactSubmissions: ContactSubmission[];
 
@@ -134,7 +147,7 @@ export const defaultSiteConfig: SiteConfig = {
   adminUsername: "admin",
   adminPassword: "yupek2026",
   announcementEnabled: true,
-  announcementText: "COMPLIMENTARY SHIPPING ACROSS EUROPE ON ORDERS OVER €100 — PRIVATE SHOWROOM VIEWINGS AVAILABLE",
+  announcementText: "COMPLIMENTARY SHIPPING ACROSS EUROPE ON ORDERS OVER €100 — CLIENT CONCIERGE ASSISTANCE AVAILABLE",
   announcementLink: "/shop",
   announcementBadge: "SPRING CAPSULE",
 
@@ -162,16 +175,16 @@ export const defaultSiteConfig: SiteConfig = {
   aboutHeroImage: "/images/about.jpg",
 
   whatsappEnabled: true,
-  whatsappNumber: "+31612345678",
+  whatsappNumber: "+31644154126",
   whatsappMessage: "Hello YUPEK! I would like personal assistance with your collection.",
   whatsappTooltip: "Chat with Concierge",
 
-  contactEmail: "concierge@yupek.eu",
-  contactPhone: "+31 (0) 20 894 3320",
-  contactAddress: "Keizersgracht 482, 1016 GD Amsterdam, The Netherlands",
+  contactEmail: "daniyarov16@gmail.com",
+  contactPhone: "+31644154126",
+  contactAddress: "",
   contactHours: "Monday – Saturday: 10:00 – 19:00 CET",
   contactVideoUrl: "",
-  orderNotificationEmail: "daniyarow16@gmail.com",
+  orderNotificationEmail: "daniyarov16@gmail.com",
   smtpUser: "",
   smtpPass: "",
 
@@ -181,14 +194,15 @@ export const defaultSiteConfig: SiteConfig = {
   checkoutButtonLabel: "PROCEED TO CHECKOUT",
 
   productOverrides: {},
+  customProducts: [],
   contactSubmissions: [
     {
       id: "sub-1",
       name: "Sophie van der Meer",
       email: "sophie.vdm@example.com",
       phone: "+31 6 8123 4567",
-      subject: "Bespoke Silk Sizing & Private Appointment",
-      message: "Good day, I would love to inquire about private viewing of the Silk-Inspired Shirt in Amsterdam next Thursday.",
+      subject: "Sizing & Fit Advice",
+      message: "Good day, I would love to inquire about sizing advice for the Silk-Inspired Shirt for an upcoming event.",
       createdAt: "2026-10-04T14:32:00Z",
       read: true
     }

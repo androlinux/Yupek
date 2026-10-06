@@ -123,7 +123,7 @@ export default function Header() {
           {/* Dark/Original variant for cream/solid header */}
           <Image
             src="/images/logo.png"
-            alt="YUPEK"
+            alt=""
             width={180}
             height={55}
             priority
@@ -181,7 +181,7 @@ export default function Header() {
 
             {/* Dropdown Menu */}
             {userDropdownOpen && user && (
-              <div className="absolute right-0 mt-2 w-56 border border-brown/15 bg-cream p-2 shadow-2xl backdrop-blur-md transition-all animate-in fade-in slide-in-from-top-2 duration-200 text-brown">
+              <div role="menu" aria-label={t.nav.account} className="absolute right-0 mt-2 w-56 border border-brown/15 bg-cream p-2 shadow-2xl backdrop-blur-md transition-all animate-in fade-in slide-in-from-top-2 duration-200 text-brown">
                 <div className="border-b border-brown/10 px-3 py-2">
                   <p className="text-[10px] uppercase tracking-widest text-brown/60">
                     {locale === "nl" ? "Ingelogd als" : "Signed in as"}
@@ -194,6 +194,7 @@ export default function Header() {
 
                 <div className="py-1">
                   <Link
+                    role="menuitem"
                     href="/account"
                     onClick={() => setUserDropdownOpen(false)}
                     className="block px-3 py-1.5 text-xs tracking-wider hover:bg-sand/30 transition-colors"
@@ -201,6 +202,7 @@ export default function Header() {
                     {t.nav.account}
                   </Link>
                   <Link
+                    role="menuitem"
                     href="/account?tab=orders"
                     onClick={() => setUserDropdownOpen(false)}
                     className="block px-3 py-1.5 text-xs tracking-wider hover:bg-sand/30 transition-colors"
@@ -208,6 +210,7 @@ export default function Header() {
                     {t.account.ordersTab} ({user.orders?.length || 0})
                   </Link>
                   <Link
+                    role="menuitem"
                     href="/wishlist"
                     onClick={() => setUserDropdownOpen(false)}
                     className="block px-3 py-1.5 text-xs tracking-wider hover:bg-sand/30 transition-colors"
@@ -218,6 +221,7 @@ export default function Header() {
 
                 <div className="border-t border-brown/10 pt-1">
                   <button
+                    role="menuitem"
                     onClick={() => {
                       signOut();
                       setUserDropdownOpen(false);
@@ -263,6 +267,8 @@ export default function Header() {
 
       {/* Mobile Drawer Navigation with Staggered Entrance */}
       <div
+        aria-hidden={!menuOpen}
+        inert={!menuOpen || undefined}
         className={`overflow-hidden bg-cream text-brown transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] md:hidden ${
           menuOpen ? "max-h-[560px] border-t border-brown/10 shadow-xl opacity-100" : "max-h-0 opacity-0 pointer-events-none"
         }`}

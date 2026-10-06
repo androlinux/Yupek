@@ -3,14 +3,14 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Contact & Client Concierge",
   description:
-    "Connect with YUPEK for client assistance, product details, orders, and appointments.",
+    "Connect with YUPEK Client Concierge for assistance with orders, sizing, product details, shipping and general enquiries.",
   alternates: {
     canonical: "https://www.yupek.shop/contact",
   },
   openGraph: {
     title: "Contact Concierge | YUPEK",
     description:
-      "Connect with YUPEK for client assistance, product details, orders, and appointments.",
+      "Connect with YUPEK Client Concierge for assistance with orders, sizing, product details, shipping and general enquiries.",
     url: "https://www.yupek.shop/contact",
     siteName: "YUPEK",
     type: "website",
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Contact Concierge | YUPEK",
     description:
-      "Connect with YUPEK for client assistance, product details, orders, and appointments.",
+      "Connect with YUPEK Client Concierge for assistance with orders, sizing, product details, shipping and general enquiries.",
     images: ["https://www.yupek.shop/images/og.jpg"],
   },
 };
