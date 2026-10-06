@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { type Product } from "@/data/products";
-import { related } from "@/lib/catalog";
+import { related, isCustomerFacingDescriptor } from "@/lib/catalog";
 import { getProductServer, getCatalogProductsServer } from "@/lib/catalogServer";
 import ProductGrid from "@/components/ProductGrid";
 import SectionHeading from "@/components/SectionHeading";
@@ -132,23 +132,29 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   if (!p) return {};
 
   const title = p.name;
-  const materialSummary = p.material.split(".")[0];
-  const description = `${p.description} Crafted from ${materialSummary}. Category: ${p.descriptor}. Available in ${p.colors.join(", ")}. Price: €${p.price}.`;
+  const materialSummary = (p.material || "").split(".")[0];
+  const hasCustomerDesc = isCustomerFacingDescriptor(p.descriptor);
+  const categoryLabel = p.category ? p.category.toUpperCase() : "APPAREL";
+  const cleanDescription = `${p.description || p.name} Crafted from ${materialSummary || "premium textiles"}. Category: ${categoryLabel}. Available in ${(p.colors || []).join(", ")}. Price: €${p.price}.`;
   const canonicalUrl = `${PRODUCTION_URL}/product/${p.slug}`;
-  const ogImageUrl = p.images[0]
+  const ogImageUrl = p.images && p.images[0]
     ? (p.images[0].startsWith("http") ? p.images[0] : `${PRODUCTION_URL}${p.images[0]}`)
     : `${PRODUCTION_URL}/images/og.jpg`;
 
+  const ogDesc = hasCustomerDesc
+    ? `${p.descriptor} — ${p.description}`
+    : (p.description ? p.description.split("<br")[0].replace(/•/g, "").trim() : p.name);
+
   return {
     title,
-    description,
-    keywords: ["YUPEK", p.name, p.category, ...p.tags, ...p.colors],
+    description: cleanDescription,
+    keywords: ["YUPEK", p.name, p.category, ...(p.tags || []), ...(p.colors || [])],
     alternates: {
       canonical: canonicalUrl,
     },
     openGraph: {
       title: `${p.name} | YUPEK`,
-      description: `${p.descriptor} — ${p.description}`,
+      description: ogDesc,
       type: "website",
       url: canonicalUrl,
       siteName: "YUPEK",
@@ -165,7 +171,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     twitter: {
       card: "summary_large_image",
       title: `${p.name} | YUPEK`,
-      description: `${p.descriptor} — ${p.description}`,
+      description: ogDesc,
       images: [ogImageUrl],
     },
     other: {
@@ -178,6 +184,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     },
   };
 }
+
 
 export default async function ProductPage({ params }: { params: { slug: string } }) {
   const p = await getProductServer(params.slug);
