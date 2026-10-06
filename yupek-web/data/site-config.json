@@ -2,7 +2,7 @@
   "adminUsername": "admin",
   "adminPassword": "yupek2026",
   "announcementEnabled": true,
-  "announcementText": "COMPLIMENTARY SHIPPING ACROSS EUROPE ON ORDERS OVER €100 — CLIENT CONCIERGE ASSISTANCE AVAILABLE",
+  "announcementText": "COMPLIMENTARY SHIPPING ACROSS EUROPE ON ORDERS OVER \u20ac100 \u2014 CLIENT CONCIERGE ASSISTANCE AVAILABLE",
   "announcementLink": "/shop",
   "announcementBadge": "SPRING CAPSULE",
   "heroTitle": "YUPEK",
@@ -16,7 +16,7 @@
   "heroButtonLink": "/shop",
   "heroSecondaryButtonText": "DISCOVER YUPEK",
   "heroSecondaryButtonLink": "/about",
-  "editorialTag": "COLLECTION 01 — THE WEAVE",
+  "editorialTag": "COLLECTION 01 \u2014 THE WEAVE",
   "editorialTitle": "SILK ROAD ARCHITECTURE",
   "editorialDescription": "Rich historical craft meets clean architectural tailoring. Heavyweight organic cottons, natural plant-dyed hues and silk-touch drape engineered for longevity.",
   "editorialImage": "/images/look-2.jpg",
@@ -32,7 +32,7 @@
   "contactEmail": "daniyarov16@gmail.com",
   "contactPhone": "+31644154126",
   "contactAddress": "",
-  "contactHours": "Monday – Saturday: 10:00 – 19:00 CET",
+  "contactHours": "Monday \u2013 Saturday: 10:00 \u2013 19:00 CET",
   "contactVideoUrl": "",
   "orderNotificationEmail": "daniyarov16@gmail.com",
   "smtpUser": "daniyarov16@gmail.com",
@@ -42,7 +42,1585 @@
   "addToBagLabel": "ADD TO BAG",
   "checkoutButtonLabel": "PROCEED TO CHECKOUT",
   "productOverrides": {},
-  "customProducts": [],
+  "customProducts": [
+    {
+      "id": "printify-6ac5349aeeae231e00050f12",
+      "slug": "yupek-logo-ornate-patch-crewneck-sweatshirt-boho-medallion-back-print-6ac5349aeeae231e00050f12",
+      "name": "Yupek Logo Ornate Patch crewneck sweatshirt | Boho Medallion Back Print",
+      "descriptor": "Printify Custom Edition \u2022 13882006219804623954",
+      "price": 36.99,
+      "currency": "EUR",
+      "category": "sweatshirts",
+      "gender": "unisex",
+      "sizes": [
+        "Ash",
+        "Dark Heather",
+        "Heliconia",
+        "Irish Green",
+        "Light Blue",
+        "Light Pink",
+        "Maroon",
+        "Navy",
+        "Red",
+        "Sand",
+        "Sport Grey",
+        "White",
+        "Black",
+        "Forest Green",
+        "Military Green"
+      ],
+      "colors": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "2XL",
+        "3XL",
+        "4XL",
+        "5XL"
+      ],
+      "description": "Soft, slightly oversized, and quietly detailed \u2014 this crewneck brings heritage-inspired embroidery into everyday wear. The embroidered chest patch and matching back emblem read like a woven memory: warm rusts and earthy motifs that sit gently against a clean ivory canvas. It feels like slipping into a favorite library chair after a long walk: relaxed shoulders, a soft midweight heft, and a collar that keeps its shape. Wear it with faded denim, layered under a coat, or draped over a linen dress. The stitched accents give a subtle, artisanal touch that stands out without shouting, and the tear-away neck label keeps the inside as comfortable as the outside.<br/><br/>Product features<br/>- Embroidered accents at chest, back, and optional wrist placements<br/>- Midweight 50/50 cotton-poly blend (8.0 oz/yd\u00b2) for warmth and durability<br/>- Tubular knit (no side seams) for cleaner drape and reduced waste<br/>- Ribbed knit collar and double-needle stitching for long-lasting shape<br/>- DTF inner neck labels; OEKO-TEX\u00ae certified dyes and ethically grown US cotton<br/><br/>Care instructions<br/>- Machine wash: cold (max 30C or 90F)<br/>- Non-chlorine: bleach as needed<br/>- Tumble dry: low heat<br/>- Do not dryclean<br/>- Do not iron<br/>",
+      "material": "100% premium quality fabric tailored for modern living.",
+      "images": [
+        "https://images-api.printify.com/mockup/6ac5349aeeae231e00050f12/25458/98502/yupek-logo-ornate-patch-crewneck-sweatshirt-boho-medallion-back-print.jpg?camera_label=front",
+        "https://images-api.printify.com/mockup/6ac5349aeeae231e00050f12/25458/98503/yupek-logo-ornate-patch-crewneck-sweatshirt-boho-medallion-back-print.jpg?camera_label=back",
+        "https://images-api.printify.com/mockup/6ac5349aeeae231e00050f12/25458/100648/yupek-logo-ornate-patch-crewneck-sweatshirt-boho-medallion-back-print.jpg?camera_label=folded",
+        "https://images-api.printify.com/mockup/6ac5349aeeae231e00050f12/25458/110127/yupek-logo-ornate-patch-crewneck-sweatshirt-boho-medallion-back-print.jpg?camera_label=size-chart",
+        "https://images-api.printify.com/mockup/6ac5349aeeae231e00050f12/25439/98502/yupek-logo-ornate-patch-crewneck-sweatshirt-boho-medallion-back-print.jpg?camera_label=front",
+        "https://images-api.printify.com/mockup/6ac5349aeeae231e00050f12/25439/98503/yupek-logo-ornate-patch-crewneck-sweatshirt-boho-medallion-back-print.jpg?camera_label=back",
+        "https://images-api.printify.com/mockup/6ac5349aeeae231e00050f12/25439/100648/yupek-logo-ornate-patch-crewneck-sweatshirt-boho-medallion-back-print.jpg?camera_label=folded",
+        "https://images-api.printify.com/mockup/6ac5349aeeae231e00050f12/25459/98502/yupek-logo-ornate-patch-crewneck-sweatshirt-boho-medallion-back-print.jpg?camera_label=front",
+        "https://images-api.printify.com/mockup/6ac5349aeeae231e00050f12/25459/98503/yupek-logo-ornate-patch-crewneck-sweatshirt-boho-medallion-back-print.jpg?camera_label=back",
+        "https://images-api.printify.com/mockup/6ac5349aeeae231e00050f12/25459/100648/yupek-logo-ornate-patch-crewneck-sweatshirt-boho-medallion-back-print.jpg?camera_label=folded",
+        "https://images-api.printify.com/mockup/6ac5349aeeae231e00050f12/25449/98502/yupek-logo-ornate-patch-crewneck-sweatshirt-boho-medallion-back-print.jpg?camera_label=front",
+        "https://images-api.printify.com/mockup/6ac5349aeeae231e00050f12/25449/98503/yupek-logo-ornate-patch-crewneck-sweatshirt-boho-medallion-back-print.jpg?camera_label=back",
+        "https://images-api.printify.com/mockup/6ac5349aeeae231e00050f12/25449/100648/yupek-logo-ornate-patch-crewneck-sweatshirt-boho-medallion-back-print.jpg?camera_label=folded",
+        "https://images-api.printify.com/mockup/6ac5349aeeae231e00050f12/25447/98502/yupek-logo-ornate-patch-crewneck-sweatshirt-boho-medallion-back-print.jpg?camera_label=front",
+        "https://images-api.printify.com/mockup/6ac5349aeeae231e00050f12/25447/98503/yupek-logo-ornate-patch-crewneck-sweatshirt-boho-medallion-back-print.jpg?camera_label=back",
+        "https://images-api.printify.com/mockup/6ac5349aeeae231e00050f12/25447/100648/yupek-logo-ornate-patch-crewneck-sweatshirt-boho-medallion-back-print.jpg?camera_label=folded",
+        "https://images-api.printify.com/mockup/6ac5349aeeae231e00050f12/25450/98502/yupek-logo-ornate-patch-crewneck-sweatshirt-boho-medallion-back-print.jpg?camera_label=front",
+        "https://images-api.printify.com/mockup/6ac5349aeeae231e00050f12/25450/98503/yupek-logo-ornate-patch-crewneck-sweatshirt-boho-medallion-back-print.jpg?camera_label=back",
+        "https://images-api.printify.com/mockup/6ac5349aeeae231e00050f12/25450/100648/yupek-logo-ornate-patch-crewneck-sweatshirt-boho-medallion-back-print.jpg?camera_label=folded"
+      ],
+      "variants": [
+        {
+          "variant_id": null,
+          "title": "S / Ash",
+          "size": "Ash",
+          "color": "S",
+          "price": 0.36,
+          "price_cents": 36,
+          "is_enabled": true,
+          "is_available": true,
+          "sku": "13882006219804623954",
+          "options": [
+            14,
+            451
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "S / Dark Heather",
+          "size": "Dark Heather",
+          "color": "S",
+          "price": 0.5,
+          "price_cents": 50,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            14,
+            367
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "S / Heliconia",
+          "size": "Heliconia",
+          "color": "S",
+          "price": 0.49,
+          "price_cents": 49,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            14,
+            429
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "S / Irish Green",
+          "size": "Irish Green",
+          "color": "S",
+          "price": 0.49,
+          "price_cents": 49,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            14,
+            369
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "S / Light Blue",
+          "size": "Light Blue",
+          "color": "S",
+          "price": 0.36,
+          "price_cents": 36,
+          "is_enabled": true,
+          "is_available": true,
+          "sku": "11919988978072839705",
+          "options": [
+            14,
+            392
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "S / Light Pink",
+          "size": "Light Pink",
+          "color": "S",
+          "price": 0.49,
+          "price_cents": 49,
+          "is_enabled": false,
+          "is_available": false,
+          "sku": "",
+          "options": [
+            14,
+            433
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "S / Maroon",
+          "size": "Maroon",
+          "color": "S",
+          "price": 0.36,
+          "price_cents": 36,
+          "is_enabled": true,
+          "is_available": true,
+          "sku": "45642122091560717882",
+          "options": [
+            14,
+            395
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "S / Navy",
+          "size": "Navy",
+          "color": "S",
+          "price": 0.36,
+          "price_cents": 36,
+          "is_enabled": true,
+          "is_available": true,
+          "sku": "26417523245468071141",
+          "options": [
+            14,
+            511
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "S / Red",
+          "size": "Red",
+          "color": "S",
+          "price": 0.5,
+          "price_cents": 50,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            14,
+            423
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "S / Sand",
+          "size": "Sand",
+          "color": "S",
+          "price": 0.5,
+          "price_cents": 50,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            14,
+            421
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "S / Sport Grey",
+          "size": "Sport Grey",
+          "color": "S",
+          "price": 0.5,
+          "price_cents": 50,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            14,
+            358
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "S / White",
+          "size": "White",
+          "color": "S",
+          "price": 0.36,
+          "price_cents": 36,
+          "is_enabled": true,
+          "is_available": true,
+          "sku": "23765260918694720640",
+          "options": [
+            14,
+            521
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "S / Black",
+          "size": "Black",
+          "color": "S",
+          "price": 0.36,
+          "price_cents": 36,
+          "is_enabled": true,
+          "is_available": true,
+          "sku": "33061076391867414161",
+          "options": [
+            14,
+            418
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "S / Forest Green",
+          "size": "Forest Green",
+          "color": "S",
+          "price": 0.49,
+          "price_cents": 49,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            14,
+            416
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "S / Military Green",
+          "size": "Military Green",
+          "color": "S",
+          "price": 0.5,
+          "price_cents": 50,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            14,
+            364
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "M / Ash",
+          "size": "Ash",
+          "color": "M",
+          "price": 0.36,
+          "price_cents": 36,
+          "is_enabled": true,
+          "is_available": true,
+          "sku": "27605144915403577016",
+          "options": [
+            15,
+            451
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "M / Dark Heather",
+          "size": "Dark Heather",
+          "color": "M",
+          "price": 0.5,
+          "price_cents": 50,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            15,
+            367
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "M / Heliconia",
+          "size": "Heliconia",
+          "color": "M",
+          "price": 0.49,
+          "price_cents": 49,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            15,
+            429
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "M / Irish Green",
+          "size": "Irish Green",
+          "color": "M",
+          "price": 0.49,
+          "price_cents": 49,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            15,
+            369
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "M / Light Blue",
+          "size": "Light Blue",
+          "color": "M",
+          "price": 0.36,
+          "price_cents": 36,
+          "is_enabled": true,
+          "is_available": true,
+          "sku": "11830004172172025460",
+          "options": [
+            15,
+            392
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "M / Light Pink",
+          "size": "Light Pink",
+          "color": "M",
+          "price": 0.49,
+          "price_cents": 49,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            15,
+            433
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "M / Maroon",
+          "size": "Maroon",
+          "color": "M",
+          "price": 0.36,
+          "price_cents": 36,
+          "is_enabled": true,
+          "is_available": true,
+          "sku": "16969481771031206820",
+          "options": [
+            15,
+            395
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "M / Navy",
+          "size": "Navy",
+          "color": "M",
+          "price": 0.36,
+          "price_cents": 36,
+          "is_enabled": true,
+          "is_available": true,
+          "sku": "27013849063612633260",
+          "options": [
+            15,
+            511
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "M / Red",
+          "size": "Red",
+          "color": "M",
+          "price": 0.5,
+          "price_cents": 50,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            15,
+            423
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "M / Sand",
+          "size": "Sand",
+          "color": "M",
+          "price": 0.5,
+          "price_cents": 50,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            15,
+            421
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "M / Sport Grey",
+          "size": "Sport Grey",
+          "color": "M",
+          "price": 0.5,
+          "price_cents": 50,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            15,
+            358
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "M / White",
+          "size": "White",
+          "color": "M",
+          "price": 0.36,
+          "price_cents": 36,
+          "is_enabled": true,
+          "is_available": true,
+          "sku": "35223838360560523935",
+          "options": [
+            15,
+            521
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "M / Black",
+          "size": "Black",
+          "color": "M",
+          "price": 0.36,
+          "price_cents": 36,
+          "is_enabled": true,
+          "is_available": true,
+          "sku": "21447005674878702375",
+          "options": [
+            15,
+            418
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "M / Forest Green",
+          "size": "Forest Green",
+          "color": "M",
+          "price": 0.49,
+          "price_cents": 49,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            15,
+            416
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "M / Military Green",
+          "size": "Military Green",
+          "color": "M",
+          "price": 0.5,
+          "price_cents": 50,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            15,
+            364
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "L / Ash",
+          "size": "Ash",
+          "color": "L",
+          "price": 0.36,
+          "price_cents": 36,
+          "is_enabled": true,
+          "is_available": true,
+          "sku": "30997946180107041875",
+          "options": [
+            16,
+            451
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "L / Dark Heather",
+          "size": "Dark Heather",
+          "color": "L",
+          "price": 0.5,
+          "price_cents": 50,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            16,
+            367
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "L / Heliconia",
+          "size": "Heliconia",
+          "color": "L",
+          "price": 0.49,
+          "price_cents": 49,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            16,
+            429
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "L / Irish Green",
+          "size": "Irish Green",
+          "color": "L",
+          "price": 0.49,
+          "price_cents": 49,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            16,
+            369
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "L / Light Blue",
+          "size": "Light Blue",
+          "color": "L",
+          "price": 0.36,
+          "price_cents": 36,
+          "is_enabled": true,
+          "is_available": true,
+          "sku": "99944527910326749039",
+          "options": [
+            16,
+            392
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "L / Light Pink",
+          "size": "Light Pink",
+          "color": "L",
+          "price": 0.49,
+          "price_cents": 49,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            16,
+            433
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "L / Maroon",
+          "size": "Maroon",
+          "color": "L",
+          "price": 0.36,
+          "price_cents": 36,
+          "is_enabled": true,
+          "is_available": true,
+          "sku": "31123848660306940825",
+          "options": [
+            16,
+            395
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "L / Navy",
+          "size": "Navy",
+          "color": "L",
+          "price": 0.36,
+          "price_cents": 36,
+          "is_enabled": true,
+          "is_available": true,
+          "sku": "19800898974845751267",
+          "options": [
+            16,
+            511
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "L / Red",
+          "size": "Red",
+          "color": "L",
+          "price": 0.5,
+          "price_cents": 50,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            16,
+            423
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "L / Sand",
+          "size": "Sand",
+          "color": "L",
+          "price": 0.5,
+          "price_cents": 50,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            16,
+            421
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "L / Sport Grey",
+          "size": "Sport Grey",
+          "color": "L",
+          "price": 0.5,
+          "price_cents": 50,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            16,
+            358
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "L / White",
+          "size": "White",
+          "color": "L",
+          "price": 0.36,
+          "price_cents": 36,
+          "is_enabled": true,
+          "is_available": true,
+          "sku": "21167372952971590961",
+          "options": [
+            16,
+            521
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "L / Black",
+          "size": "Black",
+          "color": "L",
+          "price": 0.36,
+          "price_cents": 36,
+          "is_enabled": true,
+          "is_available": true,
+          "sku": "26177719919267188636",
+          "options": [
+            16,
+            418
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "L / Forest Green",
+          "size": "Forest Green",
+          "color": "L",
+          "price": 0.49,
+          "price_cents": 49,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            16,
+            416
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "L / Military Green",
+          "size": "Military Green",
+          "color": "L",
+          "price": 0.5,
+          "price_cents": 50,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            16,
+            364
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "XL / Ash",
+          "size": "Ash",
+          "color": "XL",
+          "price": 0.36,
+          "price_cents": 36,
+          "is_enabled": true,
+          "is_available": true,
+          "sku": "31356612940005604227",
+          "options": [
+            17,
+            451
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "XL / Dark Heather",
+          "size": "Dark Heather",
+          "color": "XL",
+          "price": 0.5,
+          "price_cents": 50,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            17,
+            367
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "XL / Heliconia",
+          "size": "Heliconia",
+          "color": "XL",
+          "price": 0.49,
+          "price_cents": 49,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            17,
+            429
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "XL / Irish Green",
+          "size": "Irish Green",
+          "color": "XL",
+          "price": 0.49,
+          "price_cents": 49,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            17,
+            369
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "XL / Light Blue",
+          "size": "Light Blue",
+          "color": "XL",
+          "price": 0.36,
+          "price_cents": 36,
+          "is_enabled": true,
+          "is_available": true,
+          "sku": "55984385584127262988",
+          "options": [
+            17,
+            392
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "XL / Light Pink",
+          "size": "Light Pink",
+          "color": "XL",
+          "price": 0.49,
+          "price_cents": 49,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            17,
+            433
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "XL / Maroon",
+          "size": "Maroon",
+          "color": "XL",
+          "price": 0.36,
+          "price_cents": 36,
+          "is_enabled": true,
+          "is_available": true,
+          "sku": "21649504602726534370",
+          "options": [
+            17,
+            395
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "XL / Navy",
+          "size": "Navy",
+          "color": "XL",
+          "price": 0.36,
+          "price_cents": 36,
+          "is_enabled": true,
+          "is_available": true,
+          "sku": "53512975779172545941",
+          "options": [
+            17,
+            511
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "XL / Red",
+          "size": "Red",
+          "color": "XL",
+          "price": 0.5,
+          "price_cents": 50,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            17,
+            423
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "XL / Sand",
+          "size": "Sand",
+          "color": "XL",
+          "price": 0.5,
+          "price_cents": 50,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            17,
+            421
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "XL / Sport Grey",
+          "size": "Sport Grey",
+          "color": "XL",
+          "price": 0.5,
+          "price_cents": 50,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            17,
+            358
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "XL / White",
+          "size": "White",
+          "color": "XL",
+          "price": 0.36,
+          "price_cents": 36,
+          "is_enabled": true,
+          "is_available": true,
+          "sku": "13961473802252929853",
+          "options": [
+            17,
+            521
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "XL / Black",
+          "size": "Black",
+          "color": "XL",
+          "price": 0.36,
+          "price_cents": 36,
+          "is_enabled": true,
+          "is_available": true,
+          "sku": "31844127544597533201",
+          "options": [
+            17,
+            418
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "XL / Forest Green",
+          "size": "Forest Green",
+          "color": "XL",
+          "price": 0.49,
+          "price_cents": 49,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            17,
+            416
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "XL / Military Green",
+          "size": "Military Green",
+          "color": "XL",
+          "price": 0.5,
+          "price_cents": 50,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            17,
+            364
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "2XL / Ash",
+          "size": "Ash",
+          "color": "2XL",
+          "price": 0.36,
+          "price_cents": 36,
+          "is_enabled": true,
+          "is_available": true,
+          "sku": "11214150630136619662",
+          "options": [
+            18,
+            451
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "2XL / Dark Heather",
+          "size": "Dark Heather",
+          "color": "2XL",
+          "price": 0.5,
+          "price_cents": 50,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            18,
+            367
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "2XL / Heliconia",
+          "size": "Heliconia",
+          "color": "2XL",
+          "price": 0.49,
+          "price_cents": 49,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            18,
+            429
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "2XL / Irish Green",
+          "size": "Irish Green",
+          "color": "2XL",
+          "price": 0.49,
+          "price_cents": 49,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            18,
+            369
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "2XL / Light Blue",
+          "size": "Light Blue",
+          "color": "2XL",
+          "price": 0.36,
+          "price_cents": 36,
+          "is_enabled": true,
+          "is_available": true,
+          "sku": "10997581758657483620",
+          "options": [
+            18,
+            392
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "2XL / Light Pink",
+          "size": "Light Pink",
+          "color": "2XL",
+          "price": 0.49,
+          "price_cents": 49,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            18,
+            433
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "2XL / Maroon",
+          "size": "Maroon",
+          "color": "2XL",
+          "price": 0.36,
+          "price_cents": 36,
+          "is_enabled": true,
+          "is_available": true,
+          "sku": "28552019917209048590",
+          "options": [
+            18,
+            395
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "2XL / Navy",
+          "size": "Navy",
+          "color": "2XL",
+          "price": 0.36,
+          "price_cents": 36,
+          "is_enabled": true,
+          "is_available": true,
+          "sku": "10150085196903586913",
+          "options": [
+            18,
+            511
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "2XL / Red",
+          "size": "Red",
+          "color": "2XL",
+          "price": 0.5,
+          "price_cents": 50,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            18,
+            423
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "2XL / Sand",
+          "size": "Sand",
+          "color": "2XL",
+          "price": 0.5,
+          "price_cents": 50,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            18,
+            421
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "2XL / Sport Grey",
+          "size": "Sport Grey",
+          "color": "2XL",
+          "price": 0.5,
+          "price_cents": 50,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            18,
+            358
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "2XL / White",
+          "size": "White",
+          "color": "2XL",
+          "price": 0.36,
+          "price_cents": 36,
+          "is_enabled": true,
+          "is_available": true,
+          "sku": "11900721939187929228",
+          "options": [
+            18,
+            521
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "2XL / Black",
+          "size": "Black",
+          "color": "2XL",
+          "price": 0.36,
+          "price_cents": 36,
+          "is_enabled": true,
+          "is_available": true,
+          "sku": "29343700318041124150",
+          "options": [
+            18,
+            418
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "2XL / Forest Green",
+          "size": "Forest Green",
+          "color": "2XL",
+          "price": 0.49,
+          "price_cents": 49,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            18,
+            416
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "2XL / Military Green",
+          "size": "Military Green",
+          "color": "2XL",
+          "price": 0.5,
+          "price_cents": 50,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            18,
+            364
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "3XL / Ash",
+          "size": "Ash",
+          "color": "3XL",
+          "price": 0.54,
+          "price_cents": 54,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            19,
+            451
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "3XL / Heliconia",
+          "size": "Heliconia",
+          "color": "3XL",
+          "price": 0.54,
+          "price_cents": 54,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            19,
+            429
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "3XL / Irish Green",
+          "size": "Irish Green",
+          "color": "3XL",
+          "price": 0.54,
+          "price_cents": 54,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            19,
+            369
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "3XL / Light Blue",
+          "size": "Light Blue",
+          "color": "3XL",
+          "price": 0.54,
+          "price_cents": 54,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            19,
+            392
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "3XL / Light Pink",
+          "size": "Light Pink",
+          "color": "3XL",
+          "price": 0.54,
+          "price_cents": 54,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            19,
+            433
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "3XL / Maroon",
+          "size": "Maroon",
+          "color": "3XL",
+          "price": 0.54,
+          "price_cents": 54,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            19,
+            395
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "3XL / Navy",
+          "size": "Navy",
+          "color": "3XL",
+          "price": 0.55,
+          "price_cents": 55,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            19,
+            511
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "3XL / Red",
+          "size": "Red",
+          "color": "3XL",
+          "price": 0.55,
+          "price_cents": 55,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            19,
+            423
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "3XL / Sand",
+          "size": "Sand",
+          "color": "3XL",
+          "price": 0.55,
+          "price_cents": 55,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            19,
+            421
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "3XL / Sport Grey",
+          "size": "Sport Grey",
+          "color": "3XL",
+          "price": 0.55,
+          "price_cents": 55,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            19,
+            358
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "3XL / White",
+          "size": "White",
+          "color": "3XL",
+          "price": 0.55,
+          "price_cents": 55,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            19,
+            521
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "3XL / Black",
+          "size": "Black",
+          "color": "3XL",
+          "price": 0.55,
+          "price_cents": 55,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            19,
+            418
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "3XL / Forest Green",
+          "size": "Forest Green",
+          "color": "3XL",
+          "price": 0.54,
+          "price_cents": 54,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            19,
+            416
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "3XL / Military Green",
+          "size": "Military Green",
+          "color": "3XL",
+          "price": 0.55,
+          "price_cents": 55,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            19,
+            364
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "4XL / Navy",
+          "size": "Navy",
+          "color": "4XL",
+          "price": 0.55,
+          "price_cents": 55,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            20,
+            511
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "4XL / Red",
+          "size": "Red",
+          "color": "4XL",
+          "price": 0.55,
+          "price_cents": 55,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            20,
+            423
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "4XL / Sport Grey",
+          "size": "Sport Grey",
+          "color": "4XL",
+          "price": 0.55,
+          "price_cents": 55,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            20,
+            358
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "4XL / White",
+          "size": "White",
+          "color": "4XL",
+          "price": 0.55,
+          "price_cents": 55,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            20,
+            521
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "4XL / Black",
+          "size": "Black",
+          "color": "4XL",
+          "price": 0.55,
+          "price_cents": 55,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            20,
+            418
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "5XL / Navy",
+          "size": "Navy",
+          "color": "5XL",
+          "price": 0.55,
+          "price_cents": 55,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            21,
+            511
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "5XL / Red",
+          "size": "Red",
+          "color": "5XL",
+          "price": 0.55,
+          "price_cents": 55,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            21,
+            423
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "5XL / Sport Grey",
+          "size": "Sport Grey",
+          "color": "5XL",
+          "price": 0.55,
+          "price_cents": 55,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            21,
+            358
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "5XL / White",
+          "size": "White",
+          "color": "5XL",
+          "price": 0.55,
+          "price_cents": 55,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            21,
+            521
+          ]
+        },
+        {
+          "variant_id": null,
+          "title": "5XL / Black",
+          "size": "Black",
+          "color": "5XL",
+          "price": 0.55,
+          "price_cents": 55,
+          "is_enabled": false,
+          "is_available": true,
+          "sku": "",
+          "options": [
+            21,
+            418
+          ]
+        }
+      ],
+      "featured": false,
+      "newArrival": true,
+      "badge": null,
+      "tags": [
+        "Men's Clothing",
+        "Sweatshirts",
+        "Women's Clothing",
+        "DTG",
+        "Unisex",
+        "Crew neck",
+        "Regular fit",
+        "Neck Labels",
+        "TikTok",
+        "Embroidery",
+        "New Mockups",
+        "Glitter",
+        "Glitter print",
+        "Puffy",
+        "Puff",
+        "Puff print",
+        "Metallic",
+        "Metallic print",
+        "Raised print",
+        "Textured print"
+      ],
+      "supplier": "Printify",
+      "supplierProductId": "6ac5349aeeae231e00050f12",
+      "supplierPrice": 36.99,
+      "inventory": 50,
+      "isDraft": true
+    }
+  ],
   "contactSubmissions": [
     {
       "id": "sub-1",
@@ -91,6 +1669,6 @@
       "emailNotificationRecipient": "daniyarow16@gmail.com"
     }
   ],
-  "updatedAt": "2026-10-06T00:52:51.961Z",
+  "updatedAt": "2026-10-06T19:01:04.280514+00:00",
   "_reset": true
 }
