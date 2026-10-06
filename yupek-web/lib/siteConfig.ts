@@ -155,7 +155,7 @@ export const defaultSiteConfig: SiteConfig = {
   heroTitle: initialSiteConfig.heroTitle || "YUPEK",
   heroTaglineLine1: initialSiteConfig.heroTaglineLine1 || "EASTERN ROOTS",
   heroTaglineLine2: initialSiteConfig.heroTaglineLine2 || "EUROPEAN FORM",
-  heroDescription: initialSiteConfig.heroDescription || "Contemporary architectural clothing inspired by ancient Turkmen silk heritage, tailored for modern European living.",
+  heroDescription: initialSiteConfig.heroDescription || "Contemporary clothing inspired by Turkmen silk heritage, designed for modern European living. Discover YUPEK collections, timeless pieces and Eastern-inspired style.",
   heroImage: initialSiteConfig.heroImage || "/images/look-2.jpg",
   heroVideoUrl: initialSiteConfig.heroVideoUrl || "",
   heroUseVideo: initialSiteConfig.heroUseVideo ?? false,

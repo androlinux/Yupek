@@ -17,7 +17,8 @@ export default function Hero() {
   const isDefaultTagline2 = config.heroTaglineLine2 === "EUROPEAN FORM";
   const isDefaultDesc =
     config.heroDescription.includes("Contemporary architectural clothing") ||
-    config.heroDescription.includes("Contemporary clothing");
+    config.heroDescription.includes("Contemporary clothing") ||
+    config.heroDescription.includes("Turkmen silk heritage");
   const isDefaultBtn = config.heroButtonText === "SHOP COLLECTION";
   const isDefaultSecBtn = config.heroSecondaryButtonText === "DISCOVER YUPEK";
 
@@ -106,21 +107,20 @@ export default function Hero() {
           </p>
 
           {/* Action Buttons */}
-          <div className="fade-up mt-8 flex flex-col gap-3.5 sm:flex-row [animation-delay:350ms]">
+          <nav aria-label="Hero actions" className="fade-up mt-8 flex flex-col gap-3.5 sm:flex-row [animation-delay:350ms]">
             <Link
               href={config.heroButtonLink || "/shop"}
               className="group relative inline-flex items-center justify-center overflow-hidden border border-cream bg-cream px-8 py-3.5 text-xs font-medium tracking-[.2em] text-brown transition-all duration-300 hover:bg-transparent hover:text-cream shadow-lg"
             >
               <span className="relative z-10">{buttonText}</span>
-            </Link>
-
+            </Link>{" "}
             <Link
               href={config.heroSecondaryButtonLink || "/about"}
               className="inline-flex items-center justify-center border border-cream/50 bg-brown/40 backdrop-blur-sm px-8 py-3.5 text-xs font-medium tracking-[.2em] text-cream transition-all duration-300 hover:border-cream hover:bg-cream/10"
             >
               {secondaryButtonText}
             </Link>
-          </div>
+          </nav>
         </div>
       </div>
     </section>

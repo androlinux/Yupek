@@ -23,9 +23,10 @@ const sans = Inter({
 });
 
 const siteUrl = "https://www.yupek.shop";
+const productionCanonical = "https://www.yupek.shop/";
 const title = "YUPEK — Eastern Heritage, European Style";
 const description =
-  "Contemporary fashion blending ancient Eastern silk heritage with refined European tailoring. Architectural silhouettes crafted from organic cotton, linen, and artisanal textiles.";
+  "Contemporary clothing inspired by Turkmen silk heritage, designed for modern European living. Discover YUPEK collections, timeless pieces and Eastern-inspired style.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -35,7 +36,7 @@ export const metadata: Metadata = {
   },
   description,
   alternates: {
-    canonical: siteUrl,
+    canonical: productionCanonical,
     languages: {
       "en-US": `${siteUrl}/?lang=en`,
       "nl-NL": `${siteUrl}/?lang=nl`,
@@ -70,7 +71,7 @@ export const metadata: Metadata = {
     siteName: "YUPEK",
     type: "website",
     locale: "en_US",
-    url: siteUrl,
+    url: productionCanonical,
     images: [
       {
         url: `${siteUrl}/images/og.jpg`,
@@ -102,7 +103,7 @@ const jsonLd = {
       "@type": "OnlineStore",
       "@id": `${siteUrl}/#organization`,
       name: "YUPEK",
-      url: siteUrl,
+      url: productionCanonical,
       logo: `${siteUrl}/images/logo-dark.png`,
       image: `${siteUrl}/images/og.jpg`,
       description,
@@ -123,7 +124,7 @@ const jsonLd = {
     {
       "@type": "WebSite",
       "@id": `${siteUrl}/#website`,
-      url: siteUrl,
+      url: productionCanonical,
       name: "YUPEK",
       publisher: {
         "@id": `${siteUrl}/#organization`,

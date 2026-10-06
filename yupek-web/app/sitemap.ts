@@ -32,7 +32,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   //   /wishlist  — user-specific saved items, no canonical content
   const staticRoutes: MetadataRoute.Sitemap = [
     {
-      url: PRODUCTION_URL,
+      url: `${PRODUCTION_URL}/`,
       lastModified: SITE_LAUNCH_DATE,
       changeFrequency: "daily",
       priority: 1.0,
