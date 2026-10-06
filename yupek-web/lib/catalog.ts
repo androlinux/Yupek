@@ -62,12 +62,51 @@ export function sanitizeProductSizes(p: Product): Product {
     };
   });
 
+  // Enforce customer-facing presentation separation:
+  // Internal supplier metadata (e.g. Printify, SKUs, provider IDs) is never presented to customers
+  const cleanDescriptor = isCustomerFacingDescriptor(p.descriptor) ? p.descriptor.trim() : "";
+
   return {
     ...p,
+    descriptor: cleanDescriptor,
     sizes: cleanSizes,
     variants: cleanVariants,
     options: cleanOptions,
   };
+}
+
+/**
+ * Distinguishes between legitimate customer-facing fashion copy and
+ * internal supplier/fulfillment metadata (e.g. "Printify Custom Edition", SKUs, internal IDs).
+ * Returns true only if the string is safe and intended for customer display.
+ */
+export function isCustomerFacingDescriptor(descriptor?: string | null): boolean {
+  if (!descriptor) return false;
+  const trimmed = descriptor.trim();
+  if (!trimmed) return false;
+
+  const lower = trimmed.toLowerCase();
+
+  // Explicit internal supplier / dropship keywords
+  if (
+    lower.includes("printify") ||
+    lower.includes("custom edition") ||
+    lower.includes("ypk-pfy") ||
+    lower.includes("pfy") ||
+    lower.includes("dropship") ||
+    lower.includes("blueprint") ||
+    lower.includes("provider") ||
+    lower.includes("supplier")
+  ) {
+    return false;
+  }
+
+  // Internal SKU strings or numeric IDs (e.g. "• 13882006219804623954", "SKU-...")
+  if (/\b\d{6,}\b/.test(trimmed) || /•\s*[\dA-Za-z-]{4,}/.test(trimmed)) {
+    return false;
+  }
+
+  return true;
 }
 
 export function getCatalogProducts(): Product[] {
@@ -198,7 +237,7 @@ export function searchProducts(q: string, list?: Product[]): Product[] {
     let score = 0;
     const nameLower = p.name.toLowerCase();
     const catLower = p.category.toLowerCase();
-    const descLower = `${p.description} ${p.descriptor}`.toLowerCase();
+    const descLower = `${p.description} ${isCustomerFacingDescriptor(p.descriptor) ? p.descriptor : ""}`.toLowerCase();
     const tagsLower = p.tags.map((t) => t.toLowerCase());
     const colorsLower = p.colors.map((c) => c.toLowerCase());
     const matLower = p.material.toLowerCase();

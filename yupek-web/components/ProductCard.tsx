@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import type { Product } from "@/data/products";
-import { eur } from "@/lib/catalog";
+import { eur, isCustomerFacingDescriptor } from "@/lib/catalog";
 import ProductImage from "./ui/ProductImage";
 import WishlistButton from "./WishlistButton";
 import { useStore } from "./Providers";
@@ -38,7 +38,9 @@ export default function ProductCard({ p, priority = false }: { p: Product; prior
       <div className="mt-4 flex items-start justify-between gap-3">
         <div>
           <h3 className="text-[12px] uppercase tracking-[.16em]"><Link href={`/product/${p.slug}`}>{p.name}</Link></h3>
-          <p className="mt-1 text-xs text-brown/60">{p.descriptor}</p>
+          {isCustomerFacingDescriptor(p.descriptor) && (
+            <p className="mt-1 text-xs text-brown/60">{p.descriptor}</p>
+          )}
         </div>
         <p className="text-sm">{eur(p.price)}</p>
       </div>
