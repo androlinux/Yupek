@@ -5,6 +5,7 @@ import {
   recordEvent,
   syncPrintifyProductLocal,
 } from "@/lib/printifySync";
+import { getBackendApiUrl } from "@/lib/apiConfig";
 
 export const dynamic = "force-dynamic";
 
@@ -82,7 +83,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Forward to FastAPI backend if running
-    const backendUrl = process.env.BACKEND_URL;
+    const backendUrl = getBackendApiUrl();
     if (backendUrl) {
       try {
         fetch(`${backendUrl}/api/printify/webhook`, {

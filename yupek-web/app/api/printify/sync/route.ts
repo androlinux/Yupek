@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { syncPrintifyProductLocal } from "@/lib/printifySync";
+import { getBackendApiUrl } from "@/lib/apiConfig";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
-  const backendUrl = process.env.BACKEND_URL;
+  const backendUrl = getBackendApiUrl();
   if (backendUrl) {
     try {
       const res = await fetch(`${backendUrl}/api/printify/sync`, {
