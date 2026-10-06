@@ -155,7 +155,7 @@ export const defaultSiteConfig: SiteConfig = {
   heroTitle: initialSiteConfig.heroTitle || "YUPEK",
   heroTaglineLine1: initialSiteConfig.heroTaglineLine1 || "EASTERN ROOTS",
   heroTaglineLine2: initialSiteConfig.heroTaglineLine2 || "EUROPEAN FORM",
-  heroDescription: initialSiteConfig.heroDescription || "Contemporary clothing inspired by Turkmen silk heritage, designed for modern European living. Discover YUPEK collections, timeless pieces and Eastern-inspired style.",
+  heroDescription: initialSiteConfig.heroDescription || "YUPEK is a contemporary fashion brand inspired by Eastern heritage and designed for modern European living. Discover timeless clothing that blends traditional influences with clean, modern style.",
   heroImage: initialSiteConfig.heroImage || "/images/look-2.jpg",
   heroVideoUrl: initialSiteConfig.heroVideoUrl || "",
   heroUseVideo: initialSiteConfig.heroUseVideo ?? false,

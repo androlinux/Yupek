@@ -26,7 +26,7 @@ const siteUrl = "https://www.yupek.shop";
 const productionCanonical = "https://www.yupek.shop/";
 const title = "YUPEK — Eastern Heritage, European Style";
 const description =
-  "Contemporary clothing inspired by Turkmen silk heritage, designed for modern European living. Discover YUPEK collections, timeless pieces and Eastern-inspired style.";
+  "Contemporary clothing inspired by Eastern heritage, designed for modern European living. Discover YUPEK collections, timeless pieces and Eastern-inspired style.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
