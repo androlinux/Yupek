@@ -7,7 +7,7 @@ export default function ProductImage({
   alt,
   className = "",
   priority = false,
-  sizes = "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw",
+  sizes = "(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 300px",
 }: {
   src?: string;
   alt: string;
@@ -29,7 +29,7 @@ export default function ProductImage({
       fill
       sizes={sizes}
       priority={priority}
-      loading={priority ? "eager" : "lazy"}
+      loading={priority ? undefined : "lazy"}
       className={`object-cover ${className}`}
     />
   );

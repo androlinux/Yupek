@@ -72,7 +72,6 @@ export default function Hero() {
             fill
             priority
             sizes="100vw"
-            quality={85}
             className="object-cover object-center transition-transform duration-1000 scale-105"
           />
         </div>

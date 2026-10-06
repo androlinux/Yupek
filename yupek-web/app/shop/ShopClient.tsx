@@ -192,7 +192,7 @@ export default function ShopClient({ initial }: { initial: Filters }) {
         <div aria-live="polite">
           {items.length ? (
             <ScrollReveal>
-              <ProductGrid items={items} cols={3} />
+              <ProductGrid items={items} cols={3} priority={true} />
             </ScrollReveal>
           ) : (
             <p className="label py-20 text-center text-brown/60">{t.shop.noResults}</p>

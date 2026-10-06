@@ -25,7 +25,6 @@ export function Editorial({
           priority={priority}
           loading={priority ? "eager" : "lazy"}
           sizes={sizes}
-          quality={85}
           className="object-cover object-center"
         />
       ) : null}

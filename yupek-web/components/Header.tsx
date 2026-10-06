@@ -23,8 +23,26 @@ export default function Header() {
   const { openDrawer } = useAccessibility();
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 30);
-    handleScroll();
+    let lastScrolled = false;
+    let ticking = false;
+
+    const updateScroll = () => {
+      const isPast = window.scrollY > 30;
+      if (isPast !== lastScrolled) {
+        lastScrolled = isPast;
+        setScrolled(isPast);
+      }
+      ticking = false;
+    };
+
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(updateScroll);
+        ticking = true;
+      }
+    };
+
+    updateScroll();
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
