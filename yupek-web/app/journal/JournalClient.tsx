@@ -31,7 +31,7 @@ export default function JournalClient() {
                 <Editorial
                   src={`/images/journal-${i + 1}.jpg`}
                   label={post.title}
-                  className="h-full w-full transition-transform duration-700 group-hover:scale-105"
+                  className="h-full w-full aspect-[4/5] transition-transform duration-700 group-hover:scale-105"
                 />
               </div>
               <div className="mt-5 flex items-center justify-between text-[10px] uppercase tracking-widest text-brown/50">

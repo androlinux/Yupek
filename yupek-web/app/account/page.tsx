@@ -548,14 +548,15 @@ export default function AccountPage() {
                 <div className="mt-4 divide-y divide-brown/10">
                   {order.items.map((item, idx) => (
                     <div key={idx} className="py-3 flex items-center gap-4">
-                      <div className="relative h-16 w-12 bg-sand/30 overflow-hidden flex-shrink-0">
+                      <div className="relative h-16 w-12 aspect-[3/4] bg-sand/30 overflow-hidden flex-shrink-0">
                         {item.image && (
                           <Image
                             src={item.image}
                             alt={item.name}
-                            fill
+                            width={48}
+                            height={64}
                             sizes="48px"
-                            className="object-cover"
+                            className="h-full w-full object-cover"
                           />
                         )}
                       </div>

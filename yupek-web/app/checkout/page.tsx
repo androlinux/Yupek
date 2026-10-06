@@ -203,9 +203,15 @@ export default function Checkout() {
         <fieldset className="space-y-4">
           <legend className="label mb-3 text-brown">{t.checkout.clientContact}</legend>
           <div>
+            <label htmlFor="checkout-email" className="sr-only">
+              {t.checkout.emailPlaceholder}
+            </label>
             <input
+              id="checkout-email"
+              name="email"
               className={field}
               type="email"
+              aria-label={t.checkout.emailPlaceholder}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
@@ -219,8 +225,14 @@ export default function Checkout() {
         <fieldset className="grid gap-5 sm:grid-cols-2">
           <legend className="label mb-3 sm:col-span-2 text-brown">{t.checkout.deliveryDestination}</legend>
           <div>
+            <label htmlFor="checkout-first-name" className="sr-only">
+              {t.checkout.firstName}
+            </label>
             <input
+              id="checkout-first-name"
+              name="firstName"
               className={field}
+              aria-label={t.checkout.firstName}
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
               autoComplete="given-name"
@@ -229,8 +241,14 @@ export default function Checkout() {
             />
           </div>
           <div>
+            <label htmlFor="checkout-last-name" className="sr-only">
+              {t.checkout.lastName}
+            </label>
             <input
+              id="checkout-last-name"
+              name="lastName"
               className={field}
+              aria-label={t.checkout.lastName}
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
               autoComplete="family-name"
@@ -239,8 +257,14 @@ export default function Checkout() {
             />
           </div>
           <div className="sm:col-span-2">
+            <label htmlFor="checkout-street" className="sr-only">
+              {t.checkout.street}
+            </label>
             <input
+              id="checkout-street"
+              name="street"
               className={field}
+              aria-label={t.checkout.street}
               value={street}
               onChange={(e) => setStreet(e.target.value)}
               autoComplete="street-address"
@@ -249,8 +273,14 @@ export default function Checkout() {
             />
           </div>
           <div>
+            <label htmlFor="checkout-city" className="sr-only">
+              {t.checkout.city}
+            </label>
             <input
+              id="checkout-city"
+              name="city"
               className={field}
+              aria-label={t.checkout.city}
               value={city}
               onChange={(e) => setCity(e.target.value)}
               autoComplete="address-level2"
@@ -259,8 +289,14 @@ export default function Checkout() {
             />
           </div>
           <div>
+            <label htmlFor="checkout-postal-code" className="sr-only">
+              {t.checkout.postalCode}
+            </label>
             <input
+              id="checkout-postal-code"
+              name="postalCode"
               className={field}
+              aria-label={t.checkout.postalCode}
               value={postalCode}
               onChange={(e) => setPostalCode(e.target.value)}
               autoComplete="postal-code"
@@ -269,8 +305,14 @@ export default function Checkout() {
             />
           </div>
           <div className="sm:col-span-2">
+            <label htmlFor="checkout-phone" className="sr-only">
+              {t.checkout.phone}
+            </label>
             <input
+              id="checkout-phone"
+              name="phone"
               className={field}
+              aria-label={t.checkout.phone}
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               autoComplete="tel"
@@ -279,8 +321,14 @@ export default function Checkout() {
             />
           </div>
           <div className="sm:col-span-2">
+            <label htmlFor="checkout-country" className="sr-only">
+              {t.checkout.deliveryDestination}
+            </label>
             <select
+              id="checkout-country"
+              name="country"
               className={field}
+              aria-label={t.checkout.deliveryDestination}
               autoComplete="country-name"
               value={country}
               onChange={(e) => setCountry(e.target.value)}
@@ -300,14 +348,17 @@ export default function Checkout() {
           {(Object.keys(deliveryOptions) as (keyof typeof deliveryOptions)[]).map((k) => (
             <label
               key={k}
+              htmlFor={`delivery-${k}`}
               className={`flex cursor-pointer items-center justify-between border p-4 transition-colors [&:not(:first-of-type)]:mt-2 ${
                 d === k ? "border-brown bg-sand/20" : "border-brown/20 hover:border-brown/40"
               }`}
             >
               <span className="flex items-center gap-3">
                 <input
+                  id={`delivery-${k}`}
                   type="radio"
                   name="delivery"
+                  aria-label={`${deliveryOptions[k].label} - ${deliveryOptions[k].note}`}
                   checked={d === k}
                   onChange={() => setD(k)}
                   className="accent-brown"
@@ -339,13 +390,16 @@ export default function Checkout() {
             ].map((m) => (
               <label
                 key={m.id}
+                htmlFor={`pay-${m.id}`}
                 className={`flex cursor-pointer items-center justify-center gap-2 border p-3.5 text-center text-xs tracking-wider transition-colors ${
                   pay === m.id ? "border-brown bg-brown text-cream" : "border-brown/20 hover:border-brown/40"
                 }`}
               >
                 <input
+                  id={`pay-${m.id}`}
                   type="radio"
                   name="pay"
+                  aria-label={m.label}
                   checked={pay === m.id}
                   onChange={() => setPay(m.id)}
                   className="sr-only"
@@ -378,9 +432,17 @@ export default function Checkout() {
             return (
               <li key={`${l.slug}${l.size}${l.color}`} className="pt-3 first:pt-0 flex justify-between gap-3">
                 <div className="flex gap-3">
-                  <div className="h-14 w-10 bg-sand/30 overflow-hidden flex-shrink-0 relative">
+                  <div className="h-14 w-10 aspect-[5/7] bg-sand/30 overflow-hidden flex-shrink-0 relative">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={p.images[0]} alt={p.name} className="h-full w-full object-cover" />
+                    <img
+                      src={p.images[0]}
+                      alt={p.name}
+                      width={40}
+                      height={56}
+                      loading="lazy"
+                      decoding="async"
+                      className="h-full w-full object-cover"
+                    />
                   </div>
                   <div>
                     <p className="font-medium text-brown uppercase">{p.name}</p>

@@ -55,7 +55,7 @@ export default function LookbookClient() {
                   <Editorial
                     src={imgs.img1}
                     label={c.title}
-                    className="h-full w-full transition-transform duration-1000 hover:scale-105"
+                    className="h-full w-full aspect-[3/4] transition-transform duration-1000 hover:scale-105"
                   />
                 </div>
 
@@ -65,7 +65,7 @@ export default function LookbookClient() {
                   <Editorial
                     src={imgs.img2}
                     label={`${c.title} detail`}
-                    className="h-full w-full transition-transform duration-1000 hover:scale-105"
+                    className="h-full w-full aspect-[3/4] transition-transform duration-1000 hover:scale-105"
                   />
                 </div>
               </section>

@@ -29,12 +29,15 @@ export default function Newsletter() {
             }}
           >
             <label htmlFor="nl-email" className="sr-only">
-              Email
+              {t.newsletter.emailPlaceholder || "Email"}
             </label>
             <input
               id="nl-email"
+              name="email"
               type="email"
+              autoComplete="email"
               required
+              aria-label={t.newsletter.emailPlaceholder || "Email"}
               placeholder={t.newsletter.emailPlaceholder}
               className="w-full bg-transparent py-3 text-[11px] uppercase tracking-[.22em] text-brown placeholder:text-brown/40 focus:outline-none"
             />
