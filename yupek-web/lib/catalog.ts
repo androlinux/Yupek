@@ -1,4 +1,5 @@
 import { products, type Product } from "@/data/products";
+import initialSiteConfig from "@/data/site-config.json";
 
 export type ProductSource = "local" | "supabase" | "printify";
 
@@ -38,43 +39,33 @@ export interface NormalizedPrintifyProduct {
 export const eur = (n: number) => `€${n.toFixed(2)}`;
 
 export function getCatalogProducts(): Product[] {
-  if (typeof window === "undefined") {
-    try {
-      const nodeRequire = eval("require");
-      const fs = nodeRequire("fs");
-      const path = nodeRequire("path");
-      const configPath = path.join(process.cwd(), "data", "site-config.json");
-      if (fs.existsSync(configPath)) {
-        const raw = fs.readFileSync(configPath, "utf-8");
-        const parsed = JSON.parse(raw);
-        const custom: Product[] = parsed.customProducts || [];
-        const overrides = parsed.productOverrides || {};
-        const combined = [...products, ...custom];
+  try {
+    const custom: Product[] = (initialSiteConfig as any).customProducts || [];
+    const overrides = (initialSiteConfig as any).productOverrides || {};
+    const combined = [...products, ...custom];
 
-        return combined
-          .filter((p) => !overrides[p.slug]?.deleted)
-          .map((p) => {
-            const ov = overrides[p.slug];
-            if (!ov) return p;
-            return {
-              ...p,
-              name: ov.name ?? p.name,
-              descriptor: ov.descriptor ?? p.descriptor,
-              price: ov.price ?? p.price,
-              badge: ov.badge !== undefined ? ov.badge : p.badge,
-              featured: ov.featured ?? p.featured,
-              newArrival: ov.newArrival ?? p.newArrival,
-              sizes: ov.sizes && ov.sizes.length > 0 ? ov.sizes : p.sizes,
-              colors: ov.colors && ov.colors.length > 0 ? ov.colors : p.colors,
-              description: ov.description ?? p.description,
-              material: ov.material ?? p.material,
-              inventory: ov.inventory !== undefined ? ov.inventory : p.inventory,
-              images: ov.images && ov.images.length > 0 ? ov.images : p.images,
-            };
-          });
-      }
-    } catch {}
-  }
+    return combined
+      .filter((p) => !overrides[p.slug]?.deleted)
+      .map((p) => {
+        const ov = overrides[p.slug];
+        if (!ov) return p;
+        return {
+          ...p,
+          name: ov.name ?? p.name,
+          descriptor: ov.descriptor ?? p.descriptor,
+          price: ov.price ?? p.price,
+          badge: ov.badge !== undefined ? ov.badge : p.badge,
+          featured: ov.featured ?? p.featured,
+          newArrival: ov.newArrival ?? p.newArrival,
+          sizes: ov.sizes && ov.sizes.length > 0 ? ov.sizes : p.sizes,
+          colors: ov.colors && ov.colors.length > 0 ? ov.colors : p.colors,
+          description: ov.description ?? p.description,
+          material: ov.material ?? p.material,
+          inventory: ov.inventory !== undefined ? ov.inventory : p.inventory,
+          images: ov.images && ov.images.length > 0 ? ov.images : p.images,
+        };
+      });
+  } catch {}
   return products;
 }
 

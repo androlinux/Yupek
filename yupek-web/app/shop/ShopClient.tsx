@@ -167,9 +167,14 @@ export default function ShopClient({ initial }: { initial: Filters }) {
         <p className="label hidden text-brown/60 lg:block">
           {items.length} {t.shop.piecesCount}
         </p>
-        <label className="label flex items-center gap-3">
-          {t.shop.sort}
+        <div className="label flex items-center gap-3">
+          <label htmlFor="shop-sort">
+            {t.shop.sort}
+          </label>
           <select
+            id="shop-sort"
+            name="sort"
+            aria-label={t.shop.sort}
             value={f.sort}
             onChange={(e) => setF((p) => ({ ...p, sort: e.target.value }))}
             className="border-b border-brown bg-transparent py-1 text-[11px] tracking-[.15em] focus:outline-none"
@@ -180,7 +185,7 @@ export default function ShopClient({ initial }: { initial: Filters }) {
               </option>
             ))}
           </select>
-        </label>
+        </div>
       </div>
 
       {open && <div className="mb-10 border border-brown/15 p-5 lg:hidden bg-sand/15">{panel}</div>}

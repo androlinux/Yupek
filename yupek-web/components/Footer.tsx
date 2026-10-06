@@ -31,7 +31,7 @@ export default function Footer() {
               src="/images/logo-light.png"
               alt="YUPEK"
               width={180}
-              height={60}
+              height={131}
               loading="lazy"
               className="h-16 md:h-20 w-auto object-contain transition-transform duration-300 group-hover:scale-105 drop-shadow-md"
             />

@@ -145,6 +145,9 @@ export default function SearchOverlay() {
           </label>
           <input
             id="yupek-search"
+            name="q"
+            type="search"
+            aria-label={t.nav.search}
             ref={ref}
             value={q}
             onChange={(e) => setQ(e.target.value)}

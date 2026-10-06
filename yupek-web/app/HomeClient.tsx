@@ -157,7 +157,7 @@ export default function HomeClient() {
                   <Editorial
                     src={look.src}
                     label={look.caption}
-                    className="h-full w-full transition-transform duration-700 group-hover:scale-105"
+                    className="h-full w-full aspect-[3/4] transition-transform duration-700 group-hover:scale-105"
                   />
                 </div>
                 <p className="mt-3 text-[11px] uppercase tracking-wider text-brown/70 text-center">

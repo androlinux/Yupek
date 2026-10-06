@@ -74,7 +74,7 @@ export default function About() {
             <Editorial
               src={`/images/about-${i + 1}.jpg`}
               label={block.title}
-              className={`aspect-[4/3] md:aspect-auto md:min-h-[560px] ${i % 2 ? "md:order-2" : ""}`}
+              className={`aspect-[4/3] md:aspect-[4/3] md:min-h-[560px] md:h-full ${i % 2 ? "md:order-2" : ""}`}
             />
             <div className="flex flex-col justify-center px-8 py-16 md:px-20 lg:px-28">
               <p className="label tracking-[.25em] text-gold text-xs">CHAPTER 0{i + 1} &bull;</p>

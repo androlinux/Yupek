@@ -115,12 +115,16 @@ export default function ContactPage() {
                 ) : (
                   <form onSubmit={handleSubmit} className="mt-6 space-y-4">
                     <div>
-                      <label className="block text-[10px] uppercase tracking-widest text-brown/70 mb-1">
+                      <label htmlFor="contact-name" className="block text-[10px] uppercase tracking-widest text-brown/70 mb-1">
                         {t.contact.fullName}
                       </label>
                       <input
+                        id="contact-name"
+                        name="name"
                         type="text"
+                        autoComplete="name"
                         required
+                        aria-label={t.contact.fullName}
                         value={form.name}
                         onChange={(e) => setForm({ ...form, name: e.target.value })}
                         placeholder="e.g. Marcus Vance"
@@ -130,12 +134,16 @@ export default function ContactPage() {
 
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-[10px] uppercase tracking-widest text-brown/70 mb-1">
+                        <label htmlFor="contact-email" className="block text-[10px] uppercase tracking-widest text-brown/70 mb-1">
                           {t.contact.email}
                         </label>
                         <input
+                          id="contact-email"
+                          name="email"
                           type="email"
+                          autoComplete="email"
                           required
+                          aria-label={t.contact.email}
                           value={form.email}
                           onChange={(e) => setForm({ ...form, email: e.target.value })}
                           placeholder="client@domain.com"
@@ -143,11 +151,15 @@ export default function ContactPage() {
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] uppercase tracking-widest text-brown/70 mb-1">
+                        <label htmlFor="contact-phone" className="block text-[10px] uppercase tracking-widest text-brown/70 mb-1">
                           {t.contact.phone}
                         </label>
                         <input
+                          id="contact-phone"
+                          name="phone"
                           type="tel"
+                          autoComplete="tel"
+                          aria-label={t.contact.phone}
                           value={form.phone}
                           onChange={(e) => setForm({ ...form, phone: e.target.value })}
                           placeholder="+31 6 ..."
@@ -157,10 +169,13 @@ export default function ContactPage() {
                     </div>
 
                     <div>
-                      <label className="block text-[10px] uppercase tracking-widest text-brown/70 mb-1">
+                      <label htmlFor="contact-subject" className="block text-[10px] uppercase tracking-widest text-brown/70 mb-1">
                         {t.contact.subject}
                       </label>
                       <select
+                        id="contact-subject"
+                        name="subject"
+                        aria-label={t.contact.subject}
                         value={form.subject}
                         onChange={(e) => setForm({ ...form, subject: e.target.value })}
                         className="w-full border border-brown/20 bg-white/80 px-3.5 py-2.5 text-xs text-brown focus:border-brown focus:outline-none"
@@ -174,12 +189,15 @@ export default function ContactPage() {
                     </div>
 
                     <div>
-                      <label className="block text-[10px] uppercase tracking-widest text-brown/70 mb-1">
+                      <label htmlFor="contact-message" className="block text-[10px] uppercase tracking-widest text-brown/70 mb-1">
                         {t.contact.message}
                       </label>
                       <textarea
+                        id="contact-message"
+                        name="message"
                         rows={5}
                         required
+                        aria-label={t.contact.message}
                         value={form.message}
                         onChange={(e) => setForm({ ...form, message: e.target.value })}
                         placeholder="..."
