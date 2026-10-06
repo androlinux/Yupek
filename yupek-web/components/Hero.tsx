@@ -67,10 +67,11 @@ export default function Hero() {
       ) : (
         <div className="absolute inset-0 z-0 overflow-hidden">
           <Image
-            src={config.heroImage || "/images/hero.jpg"}
+            src={config.heroImage || "/images/look-2.jpg"}
             alt="YUPEK Heritage Collection"
             fill
             priority
+            fetchPriority="high"
             sizes="100vw"
             className="object-cover object-center transition-transform duration-1000 scale-105"
           />
