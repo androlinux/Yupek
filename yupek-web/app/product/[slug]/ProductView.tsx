@@ -42,11 +42,15 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
   
   // Price is variant price if selected, otherwise fallback to minimum variant price, or product base price
   let displayPrice = p.price;
-  if (selectedVariant && selectedVariant.price) {
-    displayPrice = selectedVariant.price;
+  
+  // Helper to safely get a variant price, ignoring corrupted DB values < 5
+  const getValidPrice = (vPrice?: number) => (vPrice && vPrice > 5) ? vPrice : p.price;
+
+  if (selectedVariant) {
+    displayPrice = getValidPrice(selectedVariant.price);
   } else if (activeVariants.length > 0) {
-    const minPrice = Math.min(...activeVariants.map(v => v.price || p.price));
-    displayPrice = minPrice;
+    const validPrices = activeVariants.map(v => getValidPrice(v.price));
+    displayPrice = Math.min(...validPrices);
   }
 
   // Update CartLine payload
@@ -93,19 +97,19 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
   const addToBagText = locale === "nl" ? t.product.addToBag : (config.addToBagLabel || t.product.addToBag);
 
   return (
-    <div className="wrap grid gap-10 py-8 lg:grid-cols-[1.3fr_1fr] lg:gap-16 lg:py-14">
+    <div className="wrap grid gap-8 py-8 lg:grid-cols-[6fr_4fr] lg:gap-16 lg:py-14 items-start">
       {/* Product Image Gallery */}
-      <div className="grid grid-cols-2 gap-3">
-        {imgs.map((src, i) => (
+      <div className="grid grid-cols-2 gap-4">
+        {imgs.filter(Boolean).map((src, i) => (
           <div
             key={i}
-            className={`relative bg-sand/30 overflow-hidden ${i === 0 ? "col-span-2 aspect-[4/5]" : "aspect-[3/4]"}`}
+            className="relative bg-sand/30 overflow-hidden aspect-[3/4]"
           >
             <ProductImage
               src={src}
               alt={`${p.name} — view ${i + 1}`}
               priority={i === 0}
-              sizes="(min-width:1024px) 45vw, 100vw"
+              sizes="(min-width:1024px) 30vw, 50vw"
             />
           </div>
         ))}
@@ -131,7 +135,10 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
         <p className="label mt-3 text-gold">
           {locale === "nl" ? "OOSTERSE WORTELS / EUROPESE VORM" : "EASTERN ROOTS / EUROPEAN STYLE"}
         </p>
-        <p className="mt-6 text-sm leading-7 text-brown/80 font-light">{p.description}</p>
+        <div 
+          className="mt-6 text-sm leading-7 text-brown/80 font-light prose prose-sm max-w-none prose-p:mb-4 prose-ul:my-4 prose-li:my-1" 
+          dangerouslySetInnerHTML={{ __html: p.description }} 
+        />
         
         {/* Audio Readout for Low-Vision & Reading Disabled */}
         <div className="mt-4 flex items-center gap-3">
