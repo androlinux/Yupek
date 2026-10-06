@@ -284,17 +284,40 @@ export async function syncPrintifyProductLocal(
   const sizesSet: string[] = [];
   const colorsSet: string[] = [];
 
+  const normVariants: any[] = [];
+
   for (const v of variants) {
     const priceEur = Math.round((v.price || 0)) / 100;
-    if (v.is_enabled !== false && v.is_available !== false && priceEur > 0) {
+    const isEnabled = v.is_enabled !== false;
+    const isAvailable = v.is_available !== false;
+    if (isEnabled && isAvailable && priceEur > 0) {
       activePrices.push(priceEur);
     }
     const parts = String(v.title || "").split("/").map((s) => s.trim()).filter(Boolean);
-    if (parts.length === 1) sizesSet.push(parts[0]);
-    else if (parts.length >= 2) {
-      colorsSet.push(parts[0]);
-      sizesSet.push(parts[1]);
+    let size = "";
+    let color = "";
+    if (parts.length === 1) {
+      size = parts[0];
+      sizesSet.push(size);
     }
+    else if (parts.length >= 2) {
+      color = parts[0];
+      size = parts[1];
+      colorsSet.push(color);
+      sizesSet.push(size);
+    }
+    normVariants.push({
+      variant_id: v.id,
+      title: v.title,
+      size,
+      color,
+      price: priceEur,
+      price_cents: v.price || 0,
+      is_enabled: isEnabled,
+      is_available: isAvailable,
+      sku: v.sku,
+      options: v.options || [],
+    });
   }
 
   const basePrice = activePrices.length > 0 ? Math.min(...activePrices) : 49;
@@ -319,6 +342,7 @@ export async function syncPrintifyProductLocal(
     description: raw.description || "Contemporary garment crafted through Printify custom production.",
     material: "100% premium quality fabric tailored for modern living.",
     images: imageUrls,
+    variants: normVariants,
     featured: false,
     newArrival: true,
     badge: eventType === "product:created" ? "NEW" : undefined,

@@ -7,6 +7,18 @@ export type Product = {
   featured: boolean; newArrival: boolean; badge?: string; tags: string[];
   // dropshipping-ready fields (filled by supplier sync, never read by UI)
   supplier?: string; supplierProductId?: string; supplierPrice?: number; inventory?: number; shippingTime?: string;
+  variants?: {
+    variant_id?: string;
+    title?: string;
+    size?: string;
+    color?: string;
+    price?: number;
+    price_cents?: number;
+    is_enabled?: boolean;
+    is_available?: boolean;
+    sku?: string;
+    options?: number[];
+  }[];
 };
 
 const S = ["XS", "S", "M", "L", "XL", "XXL"];
