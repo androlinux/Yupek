@@ -58,10 +58,24 @@ export interface StoreOrder {
   items: StoreOrderItem[];
   subtotal: number;
   shipping: number;
-  deliveryMethod: string;
-  paymentMethod: string;
+  deliveryMethod?: string;
+  paymentMethod?: string;
   total: number;
-  status: "New" | "Processing" | "Shipped" | "Delivered" | "Cancelled";
+  currency?: string;
+  status: "New" | "Processing" | "Shipped" | "Delivered" | "Cancelled" | "Paid" | "Failed";
+  payment_status?: "pending" | "paid" | "failed" | "refunded";
+  fulfillment_status?:
+    | "pending_payment"
+    | "paid"
+    | "printify_order_created"
+    | "sent_to_production"
+    | "in_production"
+    | "shipped"
+    | "delivered"
+    | "cancelled"
+    | "failed";
+  stripe_payment_intent_id?: string | null;
+  printify_order_id?: string | null;
   emailNotificationSent?: boolean;
   emailNotificationRecipient?: string;
   emailNotificationError?: string;

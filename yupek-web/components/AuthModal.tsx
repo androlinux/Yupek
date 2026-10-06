@@ -10,17 +10,20 @@ export default function AuthModal() {
   const {
     authModalOpen,
     setAuthModalOpen,
+    authModalTab,
+    setAuthModalTab,
     signInWithGoogle,
     signInWithEmail,
     signUpWithEmail,
   } = useAuth();
   const { t, locale } = useLanguage();
 
-  const [tab, setTab] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +31,7 @@ export default function AuthModal() {
   const [oauthError, setOauthError] = useState<string | null>(null);
   const [oauthLoading, setOauthLoading] = useState<"google" | null>(null);
 
-  // Close on escape
+  // Close on escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && authModalOpen) {
@@ -46,9 +49,9 @@ export default function AuthModal() {
     setError(null);
     setSuccessMsg(null);
     setOauthError(null);
-    setLoading(true);
 
-    if (tab === "signin") {
+    if (authModalTab === "signin") {
+      setLoading(true);
       const res = await signInWithEmail(email, password);
       setLoading(false);
       if (!res.success) {
@@ -60,7 +63,17 @@ export default function AuthModal() {
         );
       }
     } else {
-      const res = await signUpWithEmail(email, password, name, phone);
+      if (password !== confirmPassword) {
+        setError(locale === "nl" ? "Wachtwoorden komen niet overeen." : "Passwords do not match.");
+        return;
+      }
+      if (password.length < 6) {
+        setError(locale === "nl" ? "Wachtwoord moet minimaal 6 tekens bevatten." : "Password must be at least 6 characters.");
+        return;
+      }
+
+      setLoading(true);
+      const res = await signUpWithEmail(email, password, firstName, lastName, phone);
       setLoading(false);
       if (!res.success) {
         setError(
@@ -68,6 +81,12 @@ export default function AuthModal() {
             (locale === "nl"
               ? "Registratiefout. Controleer uw gegevens of probeer een ander e-mailadres."
               : "Registration error. Please check your details.")
+        );
+      } else if (res.confirmationNeeded) {
+        setSuccessMsg(
+          locale === "nl"
+            ? "Controleer uw e-mail om uw account te bevestigen."
+            : "Check your email to confirm your account."
         );
       } else {
         setSuccessMsg(
@@ -109,7 +128,7 @@ export default function AuthModal() {
         role="dialog"
         aria-modal="true"
         aria-labelledby="auth-modal-title"
-        className="relative w-full max-w-md overflow-hidden bg-cream p-6 shadow-2xl transition-all duration-300 sm:p-8 border border-brown/15"
+        className="relative w-full max-w-md max-h-[92vh] overflow-y-auto bg-cream p-6 shadow-2xl transition-all duration-300 sm:p-8 border border-brown/15"
       >
         <button
           onClick={() => setAuthModalOpen(false)}
@@ -125,32 +144,33 @@ export default function AuthModal() {
             alt="YUPEK"
             width={160}
             height={50}
-            className="h-12 md:h-14 w-auto mx-auto mb-3 object-contain drop-shadow-sm"
+            className="h-10 md:h-12 w-auto mx-auto mb-2.5 object-contain drop-shadow-sm"
           />
           <p className="label tracking-[.3em] text-burgundy text-[10px] uppercase font-semibold">
             {t.auth.brandTag}
           </p>
           <h2 id="auth-modal-title" className="font-serif text-2xl sm:text-3xl tracking-wide text-brown mt-1">
-            {tab === "signin" ? t.auth.clientAccessTitle : t.auth.createAccountTitle}
+            {authModalTab === "signin" ? t.auth.clientAccessTitle : t.auth.createAccountTitle}
           </h2>
-          <p className="mt-2 text-xs text-brown/70 max-w-xs mx-auto leading-relaxed">
+          <p className="mt-1.5 text-xs text-brown/70 max-w-xs mx-auto leading-relaxed">
             {t.auth.subtitle}
           </p>
         </div>
 
         {/* Tab switch */}
-        <div role="tablist" aria-label="Authentication options" className="mt-6 mb-4 grid grid-cols-2 border border-brown/20 p-1 bg-sand/20 text-xs">
+        <div role="tablist" aria-label="Authentication options" className="mt-5 mb-4 grid grid-cols-2 border border-brown/20 p-1 bg-sand/20 text-xs">
           <button
             role="tab"
             type="button"
-            aria-selected={tab === "signin"}
+            aria-selected={authModalTab === "signin"}
             aria-controls="auth-panel"
             onClick={() => {
-              setTab("signin");
+              setAuthModalTab("signin");
               setError(null);
+              setSuccessMsg(null);
             }}
             className={`py-1.5 font-medium tracking-wider uppercase text-[11px] transition-colors ${
-              tab === "signin" ? "bg-brown text-cream shadow-sm" : "text-brown/70 hover:text-brown"
+              authModalTab === "signin" ? "bg-brown text-cream shadow-sm" : "text-brown/70 hover:text-brown"
             }`}
           >
             {t.auth.signInTab}
@@ -158,14 +178,15 @@ export default function AuthModal() {
           <button
             role="tab"
             type="button"
-            aria-selected={tab === "signup"}
+            aria-selected={authModalTab === "signup"}
             aria-controls="auth-panel"
             onClick={() => {
-              setTab("signup");
+              setAuthModalTab("signup");
               setError(null);
+              setSuccessMsg(null);
             }}
             className={`py-1.5 font-medium tracking-wider uppercase text-[11px] transition-colors ${
-              tab === "signup" ? "bg-brown text-cream shadow-sm" : "text-brown/70 hover:text-brown"
+              authModalTab === "signup" ? "bg-brown text-cream shadow-sm" : "text-brown/70 hover:text-brown"
             }`}
           >
             {t.auth.registerTab}
@@ -173,23 +194,42 @@ export default function AuthModal() {
         </div>
 
         {/* Form */}
-        <form id="auth-panel" onSubmit={handleSubmit} className="space-y-3.5">
-          {tab === "signup" && (
+        <form id="auth-panel" onSubmit={handleSubmit} className="space-y-3">
+          {authModalTab === "signup" && (
             <>
-              <div>
-                <label htmlFor="auth-name" className="block text-[10px] uppercase tracking-widest text-brown/70 font-semibold mb-1">
-                  {t.auth.fullNameLabel}
-                </label>
-                <input
-                  id="auth-name"
-                  type="text"
-                  required
-                  autoComplete="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Elena Rostova"
-                  className="w-full border border-brown/30 bg-white/80 px-3 py-2 text-xs text-brown placeholder-brown/40 focus:border-brown focus:outline-none"
-                />
+              <div className="grid grid-cols-2 gap-2.5">
+                <div>
+                  <label htmlFor="auth-firstname" className="block text-[10px] uppercase tracking-widest text-brown/70 font-semibold mb-1">
+                    {locale === "nl" ? "Voornaam" : "First Name"}
+                  </label>
+                  <input
+                    id="auth-firstname"
+                    name="firstName"
+                    type="text"
+                    required
+                    autoComplete="given-name"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    placeholder="e.g. Elena"
+                    className="w-full border border-brown/30 bg-white/80 px-3 py-2 text-xs text-brown placeholder-brown/40 focus:border-brown focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="auth-lastname" className="block text-[10px] uppercase tracking-widest text-brown/70 font-semibold mb-1">
+                    {locale === "nl" ? "Achternaam" : "Last Name"}
+                  </label>
+                  <input
+                    id="auth-lastname"
+                    name="lastName"
+                    type="text"
+                    required
+                    autoComplete="family-name"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    placeholder="e.g. Rostova"
+                    className="w-full border border-brown/30 bg-white/80 px-3 py-2 text-xs text-brown placeholder-brown/40 focus:border-brown focus:outline-none"
+                  />
+                </div>
               </div>
 
               <div>
@@ -198,6 +238,7 @@ export default function AuthModal() {
                 </label>
                 <input
                   id="auth-phone"
+                  name="phone"
                   type="tel"
                   autoComplete="tel"
                   value={phone}
@@ -215,6 +256,7 @@ export default function AuthModal() {
             </label>
             <input
               id="auth-email"
+              name="email"
               type="email"
               required
               autoComplete="email"
@@ -245,16 +287,49 @@ export default function AuthModal() {
             </div>
             <input
               id="auth-password"
+              name="password"
               type={showPassword ? "text" : "password"}
               required
               minLength={6}
-              autoComplete={tab === "signin" ? "current-password" : "new-password"}
+              autoComplete={authModalTab === "signin" ? "current-password" : "new-password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••••••"
               className="w-full border border-brown/30 bg-white/80 px-3 py-2 text-xs text-brown placeholder-brown/40 focus:border-brown focus:outline-none font-mono"
             />
           </div>
+
+          {authModalTab === "signup" && (
+            <div>
+              <label htmlFor="auth-confirm-password" className="block text-[10px] uppercase tracking-widest text-brown/70 font-semibold mb-1">
+                {locale === "nl" ? "Bevestig Wachtwoord" : "Confirm Password"}
+              </label>
+              <input
+                id="auth-confirm-password"
+                name="confirmPassword"
+                type={showPassword ? "text" : "password"}
+                required
+                minLength={6}
+                autoComplete="new-password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="••••••••••••"
+                className="w-full border border-brown/30 bg-white/80 px-3 py-2 text-xs text-brown placeholder-brown/40 focus:border-brown focus:outline-none font-mono"
+              />
+            </div>
+          )}
+
+          {authModalTab === "signin" && (
+            <div className="text-right pt-0.5">
+              <Link
+                href="/auth/forgot-password"
+                onClick={() => setAuthModalOpen(false)}
+                className="text-[11px] text-brown/70 hover:text-burgundy hover:underline"
+              >
+                {locale === "nl" ? "Wachtwoord vergeten?" : "Forgot your password?"}
+              </Link>
+            </div>
+          )}
 
           {error && (
             <p role="alert" className="text-[11px] text-burgundy bg-burgundy/10 p-2.5 border border-burgundy/20">
@@ -275,7 +350,7 @@ export default function AuthModal() {
           >
             {loading
               ? t.auth.authenticating
-              : tab === "signin"
+              : authModalTab === "signin"
               ? t.auth.enterStoreBtn
               : t.auth.createProfileBtn}
           </button>
@@ -300,7 +375,7 @@ export default function AuthModal() {
           </div>
         )}
 
-        {/* OAuth Buttons */}
+        {/* Google OAuth Button */}
         <div>
           <button
             type="button"
@@ -311,7 +386,7 @@ export default function AuthModal() {
             {oauthLoading === "google" ? (
               <span className="h-3.5 w-3.5 border-2 border-brown/30 border-t-brown rounded-full animate-spin inline-block" />
             ) : (
-              <svg className="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24">
+              <svg className="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
@@ -323,7 +398,7 @@ export default function AuthModal() {
         </div>
 
         {/* Footer Note */}
-        <div className="mt-5 border-t border-brown/15 pt-3 text-center">
+        <div className="mt-4 border-t border-brown/15 pt-3 text-center">
           <Link
             href="/contact"
             onClick={() => setAuthModalOpen(false)}

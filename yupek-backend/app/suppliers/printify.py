@@ -451,6 +451,32 @@ class PrintifyClient:
                 registered.append(new_hook)
         return registered
 
+    def create_order(
+        self,
+        order_data: dict[str, Any],
+        shop_id: str | int | None = None,
+    ) -> dict[str, Any]:
+        """Create an order in Printify (POST /v1/shops/{shop_id}/orders.json).
+        
+        Does not transmit retail prices as production costs.
+        Returns the created Printify order representation containing the Printify order id.
+        """
+        target_shop = str(shop_id or config.PRINTIFY_SHOP_ID or "29215191").strip()
+        url = f"{self.base_url}/shops/{target_shop}/orders.json"
+        logger.info(f"Submitting order {order_data.get('external_id')} to Printify shop {target_shop}")
+        return self._safe_request("POST", url, json_data=order_data)
+
+    def send_to_production(
+        self,
+        order_id: str,
+        shop_id: str | int | None = None,
+    ) -> dict[str, Any]:
+        """Send a Printify order to production (POST /v1/shops/{shop_id}/orders/{order_id}/send_to_production.json)."""
+        target_shop = str(shop_id or config.PRINTIFY_SHOP_ID or "29215191").strip()
+        url = f"{self.base_url}/shops/{target_shop}/orders/{order_id}/send_to_production.json"
+        logger.info(f"Sending Printify order {order_id} to production in shop {target_shop}")
+        return self._safe_request("POST", url)
+
 
 # Idempotency and Sync Persistence
 _WORKSPACE_ROOT = os.path.dirname(
