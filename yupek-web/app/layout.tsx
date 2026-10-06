@@ -1,15 +1,13 @@
 import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Inter } from "next/font/google";
 import "./globals.css";
-import dynamic from "next/dynamic";
 import Providers from "@/components/Providers";
 import AnnouncementBar from "@/components/AnnouncementBar";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import CartDrawer from "@/components/CartDrawer";
+import SearchOverlay from "@/components/SearchOverlay";
 import { Analytics } from "@vercel/analytics/next";
-
-const CartDrawer = dynamic(() => import("@/components/CartDrawer"), { ssr: false });
-const SearchOverlay = dynamic(() => import("@/components/SearchOverlay"), { ssr: false });
 
 const serif = Cormorant_Garamond({
   subsets: ["latin"],
