@@ -183,6 +183,9 @@ export default async function ProductPage({ params }: { params: { slug: string }
   const p = await getProductServer(params.slug);
   if (!p) notFound();
 
+  const allProducts = await getCatalogProductsServer();
+  const recommendations = related(p, 4, allProducts);
+
   const ld = buildProductJsonLd(p, PRODUCTION_URL);
 
   return (
@@ -192,12 +195,14 @@ export default async function ProductPage({ params }: { params: { slug: string }
         dangerouslySetInnerHTML={{ __html: safeJsonLd(ld) }}
       />
       <ProductView p={p} />
-      <section className="wrap py-24">
-        <SectionHeading title="YOU MAY ALSO LIKE" />
-        <div className="mt-14">
-          <ProductGrid items={related(p)} />
-        </div>
-      </section>
+      {recommendations.length > 0 && (
+        <section className="wrap py-24">
+          <SectionHeading title="YOU MAY ALSO LIKE" />
+          <div className="mt-14">
+            <ProductGrid items={recommendations} centerIfFew={true} />
+          </div>
+        </section>
+      )}
     </>
   );
 }

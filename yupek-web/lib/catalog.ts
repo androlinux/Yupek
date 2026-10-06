@@ -73,11 +73,60 @@ export const getProduct = (slug: string, list?: Product[]) => {
   return source.find((p) => p.slug === slug);
 };
 
-export const related = (p: Product, n = 4, list: Product[] = products) =>
-  list
-    .filter((x) => x.slug !== p.slug && x.category === p.category)
-    .concat(list.filter((x) => x.slug !== p.slug && x.category !== p.category))
-    .slice(0, n);
+export function getRelatedProducts(
+  current: Product,
+  allProducts?: Product[],
+  limit = 4
+): Product[] {
+  const catalog = allProducts && allProducts.length > 0 ? allProducts : getCatalogProducts();
+
+  // 1. Exclude the current product strictly by id and slug
+  const candidates = catalog.filter(
+    (p) => p.slug !== current.slug && p.id !== current.id
+  );
+
+  if (candidates.length === 0) {
+    return [];
+  }
+
+  // 2. Score candidates based on recommendation priority:
+  // - Same category (+100)
+  // - Same gender (+50)
+  // - Overlapping tags (+10 per matched tag)
+  // - Base score for being a real catalog product (+1)
+  const scored = candidates.map((p) => {
+    let score = 1;
+
+    if (p.category && current.category && p.category.toLowerCase() === current.category.toLowerCase()) {
+      score += 100;
+    }
+
+    if (p.gender && current.gender && p.gender.toLowerCase() === current.gender.toLowerCase()) {
+      score += 50;
+    }
+
+    if (p.tags && current.tags && p.tags.length > 0 && current.tags.length > 0) {
+      const currentTags = new Set(current.tags.map((t) => t.toLowerCase().trim()));
+      let sharedTags = 0;
+      for (const t of p.tags) {
+        if (currentTags.has(t.toLowerCase().trim())) {
+          sharedTags++;
+        }
+      }
+      score += sharedTags * 10;
+    }
+
+    return { product: p, score };
+  });
+
+  // Sort descending by score
+  scored.sort((a, b) => b.score - a.score);
+
+  return scored.slice(0, limit).map((s) => s.product);
+}
+
+export const related = (p: Product, n = 4, list?: Product[]) =>
+  getRelatedProducts(p, list, n);
 
 function levenshtein(a: string, b: string): number {
   if (a.length === 0) return b.length;
@@ -101,7 +150,7 @@ function levenshtein(a: string, b: string): number {
   return matrix[b.length][a.length];
 }
 
-export function searchProducts(q: string, list: Product[] = products): Product[] {
+export function searchProducts(q: string, list?: Product[]): Product[] {
   const query = q.trim().toLowerCase();
   if (!query) return [];
 
@@ -109,8 +158,9 @@ export function searchProducts(q: string, list: Product[] = products): Product[]
   if (tokens.length === 0) return [];
 
   const scored: { product: Product; score: number }[] = [];
+  const items = list || getCatalogProducts();
 
-  for (const p of list) {
+  for (const p of items) {
     let score = 0;
     const nameLower = p.name.toLowerCase();
     const catLower = p.category.toLowerCase();
@@ -205,8 +255,9 @@ export type Filters = {
   sort?: string;
 };
 
-export function filterProducts(f: Filters, list: Product[] = products): Product[] {
-  let r = list.filter(
+export function filterProducts(f: Filters, list?: Product[]): Product[] {
+  const items = list || getCatalogProducts();
+  let r = items.filter(
     (p) => {
       const pSizes = (p.variants && p.variants.length > 0) 
         ? p.variants.filter((v) => v.is_enabled !== false && v.is_available !== false).map((v) => v.size as string)
