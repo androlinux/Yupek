@@ -144,7 +144,8 @@ export default function Header() {
             alt=""
             width={180}
             height={55}
-            priority
+            priority={false}
+            loading="eager"
             className={`transition-all duration-500 ease-out object-contain drop-shadow-sm w-auto ${
               scrolled ? "h-11 md:h-13" : "h-12 md:h-15"
             } ${solid ? "opacity-100 scale-100" : "opacity-0 absolute pointer-events-none scale-95"} group-hover:scale-105`}
