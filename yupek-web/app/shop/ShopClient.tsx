@@ -140,16 +140,16 @@ export default function ShopClient({ initial }: { initial: Filters }) {
       </header>
       <div className="wrap pb-24">
         {/* Category Fast Switcher Bar */}
-        <div
+        <nav
           className="mb-8 flex flex-wrap gap-x-6 gap-y-2 border-y border-brown/10 py-4"
-          aria-label="Categories"
+          aria-label={t.shop.category}
         >
           {topCategoryPills.map((c) => (
             <Link key={c.label} href={`/shop?${c.q}`} className="label hover:text-gold transition-colors">
               {c.label}
             </Link>
           ))}
-        </div>
+        </nav>
 
       {/* Control bar */}
       <div className="mb-8 flex items-center justify-between">
@@ -157,6 +157,9 @@ export default function ShopClient({ initial }: { initial: Filters }) {
           className="label flex items-center gap-2 lg:hidden"
           onClick={() => setOpen(!open)}
           aria-expanded={open}
+          aria-label={open
+            ? (locale === "nl" ? "Filters sluiten" : "Close filters")
+            : (locale === "nl" ? "Filters openen" : "Open filters")}
         >
           <Icon name="plus" className="h-3 w-3" />
           {t.shop.filter}

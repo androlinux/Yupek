@@ -1,8 +1,87 @@
 import { products, type Product } from "@/data/products";
 
+export type ProductSource = "local" | "supabase" | "printify";
+
+export interface NormalizedPrintifyProduct {
+  printify_product_id: string;
+  title: string;
+  slug: string;
+  description: string;
+  tags: string[];
+  price: number;
+  currency: string;
+  images: Array<{
+    src: string;
+    position: number;
+    variant_ids: number[];
+    is_default: boolean;
+  }>;
+  variants: Array<{
+    variant_id: number | string;
+    title: string;
+    sku: string;
+    price: number;
+    price_cents: number;
+    is_enabled: boolean;
+    is_available: boolean;
+    options: any;
+  }>;
+  sku: string;
+  available: boolean;
+  visible: boolean;
+  blueprint_id?: number | null;
+  print_provider_id?: number | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
 export const eur = (n: number) => `€${n.toFixed(2)}`;
 
-export const getProduct = (slug: string, list: Product[] = products) => list.find((p) => p.slug === slug);
+export function getCatalogProducts(): Product[] {
+  if (typeof window === "undefined") {
+    try {
+      const nodeRequire = eval("require");
+      const fs = nodeRequire("fs");
+      const path = nodeRequire("path");
+      const configPath = path.join(process.cwd(), "data", "site-config.json");
+      if (fs.existsSync(configPath)) {
+        const raw = fs.readFileSync(configPath, "utf-8");
+        const parsed = JSON.parse(raw);
+        const custom: Product[] = parsed.customProducts || [];
+        const overrides = parsed.productOverrides || {};
+        const combined = [...products, ...custom];
+
+        return combined
+          .filter((p) => !overrides[p.slug]?.deleted)
+          .map((p) => {
+            const ov = overrides[p.slug];
+            if (!ov) return p;
+            return {
+              ...p,
+              name: ov.name ?? p.name,
+              descriptor: ov.descriptor ?? p.descriptor,
+              price: ov.price ?? p.price,
+              badge: ov.badge !== undefined ? ov.badge : p.badge,
+              featured: ov.featured ?? p.featured,
+              newArrival: ov.newArrival ?? p.newArrival,
+              sizes: ov.sizes && ov.sizes.length > 0 ? ov.sizes : p.sizes,
+              colors: ov.colors && ov.colors.length > 0 ? ov.colors : p.colors,
+              description: ov.description ?? p.description,
+              material: ov.material ?? p.material,
+              inventory: ov.inventory !== undefined ? ov.inventory : p.inventory,
+              images: ov.images && ov.images.length > 0 ? ov.images : p.images,
+            };
+          });
+      }
+    } catch {}
+  }
+  return products;
+}
+
+export const getProduct = (slug: string, list?: Product[]) => {
+  const source = list || getCatalogProducts();
+  return source.find((p) => p.slug === slug);
+};
 
 export const related = (p: Product, n = 4, list: Product[] = products) =>
   list

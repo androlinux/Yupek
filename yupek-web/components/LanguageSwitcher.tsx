@@ -22,7 +22,7 @@ export default function LanguageSwitcher({
   }, [isEn, setLocale]);
 
   const handleKeyDown = useCallback(
-    (e: KeyboardEvent<HTMLDivElement>) => {
+    (e: KeyboardEvent<HTMLButtonElement>) => {
       if (e.key === " " || e.key === "Enter") {
         e.preventDefault();
         toggle();
@@ -126,11 +126,10 @@ export default function LanguageSwitcher({
       }[size];
 
   return (
-    <div
+    <button
       role="switch"
       aria-label={`Toggle language between ${nlLabel} and ${enLabel}`}
       aria-checked={isEn}
-      tabIndex={0}
       onKeyDown={handleKeyDown}
       onClick={toggle}
       className={`relative inline-flex items-center select-none cursor-pointer group focus:outline-none focus-visible:ring-1.5 focus-visible:ring-gold focus-visible:ring-offset-1 transition-transform duration-200 active:scale-[0.97] ${dims.wrapper} ${className}`}
@@ -197,6 +196,6 @@ export default function LanguageSwitcher({
         {/* Refined Sand Bevel Rim at bottom */}
         <div className={`w-full bg-[#D9CBB0] border-t border-[#2B1D14]/10 shrink-0 ${dims.bevelH}`} />
       </div>
-    </div>
+    </button>
   );
 }

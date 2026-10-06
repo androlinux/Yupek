@@ -58,6 +58,7 @@ export function CartLines() {
                 </div>
                 <button
                   className="underline underline-offset-4 text-brown/60 hover:text-burgundy transition-colors text-[11px]"
+                  aria-label={locale === "nl" ? `${p.name} verwijderen` : `Remove ${p.name}`}
                   onClick={() => remove(l)}
                 >
                   {t.cart.remove}
@@ -134,7 +135,14 @@ export default function CartDrawer() {
             </span>
             <span className="font-semibold">{progress}%</span>
           </div>
-          <div className="mt-1.5 h-1 w-full bg-brown/15 rounded-full overflow-hidden">
+          <div
+            role="progressbar"
+            aria-label={locale === "nl" ? "Voortgang gratis verzending" : "Free shipping progress"}
+            aria-valuenow={progress}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            className="mt-1.5 h-1 w-full bg-brown/15 rounded-full overflow-hidden"
+          >
             <div
               className="h-full bg-gold transition-all duration-500 ease-out"
               style={{ width: `${progress}%` }}

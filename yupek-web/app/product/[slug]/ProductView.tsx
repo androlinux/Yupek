@@ -100,8 +100,11 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
                 speakText(`${p.name}. Price ${eur(p.price)}. ${p.description}. Material: ${p.material}. Available in sizes ${p.sizes.join(", ")}.`);
               }
             }}
+            aria-label={isSpeaking
+              ? (locale === "nl" ? "Stop voorlezen" : "Stop reading product description")
+              : (locale === "nl" ? "Beluister productbeschrijving" : "Listen to product description")}
+            aria-pressed={isSpeaking}
             className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[.2em] font-semibold text-gold hover:text-brown border border-gold/40 px-3.5 py-1.5 transition-all bg-sand/15 hover:bg-gold/20"
-            title={locale === "nl" ? "Beluister productdetails met spraakweergave" : "Listen to product details with speech synthesis"}
           >
             <Icon name={isSpeaking ? "volumeMute" : "volume"} className="w-3.5 h-3.5 text-gold" />
             <span>

@@ -23,7 +23,14 @@ export default function ProductCard({ p, priority = false }: { p: Product; prior
           <p className="label mb-2 text-center text-[9px]">{t.common.quickAdd}</p>
           <div className="flex flex-wrap justify-center gap-1.5">
             {p.sizes.map((s) => (
-              <button key={s} onClick={() => add({ slug: p.slug, size: s, color: p.colors[0] })} className="min-w-9 border border-brown/30 px-2 py-1.5 text-[10px] tracking-widest hover:bg-brown hover:text-cream">{s}</button>
+              <button
+                key={s}
+                aria-label={`${t.common.quickAdd} ${s}`}
+                onClick={() => add({ slug: p.slug, size: s, color: p.colors[0] })}
+                className="min-w-9 border border-brown/30 px-2 py-1.5 text-[10px] tracking-widest hover:bg-brown hover:text-cream"
+              >
+                {s}
+              </button>
             ))}
           </div>
         </div>

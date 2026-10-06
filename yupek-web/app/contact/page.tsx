@@ -4,6 +4,16 @@ import { useSiteConfig } from "@/components/ConfigContext";
 import { useLanguage } from "@/components/LanguageContext";
 import ScrollReveal from "@/components/ScrollReveal";
 
+const SUBJECT_OPTIONS = [
+  { value: "product_info", labelEn: "Product Information", labelNl: "Productinformatie" },
+  { value: "sizing_fit", labelEn: "Sizing & Fit", labelNl: "Maatadvies & Pasvorm" },
+  { value: "order_support", labelEn: "Order Support", labelNl: "Ondersteuning bij Bestelling" },
+  { value: "shipping_delivery", labelEn: "Shipping & Delivery", labelNl: "Verzending & Bezorging" },
+  { value: "returns_exchanges", labelEn: "Returns & Exchanges", labelNl: "Retourneren & Ruilen" },
+  { value: "wholesale", labelEn: "Wholesale / Collaboration", labelNl: "Groothandel / Samenwerking" },
+  { value: "general_enquiry", labelEn: "General Enquiry", labelNl: "Algemene Vraag" },
+] as const;
+
 export default function ContactPage() {
   const { config, submitContact } = useSiteConfig();
   const { t, locale } = useLanguage();
@@ -12,7 +22,7 @@ export default function ContactPage() {
     name: "",
     email: "",
     phone: "",
-    subject: "appointment",
+    subject: "product_info",
     message: "",
   });
 
@@ -25,16 +35,10 @@ export default function ContactPage() {
     setLoading(true);
     setError(null);
 
-    const subjectText =
-      form.subject === "appointment"
-        ? t.contact.subjects.appointment
-        : form.subject === "garments"
-        ? t.contact.subjects.garments
-        : form.subject === "order"
-        ? t.contact.subjects.order
-        : form.subject === "press"
-        ? t.contact.subjects.press
-        : t.contact.subjects.wholesale;
+    const selectedOption = SUBJECT_OPTIONS.find((opt) => opt.value === form.subject);
+    const subjectText = selectedOption
+      ? (locale === "nl" ? selectedOption.labelNl : selectedOption.labelEn)
+      : "General Enquiry";
 
     const res = await submitContact({
       ...form,
@@ -48,7 +52,7 @@ export default function ContactPage() {
         name: "",
         email: "",
         phone: "",
-        subject: "appointment",
+        subject: "product_info",
         message: "",
       });
     } else {
@@ -56,18 +60,31 @@ export default function ContactPage() {
     }
   };
 
-  const cleanWaNumber = (config.whatsappNumber || "+31612345678").replace(/[^0-9]/g, "");
+  const cleanWaNumber = (config.whatsappNumber || "+31644154126").replace(/[^0-9]/g, "");
 
   return (
     <div className="py-16 md:py-24">
       <div className="wrap">
         <ScrollReveal>
           <div className="max-w-2xl">
-            <span className="label tracking-[.3em] text-burgundy text-[10px]">{t.contact.tag}</span>
-            <h1 className="h-display mt-2 text-4xl md:text-6xl text-brown">{t.contact.title}</h1>
-            <p className="mt-4 text-sm leading-7 text-brown/75 font-light">
-              {t.contact.subtitle}
-            </p>
+            <span className="label tracking-[.3em] text-burgundy text-[10px]">
+              {t.contact.tag || (locale === "nl" ? "DIGITALE KLANTENSERVICE" : "DIGITAL CLIENT CARE")}
+            </span>
+            <h1 className="h-display mt-2 text-4xl md:text-6xl text-brown">
+              {t.contact.title || "CLIENT CONCIERGE"}
+            </h1>
+            <div className="mt-4 text-sm leading-7 text-brown/75 font-light space-y-2">
+              <p>
+                {locale === "nl"
+                  ? "Of u nu een vraag heeft over maten, productdetails, een bestelling of internationale bezorging: ons cliënt conciërgeteam staat voor u klaar."
+                  : "Whether you have a question about sizing, product details, an order, or international delivery, our client concierge team is here to assist."}
+              </p>
+              <p>
+                {locale === "nl"
+                  ? "Voor specifieke productvragen of stylingadvies kunnen klanten rechtstreeks contact met ons opnemen via e-mail of WhatsApp."
+                  : "For private product questions or styling enquiries, customers can contact us directly by email or WhatsApp."}
+              </p>
+            </div>
           </div>
         </ScrollReveal>
 
@@ -148,11 +165,11 @@ export default function ContactPage() {
                         onChange={(e) => setForm({ ...form, subject: e.target.value })}
                         className="w-full border border-brown/20 bg-white/80 px-3.5 py-2.5 text-xs text-brown focus:border-brown focus:outline-none"
                       >
-                        <option value="appointment">{t.contact.subjects.appointment}</option>
-                        <option value="garments">{t.contact.subjects.garments}</option>
-                        <option value="order">{t.contact.subjects.order}</option>
-                        <option value="press">{t.contact.subjects.press}</option>
-                        <option value="wholesale">{t.contact.subjects.wholesale}</option>
+                        {SUBJECT_OPTIONS.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {locale === "nl" ? opt.labelNl : opt.labelEn}
+                          </option>
+                        ))}
                       </select>
                     </div>
 
@@ -189,53 +206,68 @@ export default function ContactPage() {
             </ScrollReveal>
           </div>
 
-          {/* Right Column: Studio Information & Direct Channels */}
+          {/* Right Column: Digital Client Concierge Card */}
           <div className="lg:col-span-5 space-y-8">
             <ScrollReveal delayMs={200}>
               <div className="border border-brown/15 bg-cream p-8 space-y-6 shadow-sm">
                 <div>
-                  <h3 className="label tracking-[.25em] text-burgundy text-[10px]">{t.contact.headquartersTag}</h3>
-                  <p className="font-serif text-2xl text-brown mt-1">{t.contact.studioTitle}</p>
-                  <p className="mt-2 text-xs leading-relaxed text-brown/80">
-                    {config.contactAddress || "Keizersgracht 482, 1016 GD Amsterdam, The Netherlands"}
+                  <span className="label tracking-[.25em] text-burgundy text-[10px] block">
+                    {locale === "nl" ? "DIGITALE KLANTENSERVICE" : "DIGITAL CLIENT CONCIERGE"}
+                  </span>
+                  <h2 className="font-serif text-2xl text-brown mt-1">
+                    {t.contact.cardTitle || "YUPEK CLIENT CONCIERGE"}
+                  </h2>
+                  <p className="mt-2 text-xs leading-relaxed text-brown/80 font-light">
+                    {locale === "nl"
+                      ? "Ons cliënt conciërgeteam staat klaar om u te helpen met bestellingen, maten, productdetails, verzending en algemene vragen."
+                      : "Our client concierge team is available to assist with orders, sizing, product details, shipping and general enquiries."}
                   </p>
                 </div>
 
-                <div className="border-t border-brown/10 pt-4 space-y-3">
+                <div className="border-t border-brown/10 pt-5 space-y-4">
                   <div>
-                    <span className="text-[10px] uppercase tracking-widest text-brown/50 block">{t.contact.conciergeEmail}</span>
+                    <span className="text-[10px] uppercase tracking-widest text-brown/50 block mb-1">
+                      {t.contact.conciergeEmail || "EMAIL"}
+                    </span>
                     <a
-                      href={`mailto:${config.contactEmail || "concierge@yupek.eu"}`}
-                      className="text-xs font-medium text-brown hover:text-burgundy transition-colors"
+                      href={`mailto:${config.contactEmail || "daniyarov16@gmail.com"}`}
+                      className="text-xs font-medium text-brown hover:text-burgundy transition-colors underline decoration-brown/30 underline-offset-4"
                     >
-                      {config.contactEmail || "concierge@yupek.eu"}
+                      {config.contactEmail || "daniyarov16@gmail.com"}
                     </a>
                   </div>
 
                   <div>
-                    <span className="text-[10px] uppercase tracking-widest text-brown/50 block">{t.contact.telephoneLine}</span>
+                    <span className="text-[10px] uppercase tracking-widest text-brown/50 block mb-1">
+                      {t.contact.telephoneLine || "WHATSAPP"}
+                    </span>
                     <a
-                      href={`tel:${(config.contactPhone || "+31208943320").replace(/[^0-9+]/g, "")}`}
+                      href={`https://wa.me/${cleanWaNumber}?text=${encodeURIComponent(
+                        locale === "nl"
+                          ? "Hallo YUPEK, ik heb een vraag over uw collectie."
+                          : "Hello YUPEK, I have an inquiry regarding your collection."
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="text-xs font-medium text-brown hover:text-burgundy transition-colors"
                     >
-                      {config.contactPhone || "+31 (0) 20 894 3320"}
+                      {config.contactPhone || "+31644154126"}
                     </a>
                   </div>
 
                   <div>
-                    <span className="text-[10px] uppercase tracking-widest text-brown/50 block">{t.contact.visitingHours}</span>
-                    <p className="text-xs text-brown/80">
-                      {config.contactHours && locale === "en"
-                        ? config.contactHours
-                        : locale === "nl"
-                        ? "Maandag – Zaterdag: 10:00 – 19:00 CET"
-                        : "Monday – Saturday: 10:00 – 19:00 CET"}
-                    </p>
+                    <span className="text-[10px] uppercase tracking-widest text-brown/50 block mb-1">
+                      {t.contact.visitingHours || "CUSTOMER CARE"}
+                    </span>
+                    <div className="text-xs text-brown/80 space-y-0.5">
+                      <p>{locale === "nl" ? "Maandag – Zaterdag" : "Monday – Saturday"}</p>
+                      <p className="font-medium text-brown">10:00 – 19:00 CET</p>
+                    </div>
                   </div>
                 </div>
 
                 {/* Instant WhatsApp Concierge Button */}
-                <div className="border-t border-brown/10 pt-4">
+                <div className="border-t border-brown/10 pt-5">
                   <a
                     href={`https://wa.me/${cleanWaNumber}?text=${encodeURIComponent(
                       config.whatsappMessage && locale === "en"
@@ -246,29 +278,16 @@ export default function ContactPage() {
                     )}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex w-full items-center justify-center gap-3 bg-[#25D366] text-white py-3 px-4 text-xs font-medium tracking-wider hover:bg-[#20ba5a] transition-all shadow-sm"
+                    className="flex w-full items-center justify-center gap-3 bg-[#25D366] text-white py-3.5 px-4 text-xs font-medium tracking-wider hover:bg-[#20ba5a] transition-all shadow-sm"
                   >
-                    <span>{t.contact.directWhatsAppBtn}</span>
+                    <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                      <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766 0-3.187-2.59-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.007c.106.005.249-.04.39.299.144.347.491 1.2.534 1.287.043.087.072.188.014.303-.058.116-.087.188-.173.289l-.26.303c-.087.087-.179.182-.077.357.101.174.449.741.964 1.2.662.591 1.221.774 1.394.86.173.086.275.072.376-.044.101-.116.433-.506.549-.679.116-.173.231-.144.39-.086s1.011.477 1.184.564.289.13.332.202c.044.073.044.419-.1.824z" />
+                    </svg>
+                    <span>{t.contact.directWhatsAppBtn || "CONTACT VIA WHATSAPP"}</span>
                   </a>
                 </div>
               </div>
             </ScrollReveal>
-
-            {/* Optional Studio Video Tour */}
-            {config.contactVideoUrl && (
-              <ScrollReveal delayMs={300}>
-                <div className="border border-brown/15 bg-black overflow-hidden shadow-sm">
-                  <span className="text-[10px] uppercase tracking-widest text-sand p-3 block bg-brown">
-                    {t.contact.studioTour}
-                  </span>
-                  <video
-                    src={config.contactVideoUrl}
-                    controls
-                    className="w-full aspect-video object-cover"
-                  />
-                </div>
-              </ScrollReveal>
-            )}
           </div>
         </div>
       </div>

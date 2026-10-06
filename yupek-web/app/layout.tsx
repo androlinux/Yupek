@@ -99,28 +99,23 @@ const jsonLd = {
   "@context": "https://schema.org",
   "@graph": [
     {
-      "@type": "ClothingStore",
+      "@type": "OnlineStore",
       "@id": `${siteUrl}/#organization`,
-      name: "YUPEK B.V.",
+      name: "YUPEK",
       url: siteUrl,
       logo: `${siteUrl}/images/logo-dark.png`,
       image: `${siteUrl}/images/og.jpg`,
       description,
-      address: {
-        "@type": "PostalAddress",
-        streetAddress: "Keizersgracht 482",
-        addressLocality: "Amsterdam",
-        postalCode: "1016 GD",
-        addressCountry: "NL",
-      },
       telephone: "+31644154126",
+      email: "daniyarov16@gmail.com",
       priceRange: "€€",
-      openingHoursSpecification: [
+      contactPoint: [
         {
-          "@type": "OpeningHoursSpecification",
-          dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-          opens: "10:00",
-          closes: "19:00",
+          "@type": "ContactPoint",
+          telephone: "+31644154126",
+          contactType: "customer service",
+          email: "daniyarov16@gmail.com",
+          availableLanguage: ["en", "nl"],
         },
       ],
       sameAs: ["https://instagram.com/yupek_amsterdam"],

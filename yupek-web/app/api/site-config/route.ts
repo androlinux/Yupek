@@ -22,6 +22,7 @@ async function readConfigFromDisk(): Promise<SiteConfig> {
         ...(defaultSiteConfig.productOverrides || {}),
         ...(parsed.productOverrides || {}),
       },
+      customProducts: parsed.customProducts || defaultSiteConfig.customProducts || [],
       storeOrders: parsed.storeOrders || defaultSiteConfig.storeOrders || [],
       contactSubmissions: parsed.contactSubmissions || defaultSiteConfig.contactSubmissions || [],
     };
@@ -85,6 +86,8 @@ export async function POST(request: Request) {
       ...currentConfig,
       ...body,
       productOverrides: mergedOverrides,
+      customProducts:
+        body.customProducts !== undefined ? body.customProducts : currentConfig.customProducts || [],
       storeOrders: body.storeOrders !== undefined ? body.storeOrders : currentConfig.storeOrders || [],
       contactSubmissions:
         body.contactSubmissions !== undefined ? body.contactSubmissions : currentConfig.contactSubmissions || [],
