@@ -827,7 +827,7 @@ export default function AdminPrintifyPage() {
                         <td className="p-2 font-mono text-brown/60">#{v.variant_id}</td>
                         <td className="p-2 font-medium">{v.title}</td>
                         <td className="p-2 font-mono text-brown/70">{v.sku || "-"}</td>
-                        <td className="p-2 font-bold font-serif">{eur(v.price)}</td>
+                        <td className="p-2 font-bold font-serif">{eur((v.price_cents || 0) / 100)}</td>
                         <td className="p-2">
                           <span
                             className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
