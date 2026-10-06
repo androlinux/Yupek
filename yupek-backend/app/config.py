@@ -8,6 +8,9 @@ SERVICE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
 JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET", "")
 DEFAULT_CORS = "http://localhost:3000,http://127.0.0.1:3000,https://www.yupek.shop,https://yupek.shop"
 CORS_ORIGINS = [o.strip() for o in os.getenv("CORS_ORIGINS", DEFAULT_CORS).split(",") if o.strip()]
+for origin in ("https://www.yupek.shop", "https://yupek.shop", "http://localhost:3000"):
+    if origin not in CORS_ORIGINS:
+        CORS_ORIGINS.append(origin)
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "")
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
 CRON_SECRET = os.getenv("CRON_SECRET", "")
@@ -15,7 +18,7 @@ VAT_RATE = float(os.getenv("VAT_RATE", "0.21"))
 SUPPLIER_MARKUP = float(os.getenv("SUPPLIER_MARKUP", "2.2"))
 PRINTIFY_API_TOKEN = os.getenv("PRINTIFY_API_TOKEN", "")
 PRINTIFY_BASE_URL = os.getenv("PRINTIFY_BASE_URL", "https://api.printify.com/v1").rstrip("/")
-PRINTIFY_SHOP_ID = os.getenv("PRINTIFY_SHOP_ID", "")
+PRINTIFY_SHOP_ID = os.getenv("PRINTIFY_SHOP_ID", "29215191") or "29215191"
 PRINTIFY_WEBHOOK_SECRET = os.getenv("PRINTIFY_WEBHOOK_SECRET", "")
 
 COUNTRIES = ["Netherlands", "Belgium", "Germany", "France", "Italy", "Spain", "Austria",
