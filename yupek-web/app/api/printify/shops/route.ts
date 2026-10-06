@@ -18,16 +18,14 @@ export async function GET(req: NextRequest) {
         cache: "no-store",
       });
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ detail: "Failed to fetch shops from backend" }));
-        return NextResponse.json(err, { status: res.status });
+      if (res.ok) {
+        const data = await res.json();
+        return NextResponse.json(data);
+      } else {
+        console.warn(`[Printify API] Backend at ${backendUrl} returned HTTP ${res.status}. Attempting direct server-side query.`);
       }
-
-      const data = await res.json();
-      return NextResponse.json(data);
     } catch (error: any) {
       console.error(`[Printify API] Error contacting backend at ${backendUrl}:`, error.message);
-      // Fall through to resilient server-side fallback if available
     }
   }
 
