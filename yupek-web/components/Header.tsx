@@ -95,7 +95,7 @@ export default function Header() {
   const [mobileCollectionsOpen, setMobileCollectionsOpen] = useState(false);
 
   const { count, wishlist, setCartOpen, setSearchOpen, menuOpen, setMenuOpen } = useStore();
-  const { user, setAuthModalOpen, signOut } = useAuth();
+  const { user, setAuthModalOpen, setAuthModalTab, signOut } = useAuth();
   const { t, locale } = useLanguage();
   const { openDrawer } = useAccessibility();
 
@@ -334,7 +334,7 @@ export default function Header() {
               </button>
             ) : (
               <button
-                onClick={() => setAuthModalOpen(true)}
+                onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                 aria-label={t.nav.signIn}
                 className="p-1 transition-transform duration-300 hover:scale-110 active:scale-95"
               >
@@ -342,27 +342,73 @@ export default function Header() {
               </button>
             )}
 
-            {userDropdownOpen && user && (
-              <div role="menu" className="absolute right-0 mt-2 w-56 border border-brown/15 bg-cream p-2 shadow-2xl backdrop-blur-md transition-all animate-in fade-in slide-in-from-top-2 duration-200 text-brown">
-                <div className="border-b border-brown/10 px-3 py-2">
-                  <p className="text-[10px] uppercase tracking-widest text-brown/60">
-                    {locale === "nl" ? "Ingelogd als" : "Signed in as"}
-                  </p>
-                  <p className="truncate text-xs font-semibold text-brown">{user.name}</p>
-                </div>
-                <div className="py-1">
-                  <Link role="menuitem" href="/account" onClick={() => setUserDropdownOpen(false)} className="block px-3 py-1.5 text-xs tracking-wider hover:bg-sand/30 transition-colors">
-                    {t.nav.account}
-                  </Link>
-                  <Link role="menuitem" href="/wishlist" onClick={() => setUserDropdownOpen(false)} className="block px-3 py-1.5 text-xs tracking-wider hover:bg-sand/30 transition-colors">
-                    {t.nav.wishlist} ({wishlist.length})
-                  </Link>
-                </div>
-                <div className="border-t border-brown/10 pt-1">
-                  <button role="menuitem" onClick={() => { signOut(); setUserDropdownOpen(false); }} className="block w-full text-left px-3 py-1.5 text-xs tracking-wider text-brown/70 hover:text-burgundy hover:bg-burgundy/5 transition-colors">
-                    {t.nav.signOut}
-                  </button>
-                </div>
+            {userDropdownOpen && (
+              <div role="menu" className="absolute right-0 mt-2 w-56 border border-brown/15 bg-cream p-2 shadow-2xl backdrop-blur-md transition-all animate-in fade-in slide-in-from-top-2 duration-200 text-brown z-50">
+                {user ? (
+                  <>
+                    <div className="border-b border-brown/10 px-3 py-2">
+                      <p className="text-[10px] uppercase tracking-widest text-brown/60 font-semibold">
+                        ACCOUNT
+                      </p>
+                      <p className="truncate text-xs font-semibold text-brown mt-0.5">{user.name}</p>
+                      <p className="truncate text-[10px] text-brown/60">{user.email}</p>
+                    </div>
+                    <div className="py-1">
+                      <Link role="menuitem" href="/account" onClick={() => setUserDropdownOpen(false)} className="block px-3 py-1.5 text-xs tracking-wider hover:bg-sand/30 transition-colors">
+                        My Account
+                      </Link>
+                      <Link role="menuitem" href="/account/orders" onClick={() => setUserDropdownOpen(false)} className="block px-3 py-1.5 text-xs tracking-wider hover:bg-sand/30 transition-colors">
+                        Orders
+                      </Link>
+                      <Link role="menuitem" href="/wishlist" onClick={() => setUserDropdownOpen(false)} className="block px-3 py-1.5 text-xs tracking-wider hover:bg-sand/30 transition-colors">
+                        Wishlist ({wishlist.length})
+                      </Link>
+                      <Link role="menuitem" href="/account/addresses" onClick={() => setUserDropdownOpen(false)} className="block px-3 py-1.5 text-xs tracking-wider hover:bg-sand/30 transition-colors">
+                        Addresses
+                      </Link>
+                      <Link role="menuitem" href="/account/security" onClick={() => setUserDropdownOpen(false)} className="block px-3 py-1.5 text-xs tracking-wider hover:bg-sand/30 transition-colors">
+                        Security
+                      </Link>
+                    </div>
+                    <div className="border-t border-brown/10 pt-1">
+                      <button role="menuitem" onClick={() => { signOut(); setUserDropdownOpen(false); }} className="block w-full text-left px-3 py-1.5 text-xs tracking-wider text-brown/70 hover:text-burgundy hover:bg-burgundy/5 transition-colors">
+                        {t.nav.signOut}
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="border-b border-brown/10 px-3 py-2">
+                      <p className="text-[10px] uppercase tracking-widest text-brown/60 font-semibold">
+                        ACCOUNT
+                      </p>
+                    </div>
+                    <div className="py-1">
+                      <button
+                        role="menuitem"
+                        onClick={() => {
+                          setAuthModalTab("signin");
+                          setAuthModalOpen(true);
+                          setUserDropdownOpen(false);
+                        }}
+                        className="block w-full text-left px-3 py-1.5 text-xs tracking-wider hover:bg-sand/30 transition-colors"
+                      >
+                        Sign In
+                      </button>
+                      <button
+                        role="menuitem"
+                        onClick={() => {
+                          setAuthModalTab("signup");
+                          setAuthModalOpen(true);
+                          setUserDropdownOpen(false);
+                        }}
+                        className="block w-full text-left px-3 py-1.5 text-xs tracking-wider hover:bg-sand/30 transition-colors"
+                      >
+                        Create Account
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -628,19 +674,45 @@ export default function Header() {
           </ul>
 
           <div className="mt-6 border-t border-brown/10 pt-4 px-2">
+            <p className="text-[10px] uppercase tracking-widest text-brown/50 font-semibold mb-2">ACCOUNT</p>
             {user ? (
-              <Link href="/account" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 text-xs uppercase tracking-widest text-brown py-2">
-                <Icon name="user" className="h-4 w-4" />
-                <span>{user.name}</span>
-              </Link>
+              <div className="space-y-1">
+                <Link href="/account" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 text-xs uppercase tracking-widest text-brown py-1.5 hover:text-burgundy">
+                  <Icon name="user" className="h-4 w-4" />
+                  <span>My Account ({user.name})</span>
+                </Link>
+                <Link href="/account/orders" onClick={() => setMenuOpen(false)} className="block text-xs uppercase tracking-widest text-brown/80 py-1.5 pl-6 hover:text-burgundy">
+                  Orders
+                </Link>
+                <Link href="/wishlist" onClick={() => setMenuOpen(false)} className="block text-xs uppercase tracking-widest text-brown/80 py-1.5 pl-6 hover:text-burgundy">
+                  Wishlist ({wishlist.length})
+                </Link>
+                <Link href="/account/addresses" onClick={() => setMenuOpen(false)} className="block text-xs uppercase tracking-widest text-brown/80 py-1.5 pl-6 hover:text-burgundy">
+                  Addresses
+                </Link>
+                <Link href="/account/security" onClick={() => setMenuOpen(false)} className="block text-xs uppercase tracking-widest text-brown/80 py-1.5 pl-6 hover:text-burgundy">
+                  Security
+                </Link>
+                <button onClick={() => { signOut(); setMenuOpen(false); }} className="block w-full text-left text-xs uppercase tracking-widest text-brown/60 py-1.5 pl-6 hover:text-burgundy">
+                  {t.nav.signOut}
+                </button>
+              </div>
             ) : (
-              <button
-                onClick={() => { setMenuOpen(false); setAuthModalOpen(true); }}
-                className="flex items-center gap-2 text-xs uppercase tracking-widest text-brown py-2"
-              >
-                <Icon name="user" className="h-4 w-4" />
-                <span>{t.nav.signIn}</span>
-              </button>
+              <div className="space-y-1">
+                <button
+                  onClick={() => { setMenuOpen(false); setAuthModalTab("signin"); setAuthModalOpen(true); }}
+                  className="flex items-center gap-2 text-xs uppercase tracking-widest text-brown py-1.5 hover:text-burgundy"
+                >
+                  <Icon name="user" className="h-4 w-4" />
+                  <span>Sign In</span>
+                </button>
+                <button
+                  onClick={() => { setMenuOpen(false); setAuthModalTab("signup"); setAuthModalOpen(true); }}
+                  className="block text-xs uppercase tracking-widest text-brown/80 py-1.5 pl-6 hover:text-burgundy text-left w-full"
+                >
+                  Create Account
+                </button>
+              </div>
             )}
           </div>
 

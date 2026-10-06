@@ -3,42 +3,31 @@ import { createContext, useContext, useEffect, useState, useCallback, ReactNode 
 import { supabase } from "@/lib/supabase";
 import { getOAuthRedirectUrl } from "@/lib/authEnv";
 
-export interface UserOrder {
-  id: string;
-  date: string;
-  status: "Processing" | "In Transit" | "Delivered";
-  total: number;
-  tracking: string;
-  items: Array<{
-    slug: string;
-    name: string;
-    size: string;
-    color: string;
-    qty: number;
-    price: number;
-    image: string;
-  }>;
-}
-
 export interface UserAddress {
+  id?: string;
   fullName: string;
+  firstName?: string;
+  lastName?: string;
   street: string;
+  address2?: string;
   city: string;
   postalCode: string;
   country: string;
   phone: string;
+  isDefault?: boolean;
 }
 
 export interface AuthUser {
   id: string;
   email: string;
+  firstName: string;
+  lastName: string;
   name: string;
   phone?: string;
   avatar?: string;
   role: "customer" | "admin";
-  provider: "google" | "apple" | "email" | "demo";
-  orders: UserOrder[];
-  address: UserAddress;
+  provider: "google" | "email";
+  address?: UserAddress;
   createdAt?: string;
 }
 
@@ -47,337 +36,302 @@ interface AuthContextType {
   loading: boolean;
   authModalOpen: boolean;
   setAuthModalOpen: (open: boolean) => void;
+  authModalTab: "signin" | "signup";
+  setAuthModalTab: (tab: "signin" | "signup") => void;
   signInWithGoogle: () => Promise<{ success: boolean; error?: string }>;
   signInWithEmail: (email: string, pass: string) => Promise<{ success: boolean; error?: string }>;
-  signUpWithEmail: (email: string, pass: string, name: string, phone?: string) => Promise<{ success: boolean; error?: string }>;
+  signUpWithEmail: (
+    email: string,
+    pass: string,
+    firstName: string,
+    lastName: string,
+    phone?: string
+  ) => Promise<{ success: boolean; error?: string; confirmationNeeded?: boolean }>;
   signOut: () => Promise<void>;
-  updateProfile: (profile: Partial<AuthUser>) => void;
-  updateAddress: (address: UserAddress) => Promise<boolean>;
-  refreshOrders: () => Promise<void>;
+  updateProfile: (data: { firstName: string; lastName: string; phone?: string }) => Promise<{ success: boolean; error?: string }>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-const USER_STORAGE_KEY = "yupek_client_auth_v2";
+const USER_STORAGE_KEY = "yupek_client_auth_v3";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authModalTab, setAuthModalTab] = useState<"signin" | "signup">("signin");
 
-  // Sync user's real orders from the server
-  const syncServerOrders = useCallback(async (clientEmail: string) => {
+  // Sync profile details from public.profiles table or user metadata
+  const loadProfile = useCallback(async (userId: string, email: string, metadata: any, provider: "google" | "email", createdAt?: string) => {
+    let firstName = metadata?.first_name || "";
+    let lastName = metadata?.last_name || "";
+    let phone = metadata?.phone || "";
+
+    if (!firstName && metadata?.full_name) {
+      const parts = metadata.full_name.split(" ");
+      firstName = parts[0] || "";
+      lastName = parts.slice(1).join(" ") || "";
+    } else if (!firstName && metadata?.name) {
+      const parts = metadata.name.split(" ");
+      firstName = parts[0] || "";
+      lastName = parts.slice(1).join(" ") || "";
+    }
+
+    // Attempt to read from public.profiles
     try {
-      const res = await fetch(`/api/auth?email=${encodeURIComponent(clientEmail)}`);
-      const data = await res.json();
-      if (data.success && Array.isArray(data.orders)) {
-        setUser((prev) => {
-          if (!prev || prev.email.toLowerCase() !== clientEmail.toLowerCase()) return prev;
-          const updated: AuthUser = {
-            ...prev,
-            orders: data.orders,
-            address: prev.address?.street ? prev.address : (data.user?.address || prev.address),
-          };
-          localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(updated));
-          return updated;
-        });
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("first_name, last_name, phone")
+        .eq("id", userId)
+        .maybeSingle();
+
+      if (profile) {
+        if (profile.first_name) firstName = profile.first_name;
+        if (profile.last_name) lastName = profile.last_name;
+        if (profile.phone) phone = profile.phone;
+      }
+    } catch {
+      // profiles table might be pending migration
+    }
+
+    // Attempt to load default address
+    let defaultAddress: UserAddress | undefined;
+    try {
+      const { data: addr } = await supabase
+        .from("addresses")
+        .select("*")
+        .eq("user_id", userId)
+        .order("is_default", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (addr) {
+        defaultAddress = {
+          id: addr.id,
+          fullName: `${addr.first_name} ${addr.last_name}`.trim(),
+          firstName: addr.first_name,
+          lastName: addr.last_name,
+          street: addr.address1,
+          address2: addr.address2,
+          city: addr.city,
+          postalCode: addr.postal_code,
+          country: addr.country,
+          phone: addr.phone || phone,
+          isDefault: addr.is_default,
+        };
       }
     } catch {
       // ignore
     }
+
+    const fullName = [firstName, lastName].filter(Boolean).join(" ") || email.split("@")[0] || "Valued Client";
+
+    const authUser: AuthUser = {
+      id: userId,
+      email,
+      firstName,
+      lastName,
+      name: fullName,
+      phone,
+      role: metadata?.role === "admin" ? "admin" : "customer",
+      provider,
+      address: defaultAddress || {
+        fullName,
+        firstName,
+        lastName,
+        street: "",
+        city: "",
+        postalCode: "",
+        country: "Netherlands",
+        phone,
+      },
+      createdAt: createdAt || new Date().toISOString(),
+    };
+
+    setUser(authUser);
+    try {
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(authUser));
+    } catch {}
+
+    return authUser;
   }, []);
 
-  // Initialize from localStorage and Supabase session
+  // Initialize session from Supabase
   useEffect(() => {
-    // 1. Restore local session
+    // 1. Instant restore from localStorage cache for fluid UI
     try {
       const cached = localStorage.getItem(USER_STORAGE_KEY);
       if (cached) {
-        const parsed: AuthUser = JSON.parse(cached);
-        setUser(parsed);
-        if (parsed.email) {
-          syncServerOrders(parsed.email);
-        }
+        setUser(JSON.parse(cached));
       }
-    } catch {
-      // ignore
-    }
+    } catch {}
 
-    // 2. Check Supabase OAuth session (Google)
-    async function checkSupabaseSession() {
+    // 2. Fetch authoritative Supabase session
+    async function initSession() {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
           const supa = session.user;
-          const email = supa.email || "";
-          const name = supa.user_metadata?.full_name || supa.user_metadata?.name || email.split("@")[0] || "Valued Client";
-          const provider = (supa.app_metadata?.provider || "google") as AuthUser["provider"];
-
-          // Register or sync with /api/auth
-          try {
-            await fetch("/api/auth", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                action: "register_oauth",
-                id: supa.id,
-                email,
-                name,
-                provider,
-              }),
-            });
-          } catch {}
-
-          const oauthUser: AuthUser = {
-            id: supa.id,
-            email,
-            name,
-            role: "customer",
-            provider,
-            orders: [],
-            address: {
-              fullName: name,
-              street: "",
-              city: "",
-              postalCode: "",
-              country: "Netherlands",
-              phone: "",
-            },
-            createdAt: supa.created_at,
-          };
-
-          setUser(oauthUser);
-          localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(oauthUser));
-          if (email) {
-            syncServerOrders(email);
-          }
+          const provider = (supa.app_metadata?.provider || "email") as "google" | "email";
+          await loadProfile(supa.id, supa.email || "", supa.user_metadata, provider, supa.created_at);
+        } else {
+          setUser(null);
+          localStorage.removeItem(USER_STORAGE_KEY);
         }
-      } catch {
-        // ignore
+      } catch (err) {
+        console.warn("[Auth Init Error]", err);
       } finally {
         setLoading(false);
       }
     }
 
-    checkSupabaseSession();
+    initSession();
 
-    // 3. Listen to auth changes (when redirected back from Google)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    // 3. Listen to Supabase auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
         const supa = session.user;
-        const email = supa.email || "";
-        const name = supa.user_metadata?.full_name || supa.user_metadata?.name || email.split("@")[0] || "Valued Client";
-        const provider = (supa.app_metadata?.provider || "google") as AuthUser["provider"];
-
-        const oauthUser: AuthUser = {
-          id: supa.id,
-          email,
-          name,
-          role: "customer",
-          provider,
-          orders: [],
-          address: {
-            fullName: name,
-            street: "",
-            city: "",
-            postalCode: "",
-            country: "Netherlands",
-            phone: "",
-          },
-          createdAt: supa.created_at,
-        };
-
-        setUser(oauthUser);
-        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(oauthUser));
-        if (email) {
-          syncServerOrders(email);
-        }
+        const provider = (supa.app_metadata?.provider || "email") as "google" | "email";
+        await loadProfile(supa.id, supa.email || "", supa.user_metadata, provider, supa.created_at);
+      } else if (event === "SIGNED_OUT") {
+        setUser(null);
+        localStorage.removeItem(USER_STORAGE_KEY);
       }
     });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [syncServerOrders]);
+  }, [loadProfile]);
 
-  // Real client Sign In via /api/auth
+  // Refresh profile manually
+  const refreshProfile = useCallback(async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      const supa = session.user;
+      const provider = (supa.app_metadata?.provider || "email") as "google" | "email";
+      await loadProfile(supa.id, supa.email || "", supa.user_metadata, provider, supa.created_at);
+    }
+  }, [loadProfile]);
+
+  // Sign In with Supabase Auth
   const signInWithEmail = useCallback(async (email: string, pass: string) => {
     try {
-      const res = await fetch("/api/auth", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "login",
-          email: email.trim(),
-          password: pass.trim(),
-        }),
+      const cleanEmail = email.trim();
+      const cleanPass = pass.trim();
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: cleanEmail,
+        password: cleanPass,
       });
 
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
+      if (error) {
         return {
           success: false,
-          error: data.error || "Invalid email or password. Please verify your details.",
+          error: error.message || "Invalid email or password. Please verify your credentials.",
         };
       }
 
-      const clientUser: AuthUser = {
-        id: data.user.id,
-        email: data.user.email,
-        name: data.user.name,
-        phone: data.user.phone,
-        role: data.user.role || "customer",
-        provider: "email",
-        orders: data.orders || [],
-        address: data.user.address || {
-          fullName: data.user.name,
-          street: "",
-          city: "",
-          postalCode: "",
-          country: "Netherlands",
-          phone: data.user.phone || "",
-        },
-        createdAt: data.user.createdAt,
-      };
+      if (data.user) {
+        await loadProfile(
+          data.user.id,
+          data.user.email || cleanEmail,
+          data.user.user_metadata,
+          "email",
+          data.user.created_at
+        );
+        setAuthModalOpen(false);
+        return { success: true };
+      }
 
-      setUser(clientUser);
-      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(clientUser));
-      setAuthModalOpen(false);
-      return { success: true };
+      return { success: false, error: "Unable to sign in. Please try again." };
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Connection error. Please try again.";
       return { success: false, error: msg };
     }
-  }, []);
+  }, [loadProfile]);
 
-  // Real client Sign Up / Register via /api/auth
-  const signUpWithEmail = useCallback(async (email: string, pass: string, name: string, phone?: string) => {
-    try {
-      const res = await fetch("/api/auth", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "register",
-          name: name.trim(),
-          email: email.trim(),
-          password: pass.trim(),
-          phone: phone ? phone.trim() : "",
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
-        return {
-          success: false,
-          error: data.error || "Unable to create account. Please check your information.",
-        };
-      }
-
-      const clientUser: AuthUser = {
-        id: data.user.id,
-        email: data.user.email,
-        name: data.user.name,
-        phone: data.user.phone,
-        role: "customer",
-        provider: "email",
-        orders: data.orders || [],
-        address: data.user.address || {
-          fullName: data.user.name,
-          street: "",
-          city: "",
-          postalCode: "",
-          country: "Netherlands",
-          phone: data.user.phone || "",
-        },
-        createdAt: data.user.createdAt,
-      };
-
-      setUser(clientUser);
-      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(clientUser));
-      setAuthModalOpen(false);
-      return { success: true };
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Registration error. Please try again.";
-      return { success: false, error: msg };
-    }
-  }, []);
-
-  // Sign out
-  const signOut = useCallback(async () => {
-    try {
-      await supabase.auth.signOut();
-    } catch {}
-    setUser(null);
-    localStorage.removeItem(USER_STORAGE_KEY);
-  }, []);
-
-  // Update profile
-  const updateProfile = useCallback(async (updates: Partial<AuthUser>) => {
-    setUser((prev) => {
-      if (!prev) return null;
-      const updated = { ...prev, ...updates };
-      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(updated));
-      return updated;
-    });
-
-    if (user?.id) {
+  // Sign Up with Supabase Auth and create public.profiles entry
+  const signUpWithEmail = useCallback(
+    async (
+      email: string,
+      pass: string,
+      firstName: string,
+      lastName: string,
+      phone?: string
+    ) => {
       try {
-        await fetch("/api/auth", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "update_profile",
-            id: user.id,
-            email: user.email,
-            name: updates.name,
-            phone: updates.phone,
-            address: updates.address,
-          }),
-        });
-      } catch {}
-    }
-  }, [user]);
+        const cleanEmail = email.trim();
+        const cleanPass = pass.trim();
+        const cleanFirst = firstName.trim();
+        const cleanLast = lastName.trim();
+        const cleanPhone = phone ? phone.trim() : "";
 
-  // Update address
-  const updateAddress = useCallback(async (newAddress: UserAddress): Promise<boolean> => {
-    setUser((prev) => {
-      if (!prev) return null;
-      const updated = { ...prev, address: newAddress };
-      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(updated));
-      return updated;
-    });
-
-    if (user?.id) {
-      try {
-        const res = await fetch("/api/auth", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "update_profile",
-            id: user.id,
-            email: user.email,
-            address: newAddress,
-          }),
+        const { data, error } = await supabase.auth.signUp({
+          email: cleanEmail,
+          password: cleanPass,
+          options: {
+            data: {
+              first_name: cleanFirst,
+              last_name: cleanLast,
+              full_name: `${cleanFirst} ${cleanLast}`.trim(),
+              phone: cleanPhone,
+            },
+          },
         });
-        const data = await res.json();
-        return !!data.success;
-      } catch {
-        return false;
+
+        if (error) {
+          return {
+            success: false,
+            error: error.message || "Registration failed. Please check your information.",
+          };
+        }
+
+        if (data.user) {
+          // Explicitly upsert to public.profiles for instant consistency
+          try {
+            await supabase.from("profiles").upsert({
+              id: data.user.id,
+              first_name: cleanFirst,
+              last_name: cleanLast,
+              phone: cleanPhone,
+              updated_at: new Date().toISOString(),
+            });
+          } catch {
+            // Profile trigger handles fallback
+          }
+
+          // Check if session was granted immediately (email confirmation disabled)
+          if (data.session) {
+            await loadProfile(
+              data.user.id,
+              cleanEmail,
+              { first_name: cleanFirst, last_name: cleanLast, phone: cleanPhone },
+              "email",
+              data.user.created_at
+            );
+            setAuthModalOpen(false);
+            return { success: true };
+          }
+
+          // Email confirmation is required by Supabase project settings
+          return {
+            success: true,
+            confirmationNeeded: true,
+          };
+        }
+
+        return { success: false, error: "Registration failed. Please try again." };
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Registration error. Please try again.";
+        return { success: false, error: msg };
       }
-    }
-    return true;
-  }, [user]);
+    },
+    [loadProfile]
+  );
 
-  // Refresh client orders on demand
-  const refreshOrders = useCallback(async () => {
-    if (user?.email) {
-      await syncServerOrders(user.email);
-    }
-  }, [user, syncServerOrders]);
-
-  // OAuth Google
+  // Sign in with Google OAuth
   const signInWithGoogle = useCallback(async (): Promise<{ success: boolean; error?: string }> => {
     try {
       const redirectTo = getOAuthRedirectUrl();
@@ -402,6 +356,74 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // Sign out
+  const signOut = useCallback(async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch {}
+    setUser(null);
+    try {
+      localStorage.removeItem(USER_STORAGE_KEY);
+    } catch {}
+  }, []);
+
+  // Update profile in public.profiles and local state
+  const updateProfile = useCallback(
+    async (updates: { firstName: string; lastName: string; phone?: string }) => {
+      if (!user) return { success: false, error: "Not authenticated" };
+
+      const cleanFirst = updates.firstName.trim();
+      const cleanLast = updates.lastName.trim();
+      const cleanPhone = (updates.phone || "").trim();
+
+      try {
+        const { error } = await supabase.from("profiles").upsert({
+          id: user.id,
+          first_name: cleanFirst,
+          last_name: cleanLast,
+          phone: cleanPhone,
+          updated_at: new Date().toISOString(),
+        });
+
+        if (error) {
+          return { success: false, error: error.message };
+        }
+
+        // Also update Supabase auth metadata
+        try {
+          await supabase.auth.updateUser({
+            data: {
+              first_name: cleanFirst,
+              last_name: cleanLast,
+              full_name: `${cleanFirst} ${cleanLast}`.trim(),
+              phone: cleanPhone,
+            },
+          });
+        } catch {}
+
+        const fullName = `${cleanFirst} ${cleanLast}`.trim() || user.email;
+        const updated: AuthUser = {
+          ...user,
+          firstName: cleanFirst,
+          lastName: cleanLast,
+          name: fullName,
+          phone: cleanPhone,
+        };
+
+        setUser(updated);
+        try {
+          localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(updated));
+        } catch {}
+
+        return { success: true };
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Failed to update profile";
+        return { success: false, error: msg };
+      }
+    },
+    [user]
+  );
+
   return (
     <AuthContext.Provider
       value={{
@@ -409,13 +431,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         authModalOpen,
         setAuthModalOpen,
+        authModalTab,
+        setAuthModalTab,
         signInWithGoogle,
         signInWithEmail,
         signUpWithEmail,
         signOut,
         updateProfile,
-        updateAddress,
-        refreshOrders,
+        refreshProfile,
       }}
     >
       {children}

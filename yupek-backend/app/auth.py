@@ -33,6 +33,15 @@ def current_user(creds: HTTPAuthorizationCredentials | None = Depends(bearer)) -
     return _decode(creds.credentials)
 
 
+def optional_user(creds: HTTPAuthorizationCredentials | None = Depends(bearer)) -> dict | None:
+    if not creds:
+        return None
+    try:
+        return _decode(creds.credentials)
+    except Exception:
+        return None
+
+
 def admin_only(user: dict = Depends(current_user)) -> dict:
     if user.get("app_metadata", {}).get("role") != "admin":
         raise HTTPException(403, "Admin only")
@@ -42,3 +51,4 @@ def admin_only(user: dict = Depends(current_user)) -> dict:
 def cron_only(x_cron_secret: str = Header(default="")) -> None:
     if not config.CRON_SECRET or x_cron_secret != config.CRON_SECRET:
         raise HTTPException(403, "Forbidden")
+

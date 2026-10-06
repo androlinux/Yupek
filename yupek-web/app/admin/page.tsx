@@ -704,39 +704,73 @@ export default function AdminPage() {
                     {/* Top Row: Order ID, Status, Date */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-brown/10 pb-4">
                       <div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-wrap items-center gap-2">
                           <span className="font-mono text-sm font-bold text-brown tracking-wider">
                             #{order.orderNumber}
                           </span>
+
+                          {/* Payment Status Badge */}
                           <span
                             className={`text-[9px] uppercase tracking-widest font-bold px-2.5 py-0.5 rounded-full border ${
-                              order.status === "New"
-                                ? "bg-gold/20 text-gold border-gold/40"
-                                : order.status === "Processing"
-                                ? "bg-blue-50 text-blue-800 border-blue-200"
-                                : order.status === "Shipped"
-                                ? "bg-purple-50 text-purple-800 border-purple-200"
-                                : order.status === "Delivered"
-                                ? "bg-green-50 text-green-800 border-green-200"
-                                : "bg-gray-100 text-gray-700 border-gray-300"
+                              (order.payment_status === "paid" || order.status === "Paid")
+                                ? "bg-green-100 text-green-900 border-green-300"
+                                : order.payment_status === "failed" || order.status === "Failed"
+                                ? "bg-red-100 text-red-900 border-red-300"
+                                : "bg-amber-100 text-amber-900 border-amber-300"
                             }`}
                           >
-                            {order.status}
+                            Payment: {order.payment_status?.toUpperCase() || (order.status === "Paid" ? "PAID" : "PENDING")}
                           </span>
+
+                          {/* Fulfillment Status Badge */}
+                          <span
+                            className={`text-[9px] uppercase tracking-widest font-bold px-2.5 py-0.5 rounded-full border ${
+                              order.fulfillment_status === "printify_order_created"
+                                ? "bg-blue-100 text-blue-900 border-blue-300"
+                                : order.fulfillment_status === "sent_to_production" || order.fulfillment_status === "in_production"
+                                ? "bg-purple-100 text-purple-900 border-purple-300"
+                                : order.fulfillment_status === "shipped" || order.fulfillment_status === "delivered"
+                                ? "bg-emerald-100 text-emerald-900 border-emerald-300"
+                                : "bg-sand text-brown/80 border-brown/20"
+                            }`}
+                          >
+                            Fulfillment: {order.fulfillment_status ? order.fulfillment_status.replace(/_/g, " ").toUpperCase() : (order.status || "NEW").toUpperCase()}
+                          </span>
+
                           {order.emailNotificationSent ? (
                             <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wider text-green-800 bg-green-50 px-2 py-0.5 rounded border border-green-200 font-medium">
                               <Icon name="check" className="h-3 w-3 text-green-700" />
-                              <span>Sent to Gmail</span>
+                              <span>Email Dispatched</span>
                             </span>
-                          ) : (
-                            <span className="text-[9px] uppercase tracking-wider text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200" title={order.emailNotificationError}>
-                              Gmail: Pending Setup
-                            </span>
+                          ) : null}
+                        </div>
+
+                        {/* Identifiers & Details */}
+                        <div className="flex flex-wrap items-center gap-3 mt-2 text-[11px] text-brown/70">
+                          <span>
+                            Created: <strong>{new Date(order.createdAt).toLocaleString()}</strong>
+                          </span>
+                          <span>&bull;</span>
+                          <span>
+                            Total: <strong className="text-burgundy text-xs">€{order.total.toFixed(2)}</strong>
+                          </span>
+                          {order.stripe_payment_intent_id && (
+                            <>
+                              <span>&bull;</span>
+                              <span className="font-mono text-[10px] bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200" title="Stripe PaymentIntent ID">
+                                Stripe: {order.stripe_payment_intent_id}
+                              </span>
+                            </>
+                          )}
+                          {order.printify_order_id && (
+                            <>
+                              <span>&bull;</span>
+                              <span className="font-mono text-[10px] bg-amber-50 text-amber-900 px-1.5 py-0.5 rounded border border-amber-300 font-bold" title="Printify Order ID">
+                                Printify: #{order.printify_order_id} (Shop 29215191)
+                              </span>
+                            </>
                           )}
                         </div>
-                        <p className="text-[11px] text-brown/50 mt-1">
-                          Placed on {new Date(order.createdAt).toLocaleString()} &bull; Total: <strong>€{order.total.toFixed(2)}</strong> via {order.paymentMethod}
-                        </p>
                       </div>
 
                       {/* Status changer */}
@@ -749,6 +783,7 @@ export default function AdminPage() {
                         >
                           <option value="New">New</option>
                           <option value="Processing">Processing</option>
+                          <option value="Paid">Paid</option>
                           <option value="Shipped">Shipped</option>
                           <option value="Delivered">Delivered</option>
                           <option value="Cancelled">Cancelled</option>

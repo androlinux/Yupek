@@ -1,811 +1,258 @@
 "use client";
-import Image from "next/image";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useAuth, UserAddress } from "@/components/AuthContext";
-import { useStore } from "@/components/Providers";
-import { useSiteConfig } from "@/components/ConfigContext";
+import { useAuth } from "@/components/AuthContext";
 import { useLanguage } from "@/components/LanguageContext";
+import AuthGate from "@/components/account/AuthGate";
+import AccountNav from "@/components/account/AccountNav";
 import Icon from "@/components/ui/Icon";
-import { eur } from "@/lib/catalog";
-import ProductCard from "@/components/ProductCard";
 
-export default function AccountPage() {
-  const {
-    user,
-    signOut,
-    updateAddress,
-    signInWithEmail,
-    signUpWithEmail,
-    signInWithGoogle,
-    refreshOrders,
-  } = useAuth();
-
-  const { wishlist } = useStore();
-  const { allProducts } = useSiteConfig();
+function ProfileContent() {
+  const { user, updateProfile } = useAuth();
   const { t, locale } = useLanguage();
 
-  // Auth form states
-  const [authMode, setAuthMode] = useState<"signin" | "register">("signin");
-  const [loginEmail, setLoginEmail] = useState("");
-  const [loginPassword, setLoginPassword] = useState("");
-  const [showLoginPassword, setShowLoginPassword] = useState(false);
-  const [loginLoading, setLoginLoading] = useState(false);
-  const [loginError, setLoginError] = useState<string | null>(null);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const [regName, setRegName] = useState("");
-  const [regEmail, setRegEmail] = useState("");
-  const [regPhone, setRegPhone] = useState("");
-  const [regPassword, setRegPassword] = useState("");
-  const [showRegPassword, setShowRegPassword] = useState(false);
-  const [regLoading, setRegLoading] = useState(false);
-  const [regError, setRegError] = useState<string | null>(null);
-
-  // Social OAuth states
-  const [oauthError, setOauthError] = useState<string | null>(null);
-  const [oauthLoading, setOauthLoading] = useState<"google" | null>(null);
-
-  // Logged-in portal states
-  const [activeTab, setActiveTab] = useState<"orders" | "wishlist" | "address" | "concierge">("orders");
-  const [editingAddress, setEditingAddress] = useState(false);
-  const [addressForm, setAddressForm] = useState<UserAddress>({
-    fullName: "",
-    street: "",
-    city: "",
-    postalCode: "",
-    country: "Netherlands",
-    phone: "",
-  });
-  const [savedSuccess, setSavedSuccess] = useState(false);
-  const [addressSaving, setAddressSaving] = useState(false);
-
-  // Sync address form when user loads
   useEffect(() => {
-    if (user?.address) {
-      setAddressForm({
-        fullName: user.address.fullName || user.name || "",
-        street: user.address.street || "",
-        city: user.address.city || "",
-        postalCode: user.address.postalCode || "",
-        country: user.address.country || "Netherlands",
-        phone: user.address.phone || user.phone || "",
-      });
+    if (user) {
+      setFirstName(user.firstName || "");
+      setLastName(user.lastName || "");
+      setPhone(user.phone || "");
     }
   }, [user]);
 
-  // Handle client Sign In
-  const handleSignIn = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoginError(null);
-    setLoginLoading(true);
+    setSuccessMsg(null);
+    setErrorMsg(null);
+    setSaving(true);
 
-    const res = await signInWithEmail(loginEmail, loginPassword);
-    setLoginLoading(false);
+    const res = await updateProfile({
+      firstName,
+      lastName,
+      phone,
+    });
 
-    if (!res.success) {
-      setLoginError(
-        res.error ||
-          (locale === "nl"
-            ? "Kan niet inloggen. Controleer uw e-mailadres en wachtwoord."
-            : "Invalid email or password. Please verify your credentials.")
+    setSaving(false);
+
+    if (res.success) {
+      setSuccessMsg(
+        locale === "nl"
+          ? "Profiel succesvol bijgewerkt."
+          : "Profile updated successfully."
       );
+      setTimeout(() => setSuccessMsg(null), 4000);
+    } else {
+      setErrorMsg(res.error || "Failed to update profile.");
     }
   };
-
-  // Handle client Registration
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setRegError(null);
-    setRegLoading(true);
-
-    const res = await signUpWithEmail(regEmail, regPassword, regName, regPhone);
-    setRegLoading(false);
-
-    if (!res.success) {
-      setRegError(
-        res.error ||
-          (locale === "nl"
-            ? "Registratiefout. Controleer uw gegevens of probeer een ander e-mailadres."
-            : "Registration failed. Please check your information.")
-      );
-    }
-  };
-
-  // Handle Google Sign-In
-  const handleGoogleSignIn = async () => {
-    setOauthError(null);
-    setOauthLoading("google");
-    const res = await signInWithGoogle();
-    setOauthLoading(null);
-    if (!res.success) {
-      if (res.error?.includes("provider is not enabled") || res.error?.includes("Unsupported provider")) {
-        setOauthError(
-          locale === "nl"
-            ? "Google Inloggen configuratie: Schakel Google Provider in via uw Supabase dashboard (Auth > Providers) met uw Google Cloud Client ID."
-            : "Google Sign-In setup: Please enable Google Provider in your Supabase Dashboard (Auth > Providers) with your Google Cloud Client ID."
-        );
-      } else {
-        setOauthError(res.error || "Google Sign-In failed. Please sign in with email.");
-      }
-    }
-  };
-
-  // Handle saving delivery address
-  const handleSaveAddress = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setAddressSaving(true);
-    await updateAddress(addressForm);
-    setAddressSaving(false);
-    setEditingAddress(false);
-    setSavedSuccess(true);
-    setTimeout(() => setSavedSuccess(false), 3500);
-  };
-
-  // ==========================================
-  // 1. UNAUTHENTICATED STATE: Real Client Portal
-  // ==========================================
-  if (!user) {
-    return (
-      <div className="wrap py-20 md:py-28">
-        <div className="mx-auto max-w-xl border border-brown/20 bg-cream p-7 sm:p-10 md:p-12 shadow-xl">
-          {/* Brand Header */}
-          <div className="text-center">
-            <span className="label tracking-[.3em] text-burgundy text-[10px] uppercase font-semibold">
-              {t.account.portalTag}
-            </span>
-            <h1 className="h-display mt-2 text-3xl sm:text-4xl md:text-5xl text-brown tracking-wide">
-              {authMode === "signin" ? t.account.clientAccess : t.auth.createAccountTitle}
-            </h1>
-            <p className="mx-auto mt-3 max-w-md text-xs leading-relaxed text-brown/75 font-light">
-              {authMode === "signin"
-                ? t.account.signInPrompt
-                : locale === "nl"
-                ? "Registreer uw persoonlijke account om uw bestellingen te volgen en exclusieve capsulecollecties te ontdekken."
-                : "Register your private account to track your orders, store your delivery address, and view private collections."}
-            </p>
-          </div>
-
-          {/* Mode Switch Tabs */}
-          <div className="mt-8 grid grid-cols-2 border border-brown/25 p-1 bg-sand/20 text-xs">
-            <button
-              type="button"
-              onClick={() => {
-                setAuthMode("signin");
-                setLoginError(null);
-                setRegError(null);
-              }}
-              className={`py-2 font-medium tracking-wider uppercase text-[11px] transition-all ${
-                authMode === "signin"
-                  ? "bg-brown text-cream shadow-sm"
-                  : "text-brown/70 hover:text-brown hover:bg-sand/30"
-              }`}
-            >
-              {t.auth.signInTab}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setAuthMode("register");
-                setLoginError(null);
-                setRegError(null);
-              }}
-              className={`py-2 font-medium tracking-wider uppercase text-[11px] transition-all ${
-                authMode === "register"
-                  ? "bg-brown text-cream shadow-sm"
-                  : "text-brown/70 hover:text-brown hover:bg-sand/30"
-              }`}
-            >
-              {t.auth.registerTab}
-            </button>
-          </div>
-
-          {/* ======================= */}
-          {/* TAB A: SIGN IN FORM    */}
-          {/* ======================= */}
-          {authMode === "signin" && (
-            <form onSubmit={handleSignIn} className="mt-6 space-y-4">
-              {loginError && (
-                <div className="bg-burgundy/10 border border-burgundy/30 text-burgundy px-4 py-3 text-xs flex items-center gap-2">
-                  <span className="font-bold">!</span>
-                  <span>{loginError}</span>
-                </div>
-              )}
-
-              <div>
-                <label className="block text-[10px] uppercase tracking-widest text-brown/80 font-semibold mb-1">
-                  {t.auth.emailLabel}
-                </label>
-                <input
-                  type="email"
-                  required
-                  autoComplete="email"
-                  value={loginEmail}
-                  onChange={(e) => setLoginEmail(e.target.value)}
-                  placeholder="client@domain.com"
-                  className="w-full border border-brown/30 bg-white/90 px-3.5 py-2.5 text-xs text-brown placeholder-brown/40 focus:border-brown focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-[10px] uppercase tracking-widest text-brown/80 font-semibold">
-                    {t.auth.passwordLabel}
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setShowLoginPassword(!showLoginPassword)}
-                    className="text-[10px] uppercase tracking-wider text-burgundy hover:underline font-medium"
-                  >
-                    {showLoginPassword ? "Hide" : "Show"}
-                  </button>
-                </div>
-                <input
-                  type={showLoginPassword ? "text" : "password"}
-                  required
-                  autoComplete="current-password"
-                  value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)}
-                  placeholder="••••••••••••"
-                  className="w-full border border-brown/30 bg-white/90 px-3.5 py-2.5 text-xs text-brown placeholder-brown/40 focus:border-brown focus:outline-none font-mono"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={loginLoading}
-                className="w-full bg-brown py-3 text-xs uppercase tracking-widest text-cream hover:bg-black transition-colors font-medium mt-2 flex items-center justify-center gap-2 disabled:opacity-60 shadow-sm"
-              >
-                {loginLoading ? (
-                  <>
-                    <span className="h-3.5 w-3.5 border-2 border-cream/30 border-t-cream rounded-full animate-spin inline-block" />
-                    <span>{t.auth.authenticating}</span>
-                  </>
-                ) : (
-                  <span>{t.auth.enterStoreBtn} &rarr;</span>
-                )}
-              </button>
-            </form>
-          )}
-
-          {/* ========================== */}
-          {/* TAB B: CREATE ACCOUNT FORM */}
-          {/* ========================== */}
-          {authMode === "register" && (
-            <form onSubmit={handleRegister} className="mt-6 space-y-4">
-              {regError && (
-                <div className="bg-burgundy/10 border border-burgundy/30 text-burgundy px-4 py-3 text-xs flex items-center gap-2">
-                  <span className="font-bold">!</span>
-                  <span>{regError}</span>
-                </div>
-              )}
-
-              <div>
-                <label className="block text-[10px] uppercase tracking-widest text-brown/80 font-semibold mb-1">
-                  {t.auth.fullNameLabel}
-                </label>
-                <input
-                  type="text"
-                  required
-                  autoComplete="name"
-                  value={regName}
-                  onChange={(e) => setRegName(e.target.value)}
-                  placeholder="e.g. Elena Rostova"
-                  className="w-full border border-brown/30 bg-white/90 px-3.5 py-2.5 text-xs text-brown placeholder-brown/40 focus:border-brown focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] uppercase tracking-widest text-brown/80 font-semibold mb-1">
-                  {t.auth.emailLabel}
-                </label>
-                <input
-                  type="email"
-                  required
-                  autoComplete="email"
-                  value={regEmail}
-                  onChange={(e) => setRegEmail(e.target.value)}
-                  placeholder="client@domain.com"
-                  className="w-full border border-brown/30 bg-white/90 px-3.5 py-2.5 text-xs text-brown placeholder-brown/40 focus:border-brown focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] uppercase tracking-widest text-brown/80 font-semibold mb-1">
-                  {locale === "nl" ? "Telefoonnummer (Optioneel)" : "Phone Number (Optional)"}
-                </label>
-                <input
-                  type="tel"
-                  autoComplete="tel"
-                  value={regPhone}
-                  onChange={(e) => setRegPhone(e.target.value)}
-                  placeholder="+31 6 1234 5678"
-                  className="w-full border border-brown/30 bg-white/90 px-3.5 py-2.5 text-xs text-brown placeholder-brown/40 focus:border-brown focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-[10px] uppercase tracking-widest text-brown/80 font-semibold">
-                    {t.auth.passwordLabel}
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setShowRegPassword(!showRegPassword)}
-                    className="text-[10px] uppercase tracking-wider text-burgundy hover:underline font-medium"
-                  >
-                    {showRegPassword ? "Hide" : "Show"}
-                  </button>
-                </div>
-                <input
-                  type={showRegPassword ? "text" : "password"}
-                  required
-                  minLength={6}
-                  autoComplete="new-password"
-                  value={regPassword}
-                  onChange={(e) => setRegPassword(e.target.value)}
-                  placeholder="Minimum 6 characters"
-                  className="w-full border border-brown/30 bg-white/90 px-3.5 py-2.5 text-xs text-brown placeholder-brown/40 focus:border-brown focus:outline-none font-mono"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={regLoading}
-                className="w-full bg-brown py-3 text-xs uppercase tracking-widest text-cream hover:bg-black transition-colors font-medium mt-2 flex items-center justify-center gap-2 disabled:opacity-60 shadow-sm"
-              >
-                {regLoading ? (
-                  <>
-                    <span className="h-3.5 w-3.5 border-2 border-cream/30 border-t-cream rounded-full animate-spin inline-block" />
-                    <span>{locale === "nl" ? "Account aanmaken..." : "Creating Account..."}</span>
-                  </>
-                ) : (
-                  <span>{t.auth.createProfileBtn} &rarr;</span>
-                )}
-              </button>
-            </form>
-          )}
-
-          {/* Social Single Sign-On Options */}
-          <div className="mt-8 border-t border-brown/15 pt-6">
-            <p className="text-center text-[10px] uppercase tracking-widest text-brown/50 mb-3">
-              {locale === "nl" ? "Of meld u aan via" : "Or connect via"}
-            </p>
-
-            {oauthError && (
-              <div className="mb-4 bg-burgundy/10 border border-burgundy/30 text-burgundy p-3 text-xs leading-relaxed text-left flex items-start gap-2">
-                <span className="font-bold text-sm shrink-0">!</span>
-                <span className="text-[11px]">{oauthError}</span>
-              </div>
-            )}
-
-            <div>
-              <button
-                type="button"
-                onClick={handleGoogleSignIn}
-                disabled={oauthLoading !== null}
-                className="w-full flex items-center justify-center gap-2.5 border border-brown/20 bg-white/80 py-2.5 px-4 text-xs font-medium tracking-wider text-brown hover:bg-white transition-all shadow-sm disabled:opacity-60"
-              >
-                {oauthLoading === "google" ? (
-                  <span className="h-4 w-4 border-2 border-brown/30 border-t-brown rounded-full animate-spin inline-block" />
-                ) : (
-                  <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-                  </svg>
-                )}
-                <span>{locale === "nl" ? "Doorgaan met Google" : "Continue with Google"}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ==========================================
-  // 2. AUTHENTICATED STATE: Client Dashboard
-  // ==========================================
-  const wishlistProducts = allProducts.filter((p) => wishlist.includes(p.slug));
 
   return (
-    <div className="wrap py-12 md:py-20">
-      {/* Header Profile Banner */}
-      <div className="border border-brown/15 bg-sand/20 p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm">
-        <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-brown text-lg font-serif text-cream shadow-md shrink-0">
-            {(user.name || "C").charAt(0).toUpperCase()}
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="font-serif text-2xl md:text-3xl text-brown tracking-wider">{user.name}</h1>
-              <span className="rounded-full bg-gold/25 px-2.5 py-0.5 text-[9px] uppercase tracking-wider text-brown font-semibold">
-                {user.role === "admin" ? t.account.adminMemberTag : t.account.vipMemberTag}
-              </span>
-            </div>
-            <p className="mt-0.5 text-xs text-brown/70">{user.email}</p>
-            {user.phone && <p className="text-[11px] text-brown/60">{user.phone}</p>}
-          </div>
-        </div>
+    <div className="wrap py-10 md:py-16">
+      <AccountNav />
 
-        <div className="flex items-center gap-3">
-
-          <button
-            onClick={() => signOut()}
-            className="border border-brown/30 px-4 py-2 text-xs uppercase tracking-widest text-brown hover:bg-brown hover:text-cream transition-colors"
-          >
-            {t.account.signOutBtn}
-          </button>
-        </div>
-      </div>
-
-      {/* Navigation Tabs */}
-      <div className="mt-8 flex border-b border-brown/15 overflow-x-auto text-xs uppercase tracking-widest">
-        <button
-          onClick={() => setActiveTab("orders")}
-          className={`py-3 px-5 border-b-2 font-medium transition-colors whitespace-nowrap ${
-            activeTab === "orders"
-              ? "border-brown text-brown font-semibold bg-sand/20"
-              : "border-transparent text-brown/60 hover:text-brown hover:bg-sand/10"
-          }`}
-        >
-          {t.account.ordersTab} ({user.orders?.length || 0})
-        </button>
-        <button
-          onClick={() => setActiveTab("wishlist")}
-          className={`py-3 px-5 border-b-2 font-medium transition-colors whitespace-nowrap ${
-            activeTab === "wishlist"
-              ? "border-brown text-brown font-semibold bg-sand/20"
-              : "border-transparent text-brown/60 hover:text-brown hover:bg-sand/10"
-          }`}
-        >
-          {t.account.wishlistTab} ({wishlist.length})
-        </button>
-        <button
-          onClick={() => setActiveTab("address")}
-          className={`py-3 px-5 border-b-2 font-medium transition-colors whitespace-nowrap ${
-            activeTab === "address"
-              ? "border-brown text-brown font-semibold bg-sand/20"
-              : "border-transparent text-brown/60 hover:text-brown hover:bg-sand/10"
-          }`}
-        >
-          {t.account.addressTab}
-        </button>
-        <button
-          onClick={() => setActiveTab("concierge")}
-          className={`py-3 px-5 border-b-2 font-medium transition-colors whitespace-nowrap ${
-            activeTab === "concierge"
-              ? "border-brown text-brown font-semibold bg-sand/20"
-              : "border-transparent text-brown/60 hover:text-brown hover:bg-sand/10"
-          }`}
-        >
-          {t.account.conciergeTab}
-        </button>
-      </div>
-
-      {/* ============================= */}
-      {/* TAB 1: Real Orders            */}
-      {/* ============================= */}
-      {activeTab === "orders" && (
-        <div className="mt-8 space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="font-serif text-lg text-brown">Your Orders</h2>
-            <button
-              onClick={() => refreshOrders()}
-              className="text-[11px] uppercase tracking-wider text-brown/60 hover:text-brown inline-flex items-center gap-1.5"
-            >
-              <Icon name="refresh" className="h-3 w-3" />
-              <span>Refresh Orders</span>
-            </button>
+      <div className="mt-8 grid gap-8 lg:grid-cols-[1.5fr_1fr]">
+        {/* Profile Edit Card */}
+        <div className="border border-brown/15 bg-cream p-6 sm:p-8 shadow-sm">
+          <div className="border-b border-brown/10 pb-4">
+            <span className="label tracking-[.25em] text-burgundy text-[10px] uppercase font-semibold">
+              {locale === "nl" ? "Persoonlijke Gegevens" : "Personal Details"}
+            </span>
+            <h2 className="font-serif text-2xl text-brown mt-1">
+              {locale === "nl" ? "Mijn Profiel" : "Profile"}
+            </h2>
+            <p className="text-xs text-brown/65 mt-1 leading-relaxed">
+              {locale === "nl"
+                ? "Beheer uw naam, telefoonnummer en contactvoorkeuren voor YUPEK leveringen."
+                : "Manage your name, contact phone number, and delivery preferences."}
+            </p>
           </div>
 
-          {!user.orders || user.orders.length === 0 ? (
-            <div className="py-16 text-center border border-dashed border-brown/20 bg-sand/10 p-8">
-              <p className="font-serif text-2xl text-brown">{t.account.noOrdersTitle}</p>
-              <p className="mt-2 text-xs text-brown/60">{t.account.noOrdersSubtitle}</p>
-              <Link href="/shop" className="btn btn-dark mt-6 inline-block">
-                {t.account.exploreBtn}
-              </Link>
-            </div>
-          ) : (
-            user.orders.map((order) => (
-              <div key={order.id} className="border border-brown/15 bg-cream p-5 md:p-6 shadow-sm">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-brown/10 pb-4 gap-2">
-                  <div>
-                    <span className="text-[10px] uppercase tracking-widest text-brown/50">
-                      {t.account.orderNumber}
-                    </span>
-                    <h3 className="font-mono text-sm font-semibold text-brown">{order.id}</h3>
-                    <p className="text-xs text-brown/60">
-                      {t.account.placedOn}{" "}
-                      {new Date(order.date).toLocaleDateString(locale === "nl" ? "nl-NL" : "en-GB", {
-                        day: "numeric",
-                        month: "long",
-                        year: "numeric",
-                      })}
-                    </p>
-                  </div>
-                  <div className="flex sm:flex-col items-start sm:items-end justify-between">
-                    <span
-                      className={`inline-block rounded-full px-2.5 py-0.5 text-[9px] uppercase tracking-wider font-semibold ${
-                        order.status === "Delivered"
-                          ? "bg-green-100 text-green-800 border border-green-200"
-                          : "bg-gold/20 text-brown border border-gold/40"
-                      }`}
-                    >
-                      {order.status === "Delivered" && locale === "nl"
-                        ? "Bezorgd"
-                        : order.status === "In Transit" && locale === "nl"
-                        ? "Onderweg"
-                        : order.status}
-                    </span>
-                    <span className="text-sm font-semibold text-brown mt-1">{eur(order.total)}</span>
-                  </div>
-                </div>
-
-                {/* Items */}
-                <div className="mt-4 divide-y divide-brown/10">
-                  {order.items.map((item, idx) => (
-                    <div key={idx} className="py-3 flex items-center gap-4">
-                      <div className="relative h-16 w-12 aspect-[3/4] bg-sand/30 overflow-hidden flex-shrink-0">
-                        {item.image && (
-                          <Image
-                            src={item.image}
-                            alt={item.name}
-                            width={48}
-                            height={64}
-                            sizes="48px"
-                            className="h-full w-full object-cover"
-                          />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <Link
-                          href={`/product/${item.slug}`}
-                          className="text-xs font-medium uppercase tracking-wider text-brown hover:text-burgundy truncate block"
-                        >
-                          {item.name}
-                        </Link>
-                        <p className="text-[11px] text-brown/60">
-                          {t.product.sizeLabel}: {item.size} &bull; {t.product.colorLabel}: {item.color} &bull;{" "}
-                          {locale === "nl" ? "Aantal" : "Qty"}: {item.qty}
-                        </p>
-                      </div>
-                      <span className="text-xs text-brown">{eur(item.price * item.qty)}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Tracking & Actions */}
-                <div className="mt-4 border-t border-brown/10 pt-3 flex flex-col sm:flex-row sm:items-center justify-between text-xs text-brown/70 gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] uppercase tracking-widest text-brown/50">
-                      {t.account.trackingLabel}
-                    </span>
-                    <span className="font-mono text-[11px] text-brown">{order.tracking}</span>
-                  </div>
-                  <button
-                    onClick={() =>
-                      alert(
-                        locale === "nl"
-                          ? `Officiële BTW-factuur voor bestelling ${order.id} is verzonden naar ${user.email}`
-                          : `Official VAT Invoice for order ${order.id} sent to ${user.email}`
-                      )
-                    }
-                    className="text-[11px] tracking-wider text-burgundy hover:underline"
-                  >
-                    {t.account.downloadInvoice}
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      )}
-
-      {/* ============================= */}
-      {/* TAB 2: Wishlist               */}
-      {/* ============================= */}
-      {activeTab === "wishlist" && (
-        <div className="mt-8">
-          {wishlistProducts.length === 0 ? (
-            <div className="py-16 text-center border border-dashed border-brown/20 bg-sand/10 p-8">
-              <p className="font-serif text-2xl text-brown">{t.account.emptyArchiveTitle}</p>
-              <p className="mt-2 text-xs text-brown/60">{t.account.emptyArchiveSubtitle}</p>
-              <Link href="/shop" className="btn btn-dark mt-6 inline-block">
-                {t.account.discoverPiecesBtn}
-              </Link>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-4">
-              {wishlistProducts.map((p) => (
-                <ProductCard key={p.slug} p={p} />
-              ))}
+          {successMsg && (
+            <div role="status" className="mt-4 bg-green-50 p-3 text-xs text-green-800 border border-green-200 flex items-center gap-2">
+              <Icon name="check" className="h-4 w-4 text-green-700 shrink-0" />
+              <span>{successMsg}</span>
             </div>
           )}
-        </div>
-      )}
 
-      {/* ============================= */}
-      {/* TAB 3: Delivery Address       */}
-      {/* ============================= */}
-      {activeTab === "address" && (
-        <div className="mt-8 max-w-xl">
-          <div className="border border-brown/15 bg-cream p-6 sm:p-8 shadow-sm">
-            <div className="flex items-center justify-between border-b border-brown/10 pb-4">
+          {errorMsg && (
+            <div role="alert" className="mt-4 bg-red-50 p-3 text-xs text-red-800 border border-red-200 flex items-center gap-2">
+              <span className="font-bold text-sm shrink-0">!</span>
+              <span>{errorMsg}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <h2 className="font-serif text-xl tracking-wider text-brown">{t.account.primaryAddressTitle}</h2>
-                <p className="text-xs text-brown/60 mt-0.5">Saved delivery details used for faster checkout</p>
-              </div>
-              {!editingAddress && (
-                <button
-                  onClick={() => setEditingAddress(true)}
-                  className="text-xs uppercase tracking-wider text-burgundy hover:underline font-medium"
+                <label
+                  htmlFor="profile-first-name"
+                  className="block text-[10px] uppercase tracking-widest text-brown/70 font-semibold mb-1"
                 >
-                  {t.account.editDetails}
-                </button>
-              )}
+                  {locale === "nl" ? "Voornaam" : "First Name"}
+                </label>
+                <input
+                  id="profile-first-name"
+                  name="firstName"
+                  type="text"
+                  required
+                  autoComplete="given-name"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className="w-full border border-brown/30 bg-white/90 px-3.5 py-2.5 text-xs text-brown focus:border-brown focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="profile-last-name"
+                  className="block text-[10px] uppercase tracking-widest text-brown/70 font-semibold mb-1"
+                >
+                  {locale === "nl" ? "Achternaam" : "Last Name"}
+                </label>
+                <input
+                  id="profile-last-name"
+                  name="lastName"
+                  type="text"
+                  required
+                  autoComplete="family-name"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className="w-full border border-brown/30 bg-white/90 px-3.5 py-2.5 text-xs text-brown focus:border-brown focus:outline-none"
+                />
+              </div>
             </div>
 
-            {savedSuccess && (
-              <p className="mt-3 bg-green-50 p-2.5 text-xs text-green-800 border border-green-200 flex items-center gap-2">
-                <Icon name="check" className="h-4 w-4 text-green-700" />
-                <span>{t.account.addressUpdated}</span>
+            <div>
+              <label
+                htmlFor="profile-email"
+                className="block text-[10px] uppercase tracking-widest text-brown/70 font-semibold mb-1"
+              >
+                {t.auth.emailLabel}
+              </label>
+              <input
+                id="profile-email"
+                name="email"
+                type="email"
+                disabled
+                value={user?.email || ""}
+                className="w-full border border-brown/20 bg-sand/30 px-3.5 py-2.5 text-xs text-brown/70 cursor-not-allowed font-mono"
+              />
+              <p className="mt-1 text-[10px] text-brown/50">
+                {locale === "nl"
+                  ? "E-mailadres wordt beheerd via uw beveiligde inlogaccount."
+                  : "Email address is managed through your secure account credentials."}
               </p>
-            )}
+            </div>
 
-            {!editingAddress ? (
-              <div className="mt-4 space-y-1.5 text-xs text-brown/80 leading-relaxed">
-                <p className="font-semibold text-brown text-sm">{user.address?.fullName || user.name}</p>
-                <p>
-                  {user.address?.street ||
-                    (locale === "nl" ? "Geen straatadres geconfigureerd" : "No street address configured")}
-                </p>
-                <p>
-                  {user.address?.postalCode} {user.address?.city}
-                </p>
-                <p>{user.address?.country}</p>
-                <p className="pt-2 text-brown/60">
-                  {t.account.contactPhoneLabel} {user.address?.phone || user.phone || (locale === "nl" ? "Niet ingesteld" : "Not set")}
-                </p>
-              </div>
-            ) : (
-              <form onSubmit={handleSaveAddress} className="mt-4 space-y-3.5">
-                <div>
-                  <label className="block text-[10px] uppercase tracking-widest text-brown/70 font-semibold mb-1">
-                    {t.checkout.firstName} & {t.checkout.lastName}
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={addressForm.fullName}
-                    onChange={(e) => setAddressForm({ ...addressForm, fullName: e.target.value })}
-                    className="w-full border border-brown/30 bg-white/90 px-3.5 py-2 text-xs text-brown focus:border-brown focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] uppercase tracking-widest text-brown/70 font-semibold mb-1">
-                    {t.checkout.street} & House Number
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={addressForm.street}
-                    onChange={(e) => setAddressForm({ ...addressForm, street: e.target.value })}
-                    placeholder="e.g. Herengracht 100"
-                    className="w-full border border-brown/30 bg-white/90 px-3.5 py-2 text-xs text-brown focus:border-brown focus:outline-none"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[10px] uppercase tracking-widest text-brown/70 font-semibold mb-1">
-                      {t.checkout.city}
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={addressForm.city}
-                      onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })}
-                      placeholder="e.g. Amsterdam"
-                      className="w-full border border-brown/30 bg-white/90 px-3.5 py-2 text-xs text-brown focus:border-brown focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] uppercase tracking-widest text-brown/70 font-semibold mb-1">
-                      {t.checkout.postalCode}
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={addressForm.postalCode}
-                      onChange={(e) => setAddressForm({ ...addressForm, postalCode: e.target.value })}
-                      placeholder="e.g. 1016 GD"
-                      className="w-full border border-brown/30 bg-white/90 px-3.5 py-2 text-xs text-brown focus:border-brown focus:outline-none"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-[10px] uppercase tracking-widest text-brown/70 font-semibold mb-1">
-                    {locale === "nl" ? "Land" : "Country"}
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={addressForm.country}
-                    onChange={(e) => setAddressForm({ ...addressForm, country: e.target.value })}
-                    className="w-full border border-brown/30 bg-white/90 px-3.5 py-2 text-xs text-brown focus:border-brown focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] uppercase tracking-widest text-brown/70 font-semibold mb-1">
-                    {t.checkout.phone}
-                  </label>
-                  <input
-                    type="tel"
-                    required
-                    value={addressForm.phone}
-                    onChange={(e) => setAddressForm({ ...addressForm, phone: e.target.value })}
-                    className="w-full border border-brown/30 bg-white/90 px-3.5 py-2 text-xs text-brown focus:border-brown focus:outline-none"
-                  />
-                </div>
-                <div className="flex gap-2.5 pt-2">
-                  <button
-                    type="submit"
-                    disabled={addressSaving}
-                    className="bg-brown px-5 py-2.5 text-xs uppercase tracking-wider text-cream hover:bg-black transition-colors font-medium disabled:opacity-60"
-                  >
-                    {addressSaving ? "Saving..." : t.account.saveChanges}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setEditingAddress(false)}
-                    className="border border-brown/30 px-4 py-2.5 text-xs uppercase tracking-wider text-brown hover:bg-sand/30"
-                  >
-                    {t.account.cancelBtn}
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
+            <div>
+              <label
+                htmlFor="profile-phone"
+                className="block text-[10px] uppercase tracking-widest text-brown/70 font-semibold mb-1"
+              >
+                {t.checkout.phone}
+              </label>
+              <input
+                id="profile-phone"
+                name="phone"
+                type="tel"
+                autoComplete="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+31 6 1234 5678"
+                className="w-full border border-brown/30 bg-white/90 px-3.5 py-2.5 text-xs text-brown focus:border-brown focus:outline-none"
+              />
+            </div>
+
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={saving}
+                className="bg-brown px-6 py-3 text-xs uppercase tracking-widest text-cream hover:bg-black transition-colors font-medium disabled:opacity-50 shadow-sm"
+              >
+                {saving
+                  ? (locale === "nl" ? "Opslaan..." : "Saving...")
+                  : (locale === "nl" ? "WIJZIGINGEN OPSLAAN" : "SAVE CHANGES")}
+              </button>
+            </div>
+          </form>
         </div>
-      )}
 
-      {/* ============================= */}
-      {/* TAB 4: Concierge & Booking    */}
-      {/* ============================= */}
-      {activeTab === "concierge" && (
-        <div className="mt-8 max-w-xl">
-          <div className="border border-gold/40 bg-gold/10 p-6 md:p-8 shadow-sm">
+        {/* Quick Links & Concierge */}
+        <div className="space-y-6">
+          <div className="border border-gold/40 bg-gold/10 p-6 shadow-sm">
             <span className="label tracking-[.3em] text-burgundy text-[10px] uppercase font-semibold">
               {t.account.conciergeTag}
             </span>
-            <h2 className="font-serif text-2xl md:text-3xl text-brown mt-1">{t.account.conciergeTitle}</h2>
-            <p className="mt-3 text-xs leading-6 text-brown/80">{t.account.conciergeDesc}</p>
-
-            <div className="mt-6 flex flex-col sm:flex-row gap-3">
+            <h3 className="font-serif text-xl text-brown mt-1">
+              {t.account.conciergeTitle}
+            </h3>
+            <p className="mt-2 text-xs leading-relaxed text-brown/80">
+              {t.account.conciergeDesc}
+            </p>
+            <div className="mt-4 flex flex-col gap-2">
               <a
                 href={`https://wa.me/31612345678?text=${encodeURIComponent(
-                  locale === "nl"
-                    ? `Hallo YUPEK! Ik ben ${user.name} (${user.email}) en vraag assistentie aan.`
-                    : `Hello YUPEK! I am ${user.name} (${user.email}) requesting assistance.`
+                  `Hello YUPEK! I am ${user?.name} (${user?.email}) requesting styling assistance.`
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 bg-[#25D366] text-white px-5 py-3 text-xs uppercase tracking-wider font-medium hover:bg-[#20ba5a] transition-colors shadow-sm"
+                className="inline-flex items-center justify-center gap-2 bg-[#25D366] text-white px-4 py-2.5 text-xs uppercase tracking-wider font-medium hover:bg-[#20ba5a] transition-colors shadow-sm"
               >
                 <span>{t.account.whatsAppConciergeBtn}</span>
               </a>
               <Link
                 href="/contact"
-                className="inline-flex items-center justify-center border border-brown px-5 py-3 text-xs uppercase tracking-wider text-brown hover:bg-brown hover:text-cream transition-colors"
+                className="text-center text-xs text-brown/70 hover:text-burgundy hover:underline py-1"
               >
-                {t.account.bookAppointmentBtn}
+                {locale === "nl" ? "Privé Afspraak Boeken" : "Book Private Appointment"} &rarr;
+              </Link>
+            </div>
+          </div>
+
+          <div className="border border-brown/15 bg-cream p-6 shadow-sm space-y-3 text-xs">
+            <h4 className="font-serif text-base text-brown font-semibold">
+              {locale === "nl" ? "Snelle Navigatie" : "Quick Actions"}
+            </h4>
+            <div className="divide-y divide-brown/10">
+              <Link
+                href="/account/orders"
+                className="flex items-center justify-between py-2.5 text-brown/80 hover:text-burgundy tracking-wider"
+              >
+                <span>{locale === "nl" ? "Mijn Bestellingen Bekijken" : "View My Orders"}</span>
+                <span>&rarr;</span>
+              </Link>
+              <Link
+                href="/account/addresses"
+                className="flex items-center justify-between py-2.5 text-brown/80 hover:text-burgundy tracking-wider"
+              >
+                <span>{locale === "nl" ? "Afleveradressen Beheren" : "Manage Delivery Addresses"}</span>
+                <span>&rarr;</span>
+              </Link>
+              <Link
+                href="/account/security"
+                className="flex items-center justify-between py-2.5 text-brown/80 hover:text-burgundy tracking-wider"
+              >
+                <span>{locale === "nl" ? "Wachtwoord Wijzigen" : "Change Password"}</span>
+                <span>&rarr;</span>
               </Link>
             </div>
           </div>
         </div>
-      )}
+      </div>
     </div>
+  );
+}
+
+export default function AccountPage() {
+  return (
+    <AuthGate>
+      <ProfileContent />
+    </AuthGate>
   );
 }
