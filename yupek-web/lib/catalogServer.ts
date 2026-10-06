@@ -27,6 +27,8 @@ export async function getCatalogProductsServer(): Promise<Product[]> {
           material: ov.material ?? p.material,
           inventory: ov.inventory !== undefined ? ov.inventory : p.inventory,
           images: ov.images && ov.images.length > 0 ? ov.images : p.images,
+          detailedImages: p.detailedImages,
+          options: p.options,
           variants: p.variants,
         };
       });

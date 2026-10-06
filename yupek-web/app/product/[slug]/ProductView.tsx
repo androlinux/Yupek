@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import type { Product } from "@/data/products";
 import { eur } from "@/lib/catalog";
 import { useStore } from "@/components/Providers";
@@ -13,40 +13,56 @@ import { Divider } from "@/components/ui/Pattern";
 import Icon from "@/components/ui/Icon";
 import { useAccessibility } from "@/components/AccessibilityContext";
 
-function sanitizePrintifyHtml(html: string) {
-  if (typeof window === "undefined") {
-    // Basic regex fallback for SSR to strip dangerous tags.
-    // In a real app, use a proper HTML parser/DOMPurify on server too.
-    return html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-               .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
-               .replace(/on[a-z]+=["'][^"']*["']/gi, '')
-               .replace(/javascript:/gi, '');
-  }
-  const doc = new DOMParser().parseFromString(html, 'text/html');
-  const allowedTags = ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'h3', 'h4'];
-  
-  function clean(node: Node) {
-    const children = Array.from(node.childNodes);
-    for (const child of children) {
-      if (child.nodeType === Node.ELEMENT_NODE) {
-        const el = child as HTMLElement;
-        const tag = el.tagName.toLowerCase();
-        if (!allowedTags.includes(tag)) {
-          // Replace disallowed element with its text content
-          const text = document.createTextNode(el.textContent || '');
-          el.parentNode?.replaceChild(text, el);
-          continue;
-        }
-        // Remove all attributes to prevent XSS (like onclick, style, etc)
-        while(el.attributes.length > 0) {
-          el.removeAttribute(el.attributes[0].name);
-        }
-        clean(el);
-      }
+/**
+ * Cleanly parse Printify description into editorial intro, features, and care instructions.
+ * Eliminates all raw `<br/>` and markdown bullet noise.
+ */
+function parseProductDescription(desc: string) {
+  if (!desc) return { intro: "", features: [] as string[], care: [] as string[] };
+
+  // Normalize all variations of br and escaped br tags to newlines
+  const text = desc
+    .replace(/&lt;br\s*\/?&gt;/gi, "\n")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/&amp;/g, "&")
+    .replace(/\r\n/g, "\n");
+
+  const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+
+  let section: "intro" | "features" | "care" = "intro";
+  const introParts: string[] = [];
+  const features: string[] = [];
+  const care: string[] = [];
+
+  for (const line of lines) {
+    const lower = line.toLowerCase();
+    if (lower.includes("product features") || lower === "features") {
+      section = "features";
+      continue;
+    }
+    if (lower.includes("care instructions") || lower === "care") {
+      section = "care";
+      continue;
+    }
+
+    // Strip leading dash, bullet, or asterisk
+    const cleanLine = line.replace(/^[-•*]\s*/, "").trim();
+    if (!cleanLine) continue;
+
+    if (section === "intro") {
+      introParts.push(cleanLine);
+    } else if (section === "features") {
+      features.push(cleanLine);
+    } else if (section === "care") {
+      care.push(cleanLine);
     }
   }
-  clean(doc.body);
-  return doc.body.innerHTML;
+
+  return {
+    intro: introParts.join(" "),
+    features,
+    care,
+  };
 }
 
 export default function ProductView({ p: initialProduct }: { p: Product }) {
@@ -54,249 +70,477 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
   const { getProduct, config } = useSiteConfig();
   const { t, locale } = useLanguage();
   const { speakText, isSpeaking, stopSpeech } = useAccessibility();
+  
+  // Real-time catalog product merge
   const p = getProduct(initialProduct.slug) || initialProduct;
 
-  const [size, setSize] = useState("");
-  const [color, setColor] = useState(p.colors[0] || "");
+  // 1. Filter enabled & available variants
+  const activeVariants = useMemo(() => {
+    return (p.variants || []).filter((v) => v.is_enabled !== false && v.is_available !== false);
+  }, [p.variants]);
+
+  // 2. Compute ordered available colors
+  const availableColors = useMemo(() => {
+    if (activeVariants.length === 0) {
+      return p.colors.length > 0 ? p.colors : ["Default"];
+    }
+    const colorsPresent = new Set(activeVariants.map((v) => v.color).filter(Boolean));
+    const ordered = (p.colors || []).filter((c) => colorsPresent.has(c));
+    if (ordered.length > 0) return ordered;
+    return Array.from(colorsPresent) as string[];
+  }, [activeVariants, p.colors]);
+
+  // Helper: Get valid sizes for a specific color
+  const getValidSizesForColor = useCallback(
+    (colorName: string): string[] => {
+      if (activeVariants.length === 0) return p.sizes;
+      const sizesForColor = new Set(
+        activeVariants.filter((v) => v.color === colorName).map((v) => v.size).filter(Boolean)
+      );
+      const ordered = (p.sizes || []).filter((s) => sizesForColor.has(s));
+      if (ordered.length > 0) return ordered;
+      return Array.from(sizesForColor) as string[];
+    },
+    [activeVariants, p.sizes]
+  );
+
+  // 3. Initial color and size selection (automatically select valid default)
+  const defaultColor = availableColors[0] || "";
+  const defaultSizes = getValidSizesForColor(defaultColor);
+  const defaultSize = defaultSizes[0] || "";
+
+  const [color, setColor] = useState<string>(() => defaultColor);
+  const [size, setSize] = useState<string>(() => defaultSize);
+  const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
   const [err, setErr] = useState(false);
   const [guide, setGuide] = useState(false);
 
-  const activeVariants = p.variants?.filter(v => v.is_enabled && v.is_available) || [];
-
-  const availableSizes = activeVariants.length > 0
-    ? Array.from(new Set(activeVariants.map(v => v.size).filter(Boolean))) as string[]
-    : p.sizes;
-
-  const availableColors = activeVariants.length > 0
-    ? Array.from(new Set(activeVariants.map(v => v.color).filter(Boolean))) as string[]
-    : p.colors;
-
-  const imgs = p.images.length ? p.images : [undefined, undefined, undefined, undefined];
-
-  // Selected variant based on size and color
-  const selectedVariant = activeVariants.find(v => v.size === size && v.color === color);
-  
-  // Price is variant price if selected, otherwise fallback to minimum variant price, or product base price
-  let displayPrice = p.price;
-  let isFromPrice = false;
-
-  if (selectedVariant && selectedVariant.price_cents) {
-    displayPrice = selectedVariant.price_cents / 100;
-  } else if (activeVariants.length > 0) {
-    const validPrices = activeVariants.map(v => (v.price_cents || 0) / 100).filter(p => p > 0);
-    if (validPrices.length > 0) {
-      displayPrice = Math.min(...validPrices);
-      isFromPrice = true;
+  // Synchronize state if product changes
+  useEffect(() => {
+    const validColors = availableColors;
+    if (validColors.length > 0 && !validColors.includes(color)) {
+      const newCol = validColors[0];
+      setColor(newCol);
+      const validS = getValidSizesForColor(newCol);
+      setSize(validS[0] || "");
+      setActiveImageIndex(0);
     }
-  }
+  }, [availableColors, color, getValidSizesForColor]);
 
-  // Update CartLine payload
+  // 4. Color -> Image Mapping
+  const colorVariantIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const v of p.variants || []) {
+      if (v.color === color && v.variant_id != null) {
+        ids.add(String(v.variant_id));
+      }
+    }
+    return ids;
+  }, [p.variants, color]);
+
+  const galleryImages = useMemo(() => {
+    if (p.detailedImages && p.detailedImages.length > 0) {
+      const matched = p.detailedImages.filter(
+        (img) => img.variant_ids && img.variant_ids.some((vid) => colorVariantIds.has(String(vid)))
+      );
+      if (matched.length > 0) {
+        return matched.map((img) => img.src);
+      }
+    }
+    return p.images.length > 0 ? p.images : ["/images/look-1.jpg"];
+  }, [p.detailedImages, p.images, colorVariantIds]);
+
+  // Clamp activeImageIndex if galleryImages length shrinks
+  useEffect(() => {
+    if (activeImageIndex >= galleryImages.length) {
+      setActiveImageIndex(0);
+    }
+  }, [galleryImages.length, activeImageIndex]);
+
+  // 5. Variant Matrix: Exact selectedVariant
+  const selectedVariant = useMemo(() => {
+    if (activeVariants.length === 0) return null;
+    return activeVariants.find((v) => v.color === color && v.size === size) || null;
+  }, [activeVariants, color, size]);
+
+  // 6. Exact Price Calculation (No "From" when variant is selected)
+  const displayPrice = useMemo(() => {
+    if (selectedVariant && selectedVariant.price_cents) {
+      return selectedVariant.price_cents / 100;
+    }
+    if (activeVariants.length > 0) {
+      const firstActive = activeVariants.find((v) => v.color === color) || activeVariants[0];
+      if (firstActive?.price_cents) {
+        return firstActive.price_cents / 100;
+      }
+    }
+    return p.price;
+  }, [selectedVariant, activeVariants, color, p.price]);
+
+  // 7. Handlers for Color and Size changes
+  const handleColorChange = (newColor: string) => {
+    setColor(newColor);
+    setActiveImageIndex(0);
+    setErr(false);
+
+    // Keep size if available for the new color, otherwise auto-select first available size
+    const validSizes = getValidSizesForColor(newColor);
+    if (!validSizes.includes(size)) {
+      setSize(validSizes[0] || "");
+    }
+  };
+
+  const handleSizeChange = (newSize: string) => {
+    setSize(newSize);
+    setErr(false);
+  };
+
+  // Gallery Navigation
+  const nextImage = useCallback(() => {
+    setActiveImageIndex((prev) => (prev + 1) % galleryImages.length);
+  }, [galleryImages.length]);
+
+  const prevImage = useCallback(() => {
+    setActiveImageIndex((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
+  }, [galleryImages.length]);
+
+  // Keyboard navigation for image gallery
+  const galleryRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.key === "ArrowLeft") {
+        prevImage();
+      } else if (e.key === "ArrowRight") {
+        nextImage();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [prevImage, nextImage]);
+
+  // Touch Swipe for Mobile Gallery
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartX(e.targetTouches[0].clientX);
+  };
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartX - touchEndX;
+    if (diff > 45) {
+      nextImage();
+    } else if (diff < -45) {
+      prevImage();
+    }
+    setTouchStartX(null);
+  };
+
+  // 8. Add to Bag with exact selected variant details
   const pick = (): boolean => {
-    if (!size && availableSizes.length > 0) {
+    const validSizes = getValidSizesForColor(color);
+    if (!size && validSizes.length > 0) {
       setErr(true);
       return false;
     }
     setErr(false);
-    add({ 
-      slug: p.slug, 
-      size, 
-      color, 
+    add({
+      slug: p.slug,
+      size,
+      color,
       productId: p.id,
       printifyProductId: p.supplierProductId,
-      printifyVariantId: selectedVariant?.variant_id || "",
+      printifyVariantId: selectedVariant?.variant_id != null ? String(selectedVariant.variant_id) : "",
       title: p.name,
       price: displayPrice,
-      image: p.images[0]
+      image: galleryImages[0] || p.images[0] || "/images/look-1.jpg",
     });
     return true;
   };
 
   const pickQuiet = (): boolean => {
-    if (!size && availableSizes.length > 0) {
+    const validSizes = getValidSizesForColor(color);
+    if (!size && validSizes.length > 0) {
       setErr(true);
       return false;
     }
     setErr(false);
-    add({ 
-      slug: p.slug, 
-      size, 
-      color,
-      productId: p.id,
-      printifyProductId: p.supplierProductId,
-      printifyVariantId: selectedVariant?.variant_id || "",
-      title: p.name,
-      price: displayPrice,
-      image: p.images[0]
-    }, false);
+    add(
+      {
+        slug: p.slug,
+        size,
+        color,
+        productId: p.id,
+        printifyProductId: p.supplierProductId,
+        printifyVariantId: selectedVariant?.variant_id != null ? String(selectedVariant.variant_id) : "",
+        title: p.name,
+        price: displayPrice,
+        image: galleryImages[0] || p.images[0] || "/images/look-1.jpg",
+      },
+      false
+    );
     return true;
   };
 
-  const addToBagText = locale === "nl" ? t.product.addToBag : (config.addToBagLabel || t.product.addToBag);
+  // 9. Parse and structure the description
+  const descParsed = useMemo(() => parseProductDescription(p.description), [p.description]);
+
+  const addToBagText = locale === "nl" ? t.product.addToBag : config.addToBagLabel || t.product.addToBag;
+  const currentSizesForColor = getValidSizesForColor(color);
+
+  // Compute all distinct sizes across enabled variants (ordered)
+  const allProductSizes = useMemo(() => {
+    if (activeVariants.length === 0) return p.sizes;
+    const presentSizes = new Set(activeVariants.map((v) => v.size).filter(Boolean));
+    const ordered = (p.sizes || []).filter((s) => presentSizes.has(s));
+    if (ordered.length > 0) return ordered;
+    return Array.from(presentSizes) as string[];
+  }, [activeVariants, p.sizes]);
 
   return (
-    <div className="wrap grid gap-8 py-8 lg:grid-cols-[6fr_4fr] lg:gap-16 lg:py-14 items-start">
-      {/* Product Image Gallery */}
-      <div className="grid grid-cols-2 gap-4">
-        {imgs.filter(Boolean).map((src, i) => (
-          <div
-            key={i}
-            className="relative bg-sand/30 overflow-hidden aspect-[3/4]"
-          >
-            <ProductImage
-              src={src}
-              alt={`${p.name} — view ${i + 1}`}
-              priority={i === 0}
-              sizes="(min-width:1024px) 30vw, 50vw"
-            />
+    <div className="wrap grid gap-10 py-6 lg:grid-cols-[58%_42%] lg:gap-16 lg:py-12 items-start">
+      {/* ============================================================ */}
+      {/* 1. PRODUCT GALLERY (LEFT COLUMN: DESKTOP & MOBILE CAROUSEL)  */}
+      {/* ============================================================ */}
+      <div ref={galleryRef} className="w-full select-none" aria-label="Product image gallery">
+        {/* Main Display Image Frame */}
+        <div
+          className="relative aspect-[3/4] md:aspect-[4/5] w-full bg-sand/20 overflow-hidden group border border-brown/10"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
+          {galleryImages.map((src, i) => (
+            <div
+              key={src + i}
+              className={`absolute inset-0 transition-opacity duration-300 ${
+                i === activeImageIndex ? "opacity-100 z-10" : "opacity-0 pointer-events-none z-0"
+              }`}
+            >
+              <ProductImage
+                src={src}
+                alt={`${p.name} - ${color} - view ${i + 1}`}
+                priority={i === 0}
+                sizes="(min-width: 1024px) 58vw, 100vw"
+                className="object-contain w-full h-full p-2 md:p-6"
+              />
+            </div>
+          ))}
+
+          {/* Navigation Arrows (Subtle & Luxury) */}
+          {galleryImages.length > 1 && (
+            <>
+              <button
+                type="button"
+                onClick={prevImage}
+                aria-label="Previous product image"
+                className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 md:w-11 md:h-11 flex items-center justify-center bg-cream/90 hover:bg-cream border border-brown/20 text-brown shadow-sm transition-all md:opacity-0 md:group-hover:opacity-100 focus:opacity-100"
+              >
+                <Icon name="arrowLeft" className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={nextImage}
+                aria-label="Next product image"
+                className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 md:w-11 md:h-11 flex items-center justify-center bg-cream/90 hover:bg-cream border border-brown/20 text-brown shadow-sm transition-all md:opacity-0 md:group-hover:opacity-100 focus:opacity-100"
+              >
+                <Icon name="arrowRight" className="w-4 h-4" />
+              </button>
+
+              {/* Minimal Counter Badge */}
+              <div className="absolute bottom-3 right-3 z-20 bg-cream/90 backdrop-blur-xs px-2.5 py-1 border border-brown/15 text-[10px] tracking-widest text-brown/80 font-mono">
+                {activeImageIndex + 1} / {galleryImages.length}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Thumbnail Navigation Row */}
+        {galleryImages.length > 1 && (
+          <div className="mt-3 flex gap-2.5 overflow-x-auto pb-1 scrollbar-none" role="tablist" aria-label="Product thumbnails">
+            {galleryImages.map((src, i) => (
+              <button
+                key={src + i}
+                type="button"
+                role="tab"
+                aria-selected={i === activeImageIndex}
+                aria-label={`View image ${i + 1}`}
+                onClick={() => setActiveImageIndex(i)}
+                className={`relative w-16 h-20 md:w-20 md:h-24 aspect-[3/4] shrink-0 bg-sand/15 overflow-hidden transition-all duration-150 border ${
+                  i === activeImageIndex
+                    ? "border-brown ring-1 ring-brown opacity-100"
+                    : "border-brown/15 opacity-60 hover:opacity-100 hover:border-brown/40"
+                }`}
+              >
+                <ProductImage
+                  src={src}
+                  alt={`${p.name} thumbnail ${i + 1}`}
+                  sizes="80px"
+                  className="object-contain w-full h-full p-1"
+                />
+              </button>
+            ))}
           </div>
-        ))}
+        )}
       </div>
 
-      {/* Product Information & Buy Panel */}
-      <div className="lg:sticky lg:top-28 lg:self-start">
-        <nav aria-label="Breadcrumb" className="label mb-6 text-brown/50">
-          <Link href="/shop" className="hover:text-brown">{t.product.breadcrumbShop}</Link> / {p.category.toUpperCase()}
+      {/* ============================================================ */}
+      {/* 2. PRODUCT INFORMATION & BUY PANEL (RIGHT COLUMN)            */}
+      {/* ============================================================ */}
+      <div className="lg:sticky lg:top-28 lg:self-start w-full">
+        {/* Breadcrumb */}
+        <nav aria-label="Breadcrumb" className="label mb-4 text-brown/50 text-[11px]">
+          <Link href="/shop" className="hover:text-brown transition-colors">
+            {t.product.breadcrumbShop}
+          </Link>{" "}
+          / <span className="uppercase">{p.category}</span>
         </nav>
+
+        {/* Title & Wishlist */}
         <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="h-display text-4xl md:text-5xl">{p.name.toUpperCase()}</h1>
+          <div className="max-w-xl">
+            <h1 className="h-display text-3xl sm:text-4xl md:text-5xl leading-[1.08] text-brown tracking-tight">
+              {p.name.toUpperCase()}
+            </h1>
             {p.badge && (
-              <span className="mt-2 inline-block rounded-full bg-gold/25 px-2.5 py-0.5 text-[9px] uppercase tracking-wider text-brown font-semibold">
+              <span className="mt-2.5 inline-block rounded-full bg-gold/25 px-2.5 py-0.5 text-[9px] uppercase tracking-wider text-brown font-semibold">
                 {p.badge}
               </span>
             )}
           </div>
-          <WishlistButton slug={p.slug} className="border border-brown/20" />
+          <WishlistButton slug={p.slug} className="border border-brown/20 shrink-0" />
         </div>
-        <p className="mt-4 text-xl font-light text-brown">
-          {isFromPrice ? `${(t.product as any).from || "From"} ` : ""}{eur(displayPrice)}
+
+        {/* Price Display (Clean exact price, no "From" prefix) */}
+        <p className="mt-4 text-2xl font-light text-brown tracking-tight">
+          {eur(displayPrice)}
         </p>
-        <p className="label mt-3 text-gold">
+
+        {/* Heritage Tagline */}
+        <p className="label mt-2 text-gold text-[10px] tracking-[.22em]">
           {locale === "nl" ? "OOSTERSE WORTELS / EUROPESE VORM" : "EASTERN ROOTS / EUROPEAN STYLE"}
         </p>
-        <div 
-          className="mt-6 text-sm leading-7 text-brown/80 font-light prose prose-sm max-w-none prose-p:mb-4 prose-ul:my-4 prose-li:my-1" 
-          dangerouslySetInnerHTML={{ __html: sanitizePrintifyHtml(p.description) }} 
-        />
-        
-        {/* Audio Readout for Low-Vision & Reading Disabled */}
-        <div className="mt-4 flex items-center gap-3">
-          <button
-            onClick={() => {
-              if (isSpeaking) {
-                stopSpeech();
-              } else {
-                speakText(`${p.name}. Price ${eur(displayPrice)}. ${p.description}. Material: ${p.material}. Available in sizes ${availableSizes.join(", ")}.`);
-              }
-            }}
-            aria-label={isSpeaking
-              ? (locale === "nl" ? "Stop voorlezen" : "Stop reading product description")
-              : (locale === "nl" ? "Beluister productbeschrijving" : "Listen to product description")}
-            aria-pressed={isSpeaking}
-            className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[.2em] font-semibold text-gold hover:text-brown border border-gold/40 px-3.5 py-1.5 transition-all bg-sand/15 hover:bg-gold/20"
-          >
-            <Icon name={isSpeaking ? "volumeMute" : "volume"} className="w-3.5 h-3.5 text-gold" />
-            <span>
-              {isSpeaking
-                ? (locale === "nl" ? "Stop voorlezen" : "Stop reading")
-                : (locale === "nl" ? "Beluister beschrijving" : "Listen to description")}
-            </span>
-          </button>
-        </div>
 
-        <Divider className="my-8 justify-start" />
+        <Divider className="my-6 justify-start" />
 
         {/* Color Selector */}
-        <p className="label mb-3">
-          {t.product.colorLabel} — <span className="text-brown/60">{color.toUpperCase()}</span>
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {availableColors.map((c) => {
-            const isAvailable = activeVariants.length === 0 || activeVariants.some(v => v.color === c && (!size || v.size === size));
-            return (
-            <button
-              key={c}
-              aria-pressed={color === c}
-              disabled={!isAvailable}
-              onClick={() => setColor(c)}
-              className={`border px-4 py-2 text-[10px] uppercase tracking-[.18em] transition-colors ${
-                color === c ? "border-brown bg-brown text-cream" : isAvailable ? "border-brown/25 hover:border-brown" : "border-brown/10 text-brown/30 cursor-not-allowed line-through"
-              }`}
-            >
-              {c}
-            </button>
-            );
-          })}
+        <div className="mb-6">
+          <p className="label mb-3 text-xs">
+            {t.product.colorLabel} — <span className="text-brown/70 font-medium">{color.toUpperCase()}</span>
+          </p>
+          <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Color">
+            {availableColors.map((c) => {
+              const isSelected = color === c;
+              return (
+                <button
+                  key={c}
+                  type="button"
+                  role="radio"
+                  aria-checked={isSelected}
+                  aria-label={`Color: ${c}`}
+                  onClick={() => handleColorChange(c)}
+                  className={`border px-4 py-2.5 text-[10px] uppercase tracking-[.18em] transition-all ${
+                    isSelected
+                      ? "border-brown bg-brown text-cream shadow-xs font-semibold"
+                      : "border-brown/25 text-brown/90 hover:border-brown bg-cream/40"
+                  }`}
+                >
+                  {c}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Size Selector */}
-        <div className="mb-3 mt-8 flex justify-between">
-          <p className="label">{t.product.sizeLabel}</p>
-          <button
-            className="label underline underline-offset-4 hover:text-burgundy"
-            onClick={() => setGuide(!guide)}
-            aria-expanded={guide}
-          >
-            {t.product.sizeGuide}
-          </button>
-        </div>
-        <div className="flex flex-wrap gap-2" role="group" aria-label="Size">
-          {availableSizes.map((s) => {
-            const isAvailable = activeVariants.length === 0 || activeVariants.some(v => v.size === s && (!color || v.color === color));
-            return (
+        <div className="mb-6">
+          <div className="mb-3 flex items-center justify-between">
+            <p className="label text-xs">
+              {t.product.sizeLabel} —{" "}
+              <span className="text-brown/70 font-medium">{size ? size.toUpperCase() : "SELECT"}</span>
+            </p>
             <button
-              key={s}
-              aria-pressed={size === s}
-              disabled={!isAvailable}
-              onClick={() => {
-                setSize(s);
-                setErr(false);
-              }}
-              className={`min-w-12 border px-3 py-3 text-[11px] tracking-widest transition-colors ${
-                size === s ? "border-brown bg-brown text-cream" : isAvailable ? "border-brown/25 hover:border-brown" : "border-brown/10 text-brown/30 cursor-not-allowed line-through"
-              }`}
+              type="button"
+              className="label underline underline-offset-4 hover:text-burgundy text-[11px] transition-colors"
+              onClick={() => setGuide(!guide)}
+              aria-expanded={guide}
             >
-              {s}
+              {t.product.sizeGuide}
             </button>
-            );
-          })}
-        </div>
-        {err && <p role="alert" className="mt-3 text-xs text-burgundy">{t.product.selectSizeError}</p>}
+          </div>
+          <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Size">
+            {allProductSizes.map((s) => {
+              const isAvailable = currentSizesForColor.includes(s);
+              const isSelected = size === s;
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  role="radio"
+                  aria-checked={isSelected}
+                  aria-label={`Size: ${s}${!isAvailable ? " (Unavailable)" : ""}`}
+                  aria-disabled={!isAvailable}
+                  disabled={!isAvailable}
+                  onClick={() => handleSizeChange(s)}
+                  className={`min-w-12 border px-3.5 py-3 text-[11px] font-mono tracking-widest transition-all ${
+                    isSelected
+                      ? "border-brown bg-brown text-cream shadow-xs font-semibold"
+                      : isAvailable
+                      ? "border-brown/25 text-brown hover:border-brown bg-cream/40"
+                      : "border-brown/10 text-brown/30 cursor-not-allowed line-through bg-sand/10"
+                  }`}
+                >
+                  {s}
+                </button>
+              );
+            })}
+          </div>
 
-        {guide && (
-          <table className="mt-5 w-full text-left text-xs animate-in fade-in">
-            <caption className="sr-only">{t.product.sizeGuideCaption}</caption>
-            <thead>
-              <tr className="label border-b border-brown/20">
-                <th className="py-2">{t.product.sizeLabel}</th>
-                <th>{t.product.chest}</th>
-                <th>{t.product.length}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                ["XS", "92", "66"],
-                ["S", "98", "68"],
-                ["M", "104", "70"],
-                ["L", "110", "72"],
-                ["XL", "116", "74"],
-                ["XXL", "122", "76"],
-              ].map((r) => (
-                <tr key={r[0]} className="border-b border-brown/10">
-                  {r.map((c, i) => (
-                    <td key={i} className="py-2">
-                      {c}
-                    </td>
+          {err && (
+            <p role="alert" className="mt-3 text-xs text-burgundy font-medium">
+              {t.product.selectSizeError}
+            </p>
+          )}
+
+          {/* Size Guide Table */}
+          {guide && (
+            <div className="mt-4 border border-brown/15 bg-sand/10 p-4 transition-all">
+              <table className="w-full text-left text-xs">
+                <caption className="sr-only">{t.product.sizeGuideCaption}</caption>
+                <thead>
+                  <tr className="label border-b border-brown/20 text-brown/70">
+                    <th className="py-2">{t.product.sizeLabel}</th>
+                    <th className="py-2">{t.product.chest} (cm)</th>
+                    <th className="py-2">{t.product.length} (cm)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-brown/10 font-mono text-[11px]">
+                  {[
+                    ["S", "98", "68"],
+                    ["M", "104", "70"],
+                    ["L", "110", "72"],
+                    ["XL", "116", "74"],
+                    ["2XL", "122", "76"],
+                    ["3XL", "128", "78"],
+                    ["4XL", "134", "80"],
+                    ["5XL", "140", "82"],
+                  ].map((r) => (
+                    <tr key={r[0]}>
+                      {r.map((c, i) => (
+                        <td key={i} className="py-2">
+                          {c}
+                        </td>
+                      ))}
+                    </tr>
                   ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
 
         {/* Action Buttons */}
         <div className="mt-8 grid gap-3">
-          <button className="btn btn-dark" onClick={pick}>
+          <button type="button" className="btn btn-dark w-full py-4 text-xs tracking-[.22em]" onClick={pick}>
             {addToBagText}
           </button>
           <Link
@@ -304,18 +548,101 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
             onClick={(e) => {
               if (!pickQuiet()) e.preventDefault();
             }}
-            className="btn btn-line"
+            className="btn btn-line w-full py-3.5 text-xs tracking-[.22em]"
           >
             {t.product.buyNow}
           </Link>
         </div>
 
-        {/* Accordions */}
-        <div className="mt-10">
+        {/* Formatted Product Story & Features */}
+        <div className="mt-8 border-t border-brown/15 pt-6 space-y-6">
+          {/* Main Description Intro */}
+          {descParsed.intro && (
+            <p className="text-sm leading-relaxed text-brown/85 font-light">
+              {descParsed.intro}
+            </p>
+          )}
+
+          {/* Product Features List */}
+          {descParsed.features.length > 0 && (
+            <div>
+              <h3 className="label text-[11px] font-semibold tracking-[.2em] text-brown mb-2.5">
+                {locale === "nl" ? "KENMERKEN" : "PRODUCT FEATURES"}
+              </h3>
+              <ul className="space-y-1.5 text-xs text-brown/80 font-light">
+                {descParsed.features.map((feat, idx) => (
+                  <li key={idx} className="flex items-start gap-2">
+                    <span className="text-gold leading-tight">•</span>
+                    <span className="leading-relaxed">{feat}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Care Instructions List */}
+          {descParsed.care.length > 0 && (
+            <div>
+              <h3 className="label text-[11px] font-semibold tracking-[.2em] text-brown mb-2.5">
+                {locale === "nl" ? "WASVOORSCHRIFT" : "CARE INSTRUCTIONS"}
+              </h3>
+              <ul className="space-y-1.5 text-xs text-brown/80 font-light">
+                {descParsed.care.map((item, idx) => (
+                  <li key={idx} className="flex items-start gap-2">
+                    <span className="text-gold leading-tight">•</span>
+                    <span className="leading-relaxed">{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Audio Readout for Accessibility */}
+          <div className="pt-2 flex items-center">
+            <button
+              type="button"
+              onClick={() => {
+                if (isSpeaking) {
+                  stopSpeech();
+                } else {
+                  const speechScript = `${p.name}. Price ${eur(displayPrice)}. ${descParsed.intro}. Available in ${availableColors.join(", ")}. Available sizes: ${currentSizesForColor.join(", ")}.`;
+                  speakText(speechScript);
+                }
+              }}
+              aria-label={
+                isSpeaking
+                  ? locale === "nl"
+                    ? "Stop voorlezen"
+                    : "Stop reading product description"
+                  : locale === "nl"
+                  ? "Beluister productbeschrijving"
+                  : "Listen to product description"
+              }
+              aria-pressed={isSpeaking}
+              className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[.2em] font-semibold text-gold hover:text-brown border border-gold/40 px-3.5 py-1.5 transition-all bg-sand/15 hover:bg-gold/20"
+            >
+              <Icon name={isSpeaking ? "volumeMute" : "volume"} className="w-3.5 h-3.5 text-gold" />
+              <span>
+                {isSpeaking
+                  ? locale === "nl"
+                    ? "Stop voorlezen"
+                    : "Stop reading"
+                  : locale === "nl"
+                  ? "Beluister beschrijving"
+                  : "Listen to description"}
+              </span>
+            </button>
+          </div>
+        </div>
+
+        {/* Editorial Accordions */}
+        <div className="mt-8 border-t border-brown/15 pt-2">
           <Accordion
             items={[
-              { title: t.product.descriptionTitle, body: p.description },
-              { title: t.product.materialTitle, body: p.material },
+              {
+                title: t.product.materialTitle,
+                body: p.material || "100% premium quality fabric tailored for modern living.",
+              },
               {
                 title: t.product.shippingTitle,
                 body: t.product.shippingBody,

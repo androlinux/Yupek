@@ -26,6 +26,7 @@ export default function ProductImage({
       </div>
     );
   }
+  const fitClass = className.includes("object-") ? "" : "object-cover";
   if (width && height) {
     return (
       <Image
@@ -36,7 +37,7 @@ export default function ProductImage({
         sizes={sizes}
         priority={priority}
         loading={priority ? undefined : "lazy"}
-        className={`object-cover ${className}`}
+        className={`${fitClass} ${className}`.trim()}
       />
     );
   }
@@ -48,7 +49,7 @@ export default function ProductImage({
       sizes={sizes}
       priority={priority}
       loading={priority ? undefined : "lazy"}
-      className={`object-cover ${className}`}
+      className={`${fitClass} ${className}`.trim()}
     />
   );
 }
