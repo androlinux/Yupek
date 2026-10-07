@@ -39,9 +39,9 @@ export default function Newsletter() {
               required
               aria-label={t.newsletter.emailPlaceholder || "Email"}
               placeholder={t.newsletter.emailPlaceholder}
-              className="w-full bg-transparent py-3 text-[11px] uppercase tracking-[.22em] text-brown placeholder:text-brown/40 focus:outline-none"
+              className="w-full min-w-0 bg-transparent py-3 text-[11px] uppercase tracking-[.22em] text-brown placeholder:text-brown/40 focus:outline-none"
             />
-            <button className="label px-3 hover:opacity-60 text-brown font-semibold whitespace-nowrap">
+            <button className="label px-3 hover:opacity-60 text-brown font-semibold whitespace-nowrap shrink-0">
               {t.newsletter.subscribeBtn}
             </button>
           </form>

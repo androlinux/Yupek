@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { eur } from "@/lib/catalog";
 import Icon from "./ui/Icon";
 import ProductImage from "./ui/ProductImage";
@@ -85,11 +85,27 @@ export default function CartDrawer() {
 
   const checkoutBtnText = locale === "nl" ? t.cart.checkout : (config.checkoutButtonLabel || t.cart.checkout);
 
+  // Unmount completely from DOM when closed and animation has completed
+  const [shouldRender, setShouldRender] = useState(false);
+
+  useEffect(() => {
+    if (cartOpen) {
+      setShouldRender(true);
+    } else {
+      const timer = setTimeout(() => setShouldRender(false), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [cartOpen]);
+
   useEffect(() => {
     const k = (e: KeyboardEvent) => e.key === "Escape" && setCartOpen(false);
     if (cartOpen) window.addEventListener("keydown", k);
     return () => window.removeEventListener("keydown", k);
   }, [cartOpen, setCartOpen]);
+
+  if (!shouldRender && !cartOpen) {
+    return null;
+  }
 
   return (
     <>
@@ -106,8 +122,8 @@ export default function CartDrawer() {
         aria-label={t.cart.title}
         aria-hidden={!cartOpen}
         inert={!cartOpen || undefined}
-        className={`fixed right-0 top-0 z-50 flex h-full w-full max-w-md flex-col bg-cream shadow-2xl transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-          cartOpen ? "translate-x-0" : "invisible translate-x-full"
+        className={`fixed right-0 top-0 z-50 flex h-full w-full max-w-full sm:max-w-md flex-col bg-cream shadow-2xl transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          cartOpen ? "translate-x-0" : "invisible translate-x-full pointer-events-none"
         }`}
       >
         <div className="flex items-center justify-between border-b border-brown/10 px-6 py-5">
@@ -117,7 +133,7 @@ export default function CartDrawer() {
           <button
             aria-label={t.common.close}
             onClick={() => setCartOpen(false)}
-            className="p-1 text-brown/60 hover:text-brown transition-colors"
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center text-brown/60 hover:text-brown transition-all duration-200 ease-out active:scale-95 opacity-80 hover:opacity-100 focus:outline-none"
           >
             <Icon name="close" className="h-5 w-5" />
           </button>

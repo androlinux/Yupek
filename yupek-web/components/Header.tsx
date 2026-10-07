@@ -1,4 +1,5 @@
 "use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -20,9 +21,8 @@ const shopCategories = [
       { label: "Shirts", href: "/shop?gender=men&category=shirts" },
       { label: "Sweatshirts", href: "/shop?gender=men&category=sweatshirts" },
       { label: "Trousers", href: "/shop?gender=men&category=trousers" },
-      { label: "Denim", href: "/shop?gender=men&category=denim" },
       { label: "Accessories", href: "/shop?gender=men&category=accessories" },
-    ]
+    ],
   },
   {
     title: "WOMEN",
@@ -33,50 +33,40 @@ const shopCategories = [
       { label: "Shirts", href: "/shop?gender=women&category=shirts" },
       { label: "Sweatshirts", href: "/shop?gender=women&category=sweatshirts" },
       { label: "Trousers", href: "/shop?gender=women&category=trousers" },
-      { label: "Denim", href: "/shop?gender=women&category=denim" },
       { label: "Accessories", href: "/shop?gender=women&category=accessories" },
-    ]
+    ],
   },
   {
-    title: "UNISEX",
+    title: "UNISEX & EDITIONS",
     href: "/shop?gender=unisex",
     items: [
-      { label: "T-Shirts", href: "/shop?gender=unisex&category=tees" },
-      { label: "Shirts", href: "/shop?gender=unisex&category=shirts" },
-      { label: "Sweatshirts", href: "/shop?gender=unisex&category=sweatshirts" },
-      { label: "Trousers", href: "/shop?gender=unisex&category=trousers" },
-      { label: "Accessories", href: "/shop?gender=unisex&category=accessories" },
-    ]
-  },
-  {
-    title: "FEATURED",
-    href: "/shop",
-    items: [
-      { label: "New Arrivals", href: "/shop?isNew=true" },
+      { label: "All Garments", href: "/shop" },
       { label: "Eastern Heritage", href: "/lookbook" },
       { label: "Silk Inspired", href: "/lookbook" },
-      { label: "Essentials", href: "/shop" },
-    ]
-  }
+      { label: "Capsule Essentials", href: "/shop" },
+    ],
+  },
 ];
 
 const collectionsCategories = [
   {
-    title: "FEATURED COLLECTIONS",
+    title: "COLLECTION 01 — THE WEAVE",
+    subtitle: "Silk Road Architecture",
+    desc: "Contemporary architectural cuts infused with traditional Turkmen silk heritage, tailored for modern European living.",
     href: "/lookbook",
-    items: [
-      { label: "Eastern Heritage", desc: "Contemporary silhouettes inspired by Eastern heritage.", href: "/lookbook" },
-      { label: "Silk Inspired", desc: "Soft textures and patterns inspired by silk traditions.", href: "/lookbook" },
-      { label: "Essentials", desc: "Everyday YUPEK pieces.", href: "/shop" },
-    ]
+  },
+  {
+    title: "CAPSULE ESSENTIALS",
+    subtitle: "Organic Heavyweight Form",
+    desc: "Everyday luxury silhouettes crafted from natural plant-dyed fibers and silk-touch drape engineered for longevity.",
+    href: "/shop",
   },
   {
     title: "NEW ARRIVALS",
+    subtitle: "Spring / Summer Edition",
+    desc: "Latest archive releases and experimental seasonal textile pieces.",
     href: "/shop?isNew=true",
-    items: [
-      { label: "Latest pieces from the collection.", desc: "", href: "/shop?isNew=true" }
-    ]
-  }
+  },
 ];
 
 export default function Header() {
@@ -86,25 +76,26 @@ export default function Header() {
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Mega Menu State
+  // Minimal desktop sub-menu state
   const [activeMenu, setActiveMenu] = useState<"shop" | "collections" | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Mobile Accordion State
+  // Mobile navigation state
   const [mobileShopOpen, setMobileShopOpen] = useState(false);
-  const [mobileCollectionsOpen, setMobileCollectionsOpen] = useState(false);
+  const [menuAnimated, setMenuAnimated] = useState(false);
 
   const { count, wishlist, setCartOpen, setSearchOpen, menuOpen, setMenuOpen } = useStore();
   const { user, setAuthModalOpen, setAuthModalTab, signOut } = useAuth();
   const { t, locale } = useLanguage();
   const { openDrawer } = useAccessibility();
 
+  // Scroll detection for header background
   useEffect(() => {
     let lastScrolled = false;
     let ticking = false;
 
     const updateScroll = () => {
-      const isPast = window.scrollY > 30;
+      const isPast = window.scrollY > 20;
       if (isPast !== lastScrolled) {
         lastScrolled = isPast;
         setScrolled(isPast);
@@ -124,23 +115,25 @@ export default function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Close menus on route change or escape
+  // Close menus on route change
   useEffect(() => {
     setMenuOpen(false);
     setUserDropdownOpen(false);
     setActiveMenu(null);
   }, [path, setMenuOpen]);
 
+  // Handle Escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setActiveMenu(null);
         setUserDropdownOpen(false);
+        setMenuOpen(false);
       }
     };
     window.addEventListener("keydown", handleEscape);
     return () => window.removeEventListener("keydown", handleEscape);
-  }, []);
+  }, [setMenuOpen]);
 
   // Click outside user dropdown
   useEffect(() => {
@@ -153,6 +146,21 @@ export default function Header() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (menuOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      const raf = requestAnimationFrame(() => setMenuAnimated(true));
+      return () => {
+        document.body.style.overflow = originalOverflow;
+        cancelAnimationFrame(raf);
+      };
+    } else {
+      setMenuAnimated(false);
+    }
+  }, [menuOpen]);
+
   const handleMouseEnter = (menu: "shop" | "collections") => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     setActiveMenu(menu);
@@ -162,378 +170,472 @@ export default function Header() {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => {
       setActiveMenu(null);
-    }, 200);
+    }, 220);
   };
 
-  const isMegaMenuOpen = activeMenu !== null;
-  const solid = scrolled || !home || menuOpen || isMegaMenuOpen;
+  const isSubMenuOpen = activeMenu !== null;
+  const solid = scrolled || !home || isSubMenuOpen;
   const tone = solid ? "text-brown" : "text-cream";
 
+  // Mobile menu items for staggered entrance
+  const mobileNavItems = [
+    {
+      id: "shop",
+      label: t.nav.shop,
+      href: "/shop",
+      hasSub: true,
+    },
+    {
+      id: "collections",
+      label: t.nav.collections,
+      href: "/lookbook",
+      hasSub: false,
+    },
+    {
+      id: "about",
+      label: t.nav.about,
+      href: "/about",
+      hasSub: false,
+    },
+    {
+      id: "account",
+      label: t.nav.account,
+      href: "/account",
+      hasSub: false,
+    },
+    {
+      id: "wishlist",
+      label: t.nav.wishlist,
+      href: "/wishlist",
+      badge: wishlist.length > 0 ? wishlist.length : null,
+      hasSub: false,
+    },
+    {
+      id: "contact",
+      label: t.nav.contact,
+      href: "/contact",
+      hasSub: false,
+    },
+  ];
+
   return (
-    <header
-      className={`sticky top-0 z-40 transition-colors duration-300 ease-in-out ${
-        solid
-          ? "border-b border-brown/10 bg-cream/95 backdrop-blur-md shadow-[0_4px_24px_rgba(43,29,20,0.04)]"
-          : "border-b border-transparent bg-transparent"
-      } ${tone}`}
-      onMouseLeave={handleMouseLeave}
-    >
-      <div className="wrap grid h-16 grid-cols-3 items-center md:h-20 transition-all duration-300 relative z-50">
-        {/* Left: Desktop Navigation */}
-        <nav aria-label="Primary" className="hidden md:flex">
-          <ul className="flex items-center gap-7">
-            <li>
-              <Link
-                href="/shop"
-                onMouseEnter={() => handleMouseEnter("shop")}
-                onFocus={() => handleMouseEnter("shop")}
-                className="group relative py-4 text-[11px] uppercase tracking-[.22em] transition-opacity duration-300 hover:opacity-100"
-                aria-expanded={activeMenu === "shop"}
-                aria-haspopup="true"
-                aria-controls="mega-menu-shop"
-              >
-                <span className={path.startsWith("/shop") ? "font-semibold" : "opacity-80 group-hover:opacity-100"}>
-                  {t.nav.shop}
-                </span>
-                <span
-                  className={`absolute bottom-2 left-0 h-[1.5px] bg-current transition-all duration-300 ease-out ${
-                    path.startsWith("/shop") ? "w-full" : "w-0 group-hover:w-full"
-                  }`}
-                />
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/lookbook"
-                onMouseEnter={() => handleMouseEnter("collections")}
-                onFocus={() => handleMouseEnter("collections")}
-                className="group relative py-4 text-[11px] uppercase tracking-[.22em] transition-opacity duration-300 hover:opacity-100"
-                aria-expanded={activeMenu === "collections"}
-                aria-haspopup="true"
-                aria-controls="mega-menu-collections"
-              >
-                <span className={path.startsWith("/lookbook") ? "font-semibold" : "opacity-80 group-hover:opacity-100"}>
-                  {t.nav.collections}
-                </span>
-                <span
-                  className={`absolute bottom-2 left-0 h-[1.5px] bg-current transition-all duration-300 ease-out ${
-                    path.startsWith("/lookbook") ? "w-full" : "w-0 group-hover:w-full"
-                  }`}
-                />
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/about"
-                onMouseEnter={handleMouseLeave}
-                className="group relative py-4 text-[11px] uppercase tracking-[.22em] transition-opacity duration-300 hover:opacity-100"
-              >
-                <span className={path === "/about" ? "font-semibold" : "opacity-80 group-hover:opacity-100"}>
-                  {t.nav.about}
-                </span>
-                <span
-                  className={`absolute bottom-2 left-0 h-[1.5px] bg-current transition-all duration-300 ease-out ${
-                    path === "/about" ? "w-full" : "w-0 group-hover:w-full"
-                  }`}
-                />
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/contact"
-                onMouseEnter={handleMouseLeave}
-                className="group relative py-4 text-[11px] uppercase tracking-[.22em] transition-opacity duration-300 hover:opacity-100"
-              >
-                <span className={path === "/contact" ? "font-semibold" : "opacity-80 group-hover:opacity-100"}>
-                  {t.nav.contact}
-                </span>
-                <span
-                  className={`absolute bottom-2 left-0 h-[1.5px] bg-current transition-all duration-300 ease-out ${
-                    path === "/contact" ? "w-full" : "w-0 group-hover:w-full"
-                  }`}
-                />
-              </Link>
-            </li>
-          </ul>
-        </nav>
-
-        {/* Mobile Hamburger Button */}
-        <button
-          className="md:hidden justify-self-start min-h-[44px] min-w-[44px] flex items-center justify-center p-1.5 transition-transform active:scale-95 text-current"
-          aria-label={
-            menuOpen
-              ? locale === "nl" ? "Menu sluiten" : "Close menu"
-              : locale === "nl" ? "Menu openen" : "Open menu"
-          }
-          aria-expanded={menuOpen}
-          onClick={() => setMenuOpen(!menuOpen)}
-        >
-          <Icon name={menuOpen ? "close" : "menu"} className="h-6 w-6" />
-        </button>
-
-        {/* Center: Brand Logo */}
-        <Link
-          href="/"
-          className="justify-self-center relative flex items-center justify-center py-1 group focus:outline-none"
-          aria-label="YUPEK home"
-          onMouseEnter={handleMouseLeave}
-        >
-          <Image
-            src="/images/logo-light.png"
-            alt="YUPEK"
-            width={180}
-            height={55}
-            priority
-            className={`transition-all duration-500 ease-out object-contain drop-shadow-sm w-auto ${
-              scrolled || isMegaMenuOpen ? "h-11 md:h-13" : "h-12 md:h-15"
-            } ${solid ? "opacity-0 absolute pointer-events-none scale-95" : "opacity-100 scale-100"} group-hover:scale-105`}
-          />
-          <Image
-            src="/images/logo.png"
-            alt=""
-            width={180}
-            height={55}
-            priority={false}
-            loading="eager"
-            className={`transition-all duration-500 ease-out object-contain drop-shadow-sm w-auto ${
-              scrolled || isMegaMenuOpen ? "h-11 md:h-13" : "h-12 md:h-15"
-            } ${solid ? "opacity-100 scale-100" : "opacity-0 absolute pointer-events-none scale-95"} group-hover:scale-105`}
-          />
-        </Link>
-
-        {/* Right: Actions */}
-        <div className="flex items-center justify-self-end gap-3.5 sm:gap-5 md:gap-6" onMouseEnter={handleMouseLeave}>
-          <LanguageSwitcher className="hidden sm:inline-flex" />
-          <button
-            aria-label={t.nav.search}
-            onClick={() => setSearchOpen(true)}
-            className="p-1 transition-transform duration-300 hover:scale-110 active:scale-95"
-          >
-            <Icon name="search" className="h-5 w-5" />
-          </button>
-
-          <button
-            aria-label={t.a11y.floatingButtonLabel}
-            onClick={openDrawer}
-            title={t.a11y.floatingTooltip}
-            className="p-1 transition-transform duration-300 hover:scale-110 active:scale-95"
-          >
-            <Icon name="accessibility" className="h-5 w-5" />
-          </button>
-
-          <div className="relative" ref={dropdownRef}>
-            {user ? (
-              <button
-                onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                aria-label={t.nav.account}
-                className="group flex items-center gap-1.5 p-1 transition-transform active:scale-95"
-              >
-                <div className="flex h-7 w-7 items-center justify-center rounded-full border border-current text-[11px] font-medium tracking-wider transition-colors group-hover:bg-brown group-hover:text-cream">
-                  {user.name.charAt(0).toUpperCase()}
-                </div>
-              </button>
-            ) : (
-              <button
-                onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                aria-label={t.nav.signIn}
-                className="p-1 transition-transform duration-300 hover:scale-110 active:scale-95"
-              >
-                <Icon name="user" className="h-5 w-5" />
-              </button>
-            )}
-
-            {userDropdownOpen && (
-              <div role="menu" className="absolute right-0 mt-2 w-56 border border-brown/15 bg-cream p-2 shadow-2xl backdrop-blur-md transition-all animate-in fade-in slide-in-from-top-2 duration-200 text-brown z-50">
-                {user ? (
-                  <>
-                    <div className="border-b border-brown/10 px-3 py-2">
-                      <p className="text-[10px] uppercase tracking-widest text-brown/60 font-semibold">
-                        ACCOUNT
-                      </p>
-                      <p className="truncate text-xs font-semibold text-brown mt-0.5">{user.name}</p>
-                      <p className="truncate text-[10px] text-brown/60">{user.email}</p>
-                    </div>
-                    <div className="py-1">
-                      <Link role="menuitem" href="/account" onClick={() => setUserDropdownOpen(false)} className="block px-3 py-1.5 text-xs tracking-wider hover:bg-sand/30 transition-colors">
-                        My Account
-                      </Link>
-                      <Link role="menuitem" href="/account/orders" onClick={() => setUserDropdownOpen(false)} className="block px-3 py-1.5 text-xs tracking-wider hover:bg-sand/30 transition-colors">
-                        Orders
-                      </Link>
-                      <Link role="menuitem" href="/wishlist" onClick={() => setUserDropdownOpen(false)} className="block px-3 py-1.5 text-xs tracking-wider hover:bg-sand/30 transition-colors">
-                        Wishlist ({wishlist.length})
-                      </Link>
-                      <Link role="menuitem" href="/account/addresses" onClick={() => setUserDropdownOpen(false)} className="block px-3 py-1.5 text-xs tracking-wider hover:bg-sand/30 transition-colors">
-                        Addresses
-                      </Link>
-                      <Link role="menuitem" href="/account/security" onClick={() => setUserDropdownOpen(false)} className="block px-3 py-1.5 text-xs tracking-wider hover:bg-sand/30 transition-colors">
-                        Security
-                      </Link>
-                    </div>
-                    <div className="border-t border-brown/10 pt-1">
-                      <button role="menuitem" onClick={() => { signOut(); setUserDropdownOpen(false); }} className="block w-full text-left px-3 py-1.5 text-xs tracking-wider text-brown/70 hover:text-burgundy hover:bg-burgundy/5 transition-colors">
-                        {t.nav.signOut}
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="border-b border-brown/10 px-3 py-2">
-                      <p className="text-[10px] uppercase tracking-widest text-brown/60 font-semibold">
-                        ACCOUNT
-                      </p>
-                    </div>
-                    <div className="py-1">
-                      <button
-                        role="menuitem"
-                        onClick={() => {
-                          setAuthModalTab("signin");
-                          setAuthModalOpen(true);
-                          setUserDropdownOpen(false);
-                        }}
-                        className="block w-full text-left px-3 py-1.5 text-xs tracking-wider hover:bg-sand/30 transition-colors"
-                      >
-                        Sign In
-                      </button>
-                      <button
-                        role="menuitem"
-                        onClick={() => {
-                          setAuthModalTab("signup");
-                          setAuthModalOpen(true);
-                          setUserDropdownOpen(false);
-                        }}
-                        className="block w-full text-left px-3 py-1.5 text-xs tracking-wider hover:bg-sand/30 transition-colors"
-                      >
-                        Create Account
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-
-          <Link
-            href="/wishlist"
-            aria-label={`${t.nav.wishlist}, ${wishlist.length} items`}
-            className="relative hidden md:block p-1 transition-transform duration-300 hover:scale-110 active:scale-95"
-          >
-            <Icon name="heart" className="h-5 w-5" />
-            {wishlist.length > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-gold text-[8px] font-bold text-brown">
-                {wishlist.length}
-              </span>
-            )}
-          </Link>
-
-          <button
-            aria-label={`${t.nav.bag}, ${count} items`}
-            onClick={() => setCartOpen(true)}
-            className="group relative p-1 transition-transform duration-300 hover:scale-110 active:scale-95"
-          >
-            <Icon name="bag" className="h-5 w-5" />
-            {count > 0 && (
-              <span className="absolute -right-2 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-burgundy text-[9px] font-bold text-cream animate-pulse shadow-sm">
-                {count}
-              </span>
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* Desktop Mega Menu Dropdowns */}
-      <div
-        className={`absolute left-0 top-full w-full bg-cream text-brown border-b border-brown/10 shadow-[0_20px_40px_-15px_rgba(43,29,20,0.05)] transition-all duration-300 origin-top z-40 ${
-          activeMenu
-            ? "opacity-100 translate-y-0 pointer-events-auto"
-            : "opacity-0 -translate-y-2 pointer-events-none"
-        }`}
-        onMouseEnter={() => {
-          if (timeoutRef.current) clearTimeout(timeoutRef.current);
-        }}
+    <>
+      <header
+        className={`sticky top-0 z-40 w-full transition-all duration-300 ease-in-out ${
+          solid
+            ? "border-b border-brown/10 bg-[#FAF7F2]/95 backdrop-blur-md shadow-[0_4px_24px_rgba(43,29,20,0.02)]"
+            : "border-b border-white/10 bg-gradient-to-b from-black/40 via-black/15 to-transparent backdrop-blur-[1px]"
+        } ${tone}`}
         onMouseLeave={handleMouseLeave}
       >
-        <div className="wrap relative">
-          {/* Shop Mega Menu */}
-          <div
-            id="mega-menu-shop"
-            className={`transition-opacity duration-300 ${
-              activeMenu === "shop" ? "opacity-100 z-10 relative" : "opacity-0 absolute inset-0 z-0 pointer-events-none"
-            }`}
-          >
-            <div className="grid grid-cols-[1fr_300px] xl:grid-cols-[1fr_400px] gap-12 py-10">
-              <div className="grid grid-cols-4 gap-8">
-                {shopCategories.map((col) => (
-                  <div key={col.title} className="flex flex-col gap-5">
-                    <Link href={col.href} onClick={() => setActiveMenu(null)} className="font-serif tracking-widest text-sm text-brown border-b border-brown/10 pb-2 hover:text-burgundy transition-colors inline-block">
-                      {col.title}
-                    </Link>
-                    <ul className="flex flex-col gap-3">
-                      {col.items.map((item) => (
-                        <li key={item.label}>
-                          <Link
-                            href={item.href}
-                            onClick={() => setActiveMenu(null)}
-                            className="text-[13px] text-brown/70 hover:text-brown hover:translate-x-1 transition-all inline-block font-light"
-                          >
-                            {item.label}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-              <div className="relative group overflow-hidden bg-sand/30 h-[360px] cursor-pointer" onClick={() => { window.location.href = "/lookbook"; setActiveMenu(null); }}>
-                <Image
-                  src="/images/look-4.jpg"
-                  alt="Eastern Heritage Collection"
-                  fill
-                  sizes="400px"
-                  className="object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent pointer-events-none" />
-                <div className="absolute bottom-6 left-6 text-cream">
-                  <p className="text-xs uppercase tracking-widest font-semibold mb-2 text-gold">New Season</p>
-                  <p className="font-serif text-2xl tracking-wide mb-1">Eastern Heritage</p>
-                  <span className="text-xs tracking-widest uppercase inline-flex items-center gap-2 hover:text-gold transition-colors border-b border-transparent hover:border-gold">
-                    Discover Collection <Icon name="chevron-right" className="w-3 h-3" />
-                  </span>
-                </div>
-              </div>
-            </div>
+        <div className="wrap relative flex items-center justify-between h-16 md:h-20 w-full">
+          {/* ========================================================= */}
+          {/* DESKTOP NAVBAR (>= 768px)                                 */}
+          {/* LEFT: Logo | CENTER: Primary Nav | RIGHT: Actions         */}
+          {/* ========================================================= */}
+
+          {/* DESKTOP LEFT: YUPEK Logo Asset */}
+          <div className="hidden md:flex items-center shrink-0">
+            <Link
+              href="/"
+              className="relative flex items-center py-2 group focus:outline-none"
+              aria-label="YUPEK home"
+            >
+              {/* Light variant for transparent hero */}
+              <Image
+                unoptimized
+                src="/images/logo-light.png"
+                alt="YUPEK"
+                width={140}
+                height={102}
+                priority
+                className={`h-8 lg:h-9 w-auto object-contain transition-opacity duration-300 ${
+                  solid ? "opacity-0 absolute pointer-events-none" : "opacity-100"
+                } group-hover:opacity-80`}
+              />
+              {/* Dark variant for solid scrolled / inner pages */}
+              <Image
+                unoptimized
+                src="/images/logo.png"
+                alt="YUPEK"
+                width={140}
+                height={102}
+                priority={false}
+                loading="eager"
+                className={`h-8 lg:h-9 w-auto object-contain transition-opacity duration-300 ${
+                  solid ? "opacity-100" : "opacity-0 absolute pointer-events-none"
+                } group-hover:opacity-80`}
+              />
+            </Link>
           </div>
 
-          {/* Collections Mega Menu */}
-          <div
-            id="mega-menu-collections"
-            className={`transition-opacity duration-300 ${
-              activeMenu === "collections" ? "opacity-100 z-10 relative" : "opacity-0 absolute inset-0 z-0 pointer-events-none"
-            }`}
+          {/* DESKTOP CENTER: Editorial Fashion Navigation */}
+          <nav
+            aria-label="Primary"
+            className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-7 lg:gap-11 xl:gap-14"
           >
-            <div className="grid grid-cols-[1fr_300px] xl:grid-cols-[1fr_400px] gap-12 py-10">
-              <div className="grid grid-cols-2 gap-12">
-                {collectionsCategories.map((col) => (
-                  <div key={col.title} className="flex flex-col gap-5">
-                    <h3 className="font-serif tracking-widest text-sm text-brown border-b border-brown/10 pb-2">
-                      {col.title}
-                    </h3>
-                    <ul className="flex flex-col gap-6">
+            {/* SHOP */}
+            <Link
+              href="/shop"
+              onMouseEnter={() => handleMouseEnter("shop")}
+              className="group relative py-2 text-[12px] lg:text-[13px] uppercase tracking-[.28em] font-light transition-all duration-200 ease-out hover:opacity-75 focus:outline-none"
+            >
+              <span className="relative z-10 leading-none">
+                {t.nav.shop}
+              </span>
+              <span
+                aria-hidden="true"
+                className={`absolute bottom-0 left-0 h-[1px] w-full bg-current transition-transform duration-300 ease-out origin-left ${
+                  path.startsWith("/shop")
+                    ? "scale-x-100"
+                    : "scale-x-0 group-hover:scale-x-100"
+                }`}
+              />
+            </Link>
+
+            {/* COLLECTIONS */}
+            <Link
+              href="/lookbook"
+              onMouseEnter={() => handleMouseEnter("collections")}
+              className="group relative py-2 text-[12px] lg:text-[13px] uppercase tracking-[.28em] font-light transition-all duration-200 ease-out hover:opacity-75 focus:outline-none"
+            >
+              <span className="relative z-10 leading-none">
+                {t.nav.collections}
+              </span>
+              <span
+                aria-hidden="true"
+                className={`absolute bottom-0 left-0 h-[1px] w-full bg-current transition-transform duration-300 ease-out origin-left ${
+                  path.startsWith("/lookbook")
+                    ? "scale-x-100"
+                    : "scale-x-0 group-hover:scale-x-100"
+                }`}
+              />
+            </Link>
+
+            {/* ABOUT YUPEK */}
+            <Link
+              href="/about"
+              onMouseEnter={handleMouseLeave}
+              className="group relative py-2 text-[12px] lg:text-[13px] uppercase tracking-[.28em] font-light transition-all duration-200 ease-out hover:opacity-75 focus:outline-none"
+            >
+              <span className="relative z-10 leading-none">
+                {t.nav.about}
+              </span>
+              <span
+                aria-hidden="true"
+                className={`absolute bottom-0 left-0 h-[1px] w-full bg-current transition-transform duration-300 ease-out origin-left ${
+                  path === "/about"
+                    ? "scale-x-100"
+                    : "scale-x-0 group-hover:scale-x-100"
+                }`}
+              />
+            </Link>
+          </nav>
+
+          {/* DESKTOP RIGHT: SEARCH, LANGUAGE SWITCHER, ACCOUNT, BAG */}
+          <div className="hidden md:flex items-center gap-3 lg:gap-5 xl:gap-6 justify-end shrink-0">
+            {/* SEARCH: [search icon] SEARCH */}
+            <button
+              id="nav-search-desktop"
+              onClick={() => setSearchOpen(true)}
+              aria-label={t.nav.search}
+              className="min-h-[44px] min-w-[44px] group relative flex items-center justify-center gap-2 py-2 px-1 text-[11px] lg:text-[12px] uppercase tracking-[.22em] font-light transition-all duration-200 ease-out hover:-translate-y-[1px] opacity-80 hover:opacity-100 focus:outline-none"
+            >
+              <Icon name="search" className="h-[17px] w-[17px] transition-transform duration-200" />
+              <span className="leading-none pt-[1px]">
+                {t.nav.search}
+              </span>
+            </button>
+
+            {/* LANGUAGE SWITCHER: Quiet compact pill */}
+            <div className="flex items-center justify-center min-h-[44px] px-0.5">
+              <LanguageSwitcher short size="sm" className="inline-flex" />
+            </div>
+
+            {/* ACCOUNT: [account icon] ACCOUNT */}
+            <div className="relative" ref={dropdownRef}>
+              {user ? (
+                <button
+                  id="nav-account-desktop"
+                  onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                  aria-label={t.nav.account}
+                  className="min-h-[44px] min-w-[44px] group flex items-center justify-center gap-2 py-2 px-1 text-[11px] lg:text-[12px] uppercase tracking-[.22em] font-light transition-all duration-200 ease-out hover:-translate-y-[1px] opacity-80 hover:opacity-100 focus:outline-none"
+                >
+                  <div className="flex h-4 w-4 items-center justify-center rounded-full border border-current text-[8px] font-medium tracking-wider">
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="leading-none pt-[1px]">
+                    {user.name.split(" ")[0]}
+                  </span>
+                </button>
+              ) : (
+                <button
+                  id="nav-account-desktop"
+                  onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                  aria-label={t.nav.account}
+                  className="min-h-[44px] min-w-[44px] group relative flex items-center justify-center gap-2 py-2 px-1 text-[11px] lg:text-[12px] uppercase tracking-[.22em] font-light transition-all duration-200 ease-out hover:-translate-y-[1px] opacity-80 hover:opacity-100 focus:outline-none"
+                >
+                  <Icon name="user" className="h-[17px] w-[17px] transition-transform duration-200" />
+                  <span className="leading-none pt-[1px]">
+                    {t.nav.account}
+                  </span>
+                </button>
+              )}
+
+              {/* Minimal Account Dropdown */}
+              {userDropdownOpen && (
+                <div
+                  role="menu"
+                  className="absolute right-0 mt-3 w-56 border border-brown/10 bg-[#FAF7F2] p-2 shadow-xl backdrop-blur-md transition-all text-brown z-50 animate-in fade-in slide-in-from-top-2 duration-200"
+                >
+                  {user ? (
+                    <>
+                      <div className="border-b border-brown/10 px-3 py-2">
+                        <p className="text-[9px] uppercase tracking-widest text-brown/50 font-semibold">
+                          ACCOUNT
+                        </p>
+                        <p className="truncate text-xs font-semibold text-brown mt-0.5">{user.name}</p>
+                        <p className="truncate text-[10px] text-brown/50">{user.email}</p>
+                      </div>
+                      <div className="py-1">
+                        <Link
+                          role="menuitem"
+                          href="/account"
+                          onClick={() => setUserDropdownOpen(false)}
+                          className="block px-3 py-1.5 text-xs tracking-wider hover:bg-sand/30 transition-colors"
+                        >
+                          My Account
+                        </Link>
+                        <Link
+                          role="menuitem"
+                          href="/account/orders"
+                          onClick={() => setUserDropdownOpen(false)}
+                          className="block px-3 py-1.5 text-xs tracking-wider hover:bg-sand/30 transition-colors"
+                        >
+                          Orders
+                        </Link>
+                        <Link
+                          role="menuitem"
+                          href="/wishlist"
+                          onClick={() => setUserDropdownOpen(false)}
+                          className="block px-3 py-1.5 text-xs tracking-wider hover:bg-sand/30 transition-colors"
+                        >
+                          Wishlist ({wishlist.length})
+                        </Link>
+                        <Link
+                          role="menuitem"
+                          href="/account/addresses"
+                          onClick={() => setUserDropdownOpen(false)}
+                          className="block px-3 py-1.5 text-xs tracking-wider hover:bg-sand/30 transition-colors"
+                        >
+                          Addresses
+                        </Link>
+                        <Link
+                          role="menuitem"
+                          href="/account/security"
+                          onClick={() => setUserDropdownOpen(false)}
+                          className="block px-3 py-1.5 text-xs tracking-wider hover:bg-sand/30 transition-colors"
+                        >
+                          Security
+                        </Link>
+                      </div>
+                      <div className="border-t border-brown/10 pt-1">
+                        <button
+                          role="menuitem"
+                          onClick={() => {
+                            signOut();
+                            setUserDropdownOpen(false);
+                          }}
+                          className="block w-full text-left px-3 py-1.5 text-xs tracking-wider text-brown/70 hover:text-burgundy hover:bg-burgundy/5 transition-colors"
+                        >
+                          {t.nav.signOut}
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="border-b border-brown/10 px-3 py-2">
+                        <p className="text-[9px] uppercase tracking-widest text-brown/50 font-semibold">
+                          ACCOUNT
+                        </p>
+                      </div>
+                      <div className="py-1">
+                        <button
+                          role="menuitem"
+                          onClick={() => {
+                            setAuthModalTab("signin");
+                            setAuthModalOpen(true);
+                            setUserDropdownOpen(false);
+                          }}
+                          className="block w-full text-left px-3 py-1.5 text-xs tracking-wider hover:bg-sand/30 transition-colors"
+                        >
+                          Sign In
+                        </button>
+                        <button
+                          role="menuitem"
+                          onClick={() => {
+                            setAuthModalTab("signup");
+                            setAuthModalOpen(true);
+                            setUserDropdownOpen(false);
+                          }}
+                          className="block w-full text-left px-3 py-1.5 text-xs tracking-wider hover:bg-sand/30 transition-colors"
+                        >
+                          Create Account
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* BAG: [bag icon] BAG (6) */}
+            <button
+              id="nav-bag-desktop"
+              onClick={() => setCartOpen(true)}
+              aria-label={`${t.nav.bag}, ${count} items`}
+              className="min-h-[44px] min-w-[44px] group relative flex items-center justify-center gap-2 py-2 px-1 text-[11px] lg:text-[12px] uppercase tracking-[.22em] font-light transition-all duration-200 ease-out hover:-translate-y-[1px] opacity-80 hover:opacity-100 focus:outline-none"
+            >
+              <div className="relative flex items-center justify-center">
+                <Icon name="bag" className="h-[17px] w-[17px] transition-transform duration-200" />
+              </div>
+              <span className="leading-none pt-[1px]">
+                {t.nav.bag}{count > 0 ? ` (${count})` : ""}
+              </span>
+            </button>
+          </div>
+
+          {/* ========================================================= */}
+          {/* MOBILE NAVBAR (< 768px)                                   */}
+          {/* LEFT: Animated ☰/✕ | CENTER: Logo | RIGHT: Search, Bag   */}
+          {/* ========================================================= */}
+
+          {/* MOBILE LEFT: Animated 3-line Hamburger */}
+          <div className="flex md:hidden items-center shrink-0">
+            <button
+              id="nav-mobile-menu"
+              onClick={() => setMenuOpen(!menuOpen)}
+              aria-label={menuOpen ? (locale === "nl" ? "Menu sluiten" : "Close menu") : (locale === "nl" ? "Menu openen" : "Open menu")}
+              aria-expanded={menuOpen}
+              aria-controls="mobile-navigation-overlay"
+              className="min-h-[44px] min-w-[44px] flex flex-col justify-center items-start gap-[5.5px] text-current p-2.5 focus:outline-none group z-50 relative transition-opacity duration-200 opacity-85 hover:opacity-100"
+            >
+              <span
+                aria-hidden="true"
+                className={`h-[1.5px] rounded-full bg-current transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] origin-center ${
+                  menuOpen ? "w-5 translate-y-[7px] rotate-45" : "w-5"
+                }`}
+              />
+              <span
+                aria-hidden="true"
+                className={`h-[1.5px] rounded-full bg-current transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] origin-center ${
+                  menuOpen ? "w-5 opacity-0 scale-x-0" : "w-3.5 group-hover:w-5"
+                }`}
+              />
+              <span
+                aria-hidden="true"
+                className={`h-[1.5px] rounded-full bg-current transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] origin-center ${
+                  menuOpen ? "w-5 -translate-y-[7px] -rotate-45" : "w-5"
+                }`}
+              />
+            </button>
+          </div>
+
+          {/* MOBILE CENTER: Logo Mathematically Centered in Viewport */}
+          <div className="flex md:hidden absolute left-1/2 -translate-x-1/2 items-center justify-center pointer-events-auto">
+            <Link
+              href="/"
+              aria-label="YUPEK home"
+              className="relative flex items-center justify-center py-1 max-w-[105px] sm:max-w-[130px] focus:outline-none"
+            >
+              <Image
+                unoptimized
+                src="/images/logo-light.png"
+                alt="YUPEK"
+                width={120}
+                height={87}
+                priority
+                className={`h-6 sm:h-7 w-auto object-contain transition-opacity duration-300 ${
+                  solid ? "opacity-0 absolute pointer-events-none" : "opacity-100"
+                }`}
+              />
+              <Image
+                unoptimized
+                src="/images/logo.png"
+                alt="YUPEK"
+                width={120}
+                height={87}
+                priority={false}
+                loading="eager"
+                className={`h-6 sm:h-7 w-auto object-contain transition-opacity duration-300 ${
+                  solid ? "opacity-100" : "opacity-0 absolute pointer-events-none"
+                }`}
+              />
+            </Link>
+          </div>
+
+          {/* MOBILE RIGHT: Search and Bag */}
+          <div className="flex md:hidden items-center gap-0.5 justify-end shrink-0">
+            <button
+              id="nav-search-mobile"
+              onClick={() => setSearchOpen(true)}
+              aria-label={t.nav.search}
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center text-current transition-all duration-200 ease-out active:scale-95 opacity-85 hover:opacity-100 focus:outline-none"
+            >
+              <Icon name="search" className="h-5 w-5" />
+            </button>
+
+            <button
+              id="nav-bag-mobile"
+              onClick={() => setCartOpen(true)}
+              aria-label={`${t.nav.bag}, ${count} items`}
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center relative text-current transition-all duration-200 ease-out active:scale-95 opacity-85 hover:opacity-100 focus:outline-none"
+            >
+              <div className="relative flex items-center justify-center">
+                <Icon name="bag" className="h-5 w-5" />
+                {count > 0 && (
+                  <span className="absolute -top-1 -right-1.5 flex h-3.5 min-w-[13px] px-0.5 items-center justify-center rounded-full bg-burgundy text-[8px] font-medium text-cream shadow-sm">
+                    {count}
+                  </span>
+                )}
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {/* ========================================================= */}
+        {/* DESKTOP EDITORIAL SUB-PANEL (Warm Ivory, High Contrast)   */}
+        {/* ========================================================= */}
+        <div
+          className={`hidden md:block absolute left-0 top-full w-full bg-[#FAF7F2] text-brown border-b border-brown/15 shadow-[0_20px_48px_rgba(43,29,20,0.08)] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] origin-top z-40 ${
+            activeMenu
+              ? "opacity-100 translate-y-0 pointer-events-auto visible"
+              : "opacity-0 -translate-y-2 pointer-events-none invisible"
+          }`}
+        >
+          {activeMenu === "shop" && (
+            <div className="wrap py-10">
+              <div className="grid grid-cols-3 gap-12 max-w-4xl mx-auto">
+                {shopCategories.map((col) => (
+                  <div key={col.title}>
+                    <Link
+                      href={col.href}
+                      onClick={handleMouseLeave}
+                      className="group relative inline-block text-[10px] font-semibold uppercase tracking-[.25em] text-brown mb-4 pb-1 border-b border-brown/15 hover:text-burgundy transition-colors"
+                    >
+                      <span>{col.title}</span>
+                    </Link>
+                    <ul className="space-y-3">
                       {col.items.map((item) => (
                         <li key={item.label}>
                           <Link
                             href={item.href}
-                            onClick={() => setActiveMenu(null)}
-                            className="group block"
+                            onClick={handleMouseLeave}
+                            className="group inline-flex items-center text-xs font-light text-brown/75 hover:text-brown tracking-wide transition-colors"
                           >
-                            <p className="text-[14px] text-brown font-medium group-hover:text-burgundy transition-colors">
+                            <span className="transition-transform duration-200 group-hover:translate-x-1">
                               {item.label}
-                            </p>
-                            {item.desc && (
-                              <p className="text-[12px] text-brown/60 mt-1 font-light leading-relaxed max-w-xs">
-                                {item.desc}
-                              </p>
-                            )}
+                            </span>
                           </Link>
                         </li>
                       ))}
@@ -541,195 +643,226 @@ export default function Header() {
                   </div>
                 ))}
               </div>
-              <div className="relative group overflow-hidden bg-sand/30 h-[360px] cursor-pointer" onClick={() => { window.location.href = "/lookbook"; setActiveMenu(null); }}>
-                <Image
-                  src="/images/heritage.jpg"
-                  alt="Collections"
-                  fill
-                  sizes="400px"
-                  className="object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-transparent pointer-events-none" />
-                <div className="absolute bottom-6 left-6 text-cream">
-                  <p className="font-serif text-2xl tracking-wide mb-1">Silk Inspired</p>
-                  <span className="text-xs tracking-widest uppercase inline-flex items-center gap-2 hover:text-gold transition-colors border-b border-transparent hover:border-gold mt-2">
-                    View Lookbook <Icon name="chevron-right" className="w-3 h-3" />
-                  </span>
+            </div>
+          )}
+
+          {activeMenu === "collections" && (
+            <div className="wrap py-10">
+              <div className="grid grid-cols-3 gap-10 max-w-4xl mx-auto">
+                {collectionsCategories.map((item) => (
+                  <Link
+                    key={item.title}
+                    href={item.href}
+                    onClick={handleMouseLeave}
+                    className="group block space-y-2 p-3 -m-3 hover:bg-sand/20 transition-colors rounded-sm"
+                  >
+                    <p className="text-[10px] font-semibold uppercase tracking-[.25em] text-brown pb-1 border-b border-brown/15 group-hover:text-burgundy transition-colors">
+                      {item.title}
+                    </p>
+                    <p className="text-[11px] font-serif text-brown/90 tracking-wider">
+                      {item.subtitle}
+                    </p>
+                    <p className="text-xs font-light text-brown/65 leading-relaxed">
+                      {item.desc}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </header>
+
+      {/* ========================================================= */}
+      {/* MOBILE FULL-SCREEN NAVIGATION OVERLAY                     */}
+      {/* ========================================================= */}
+      {menuOpen && (
+        <div
+          id="mobile-navigation-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Navigation Menu"
+          className="fixed inset-0 z-50 bg-[#FAF7F2] text-brown flex flex-col justify-between overflow-y-auto overflow-x-hidden max-w-full w-full h-[100dvh] pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)] animate-in fade-in duration-300"
+        >
+          {/* Top Bar inside Overlay */}
+          <div className="w-full flex items-center justify-between px-6 py-5 border-b border-brown/10 shrink-0">
+            <Link
+              href="/"
+              onClick={() => setMenuOpen(false)}
+              className="flex items-center focus:outline-none"
+              aria-label="YUPEK home"
+            >
+              <Image
+                unoptimized
+                src="/images/logo.png"
+                alt="YUPEK"
+                width={120}
+                height={87}
+                priority
+                className="h-7 w-auto object-contain"
+              />
+            </Link>
+
+            <button
+              id="nav-close-mobile-menu"
+              onClick={() => setMenuOpen(false)}
+              aria-label={locale === "nl" ? "Menu sluiten" : "Close menu"}
+              className="min-h-[44px] min-w-[44px] flex items-center justify-end text-brown hover:text-burgundy transition-all duration-200 ease-out active:scale-95 opacity-80 hover:opacity-100 focus:outline-none"
+            >
+              <Icon name="close" className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Primary Editorial Navigation Links with Sequential Stagger */}
+          <nav
+            aria-label="Mobile Navigation"
+            className="flex-1 flex flex-col justify-center px-6 sm:px-12 py-8 space-y-5"
+          >
+            {mobileNavItems.map((item, index) => {
+              if (item.hasSub) {
+                return (
+                  <div
+                    key={item.id}
+                    style={{
+                      transitionDelay: `${index * 60}ms`,
+                    }}
+                    className={`border-b border-brown/10 pb-4 transform transition-all duration-300 ease-out ${
+                      menuAnimated
+                        ? "opacity-100 translate-y-0"
+                        : "opacity-0 translate-y-3"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <Link
+                        href={item.href}
+                        onClick={() => setMenuOpen(false)}
+                        className="font-serif text-3xl sm:text-5xl tracking-[.12em] text-brown hover:text-burgundy transition-colors uppercase"
+                      >
+                        {item.label}
+                      </Link>
+                      <button
+                        onClick={() => setMobileShopOpen(!mobileShopOpen)}
+                        aria-label="Toggle shop categories"
+                        aria-expanded={mobileShopOpen}
+                        className="min-h-[44px] min-w-[44px] flex items-center justify-center text-brown/60 hover:text-brown focus:outline-none"
+                      >
+                        <Icon name={mobileShopOpen ? "minus" : "plus"} className="h-4 w-4" />
+                      </button>
+                    </div>
+
+                    {mobileShopOpen && (
+                      <div className="grid grid-cols-2 gap-4 pt-4 pl-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <Link
+                          href="/shop?gender=men"
+                          onClick={() => setMenuOpen(false)}
+                          className="text-xs uppercase tracking-[.2em] text-brown/70 hover:text-brown py-1"
+                        >
+                          Men
+                        </Link>
+                        <Link
+                          href="/shop?gender=women"
+                          onClick={() => setMenuOpen(false)}
+                          className="text-xs uppercase tracking-[.2em] text-brown/70 hover:text-brown py-1"
+                        >
+                          Women
+                        </Link>
+                        <Link
+                          href="/shop?gender=unisex"
+                          onClick={() => setMenuOpen(false)}
+                          className="text-xs uppercase tracking-[.2em] text-brown/70 hover:text-brown py-1"
+                        >
+                          Unisex
+                        </Link>
+                        <Link
+                          href="/shop?isNew=true"
+                          onClick={() => setMenuOpen(false)}
+                          className="text-xs uppercase tracking-[.2em] text-brown/70 hover:text-brown py-1"
+                        >
+                          New Arrivals
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
+              return (
+                <div
+                  key={item.id}
+                  style={{
+                    transitionDelay: `${index * 60}ms`,
+                  }}
+                  className={`border-b border-brown/10 pb-4 transform transition-all duration-300 ease-out ${
+                    menuAnimated
+                      ? "opacity-100 translate-y-0"
+                      : "opacity-0 translate-y-3"
+                  }`}
+                >
+                  <Link
+                    href={item.href}
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center gap-3 font-serif text-3xl sm:text-5xl tracking-[.12em] text-brown hover:text-burgundy transition-colors uppercase"
+                  >
+                    <span>{item.label}</span>
+                    {item.badge && (
+                      <span className="text-sm font-sans font-normal text-gold">
+                        ({item.badge})
+                      </span>
+                    )}
+                  </Link>
                 </div>
+              );
+            })}
+          </nav>
+
+          {/* Overlay Footer: Language, Accessibility, Customer Care */}
+          <div
+            style={{
+              transitionDelay: `${mobileNavItems.length * 60}ms`,
+            }}
+            className={`border-t border-brown/10 px-6 sm:px-12 py-6 bg-sand/15 flex flex-col gap-4 shrink-0 transform transition-all duration-300 ease-out ${
+              menuAnimated
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-3"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] uppercase tracking-[.25em] text-brown/50">Language</span>
+              <LanguageSwitcher />
+            </div>
+
+            <div className="flex items-center justify-between text-[11px] tracking-wider text-brown/70 pt-2 border-t border-brown/10">
+              <button
+                onClick={() => {
+                  setMenuOpen(false);
+                  openDrawer();
+                }}
+                className="flex items-center gap-1.5 hover:text-gold transition-colors text-[10px] uppercase tracking-widest text-brown/70 focus:outline-none"
+              >
+                <Icon name="accessibility" className="h-3.5 w-3.5 text-gold" />
+                <span>Accessibility</span>
+              </button>
+
+              <div className="flex items-center gap-4">
+                <Link
+                  href="/shipping"
+                  onClick={() => setMenuOpen(false)}
+                  className="hover:text-brown transition-colors text-[10px] uppercase tracking-widest text-brown/70"
+                >
+                  Shipping
+                </Link>
+                <Link
+                  href="/returns"
+                  onClick={() => setMenuOpen(false)}
+                  className="hover:text-brown transition-colors text-[10px] uppercase tracking-widest text-brown/70"
+                >
+                  Returns
+                </Link>
               </div>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Mobile Drawer Navigation */}
-      <div
-        aria-hidden={!menuOpen}
-        inert={!menuOpen || undefined}
-        className={`overflow-y-auto bg-cream text-brown transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] md:hidden fixed inset-x-0 top-[64px] bottom-0 z-30 ${
-          menuOpen ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0 pointer-events-none"
-        }`}
-      >
-        <nav aria-label="Mobile" className="wrap flex flex-col gap-0 py-2 pb-24">
-          
-          <div className="border-b border-brown/10 pb-4 mb-2 pt-4 px-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] uppercase tracking-widest text-brown/60">Language / Taal</span>
-              <LanguageSwitcher />
-            </div>
-          </div>
-
-          <ul className="flex flex-col">
-            {/* Mobile Shop Accordion */}
-            <li className="border-b border-brown/10">
-              <button
-                onClick={() => setMobileShopOpen(!mobileShopOpen)}
-                className="w-full flex items-center justify-between py-5 px-2 font-serif text-xl tracking-[.15em] text-brown transition-colors hover:bg-sand/20"
-                aria-expanded={mobileShopOpen}
-              >
-                <span>{t.nav.shop}</span>
-                <Icon name={mobileShopOpen ? "minus" : "plus"} className="w-4 h-4 text-brown/50" />
-              </button>
-              <div
-                className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                  mobileShopOpen ? "max-h-[800px] opacity-100 pb-4" : "max-h-0 opacity-0"
-                }`}
-              >
-                <div className="grid grid-cols-2 gap-x-4 gap-y-6 px-4 pt-2">
-                  {shopCategories.map(col => (
-                    <div key={col.title}>
-                      <Link href={col.href} onClick={() => setMenuOpen(false)} className="text-[11px] font-semibold uppercase tracking-widest text-brown mb-3 border-b border-brown/10 pb-1 block">
-                        {col.title}
-                      </Link>
-                      <ul className="flex flex-col gap-3">
-                        {col.items.map(item => (
-                          <li key={item.label}>
-                            <Link href={item.href} onClick={() => setMenuOpen(false)} className="text-[13px] font-light text-brown/70 hover:text-brown block">
-                              {item.label}
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </li>
-
-            {/* Mobile Collections Accordion */}
-            <li className="border-b border-brown/10">
-              <button
-                onClick={() => setMobileCollectionsOpen(!mobileCollectionsOpen)}
-                className="w-full flex items-center justify-between py-5 px-2 font-serif text-xl tracking-[.15em] text-brown transition-colors hover:bg-sand/20"
-                aria-expanded={mobileCollectionsOpen}
-              >
-                <span>{t.nav.collections}</span>
-                <Icon name={mobileCollectionsOpen ? "minus" : "plus"} className="w-4 h-4 text-brown/50" />
-              </button>
-              <div
-                className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                  mobileCollectionsOpen ? "max-h-[500px] opacity-100 pb-4" : "max-h-0 opacity-0"
-                }`}
-              >
-                <div className="flex flex-col gap-6 px-4 pt-2">
-                  {collectionsCategories.map(col => (
-                    <div key={col.title}>
-                      <Link href={col.href} onClick={() => setMenuOpen(false)} className="text-[11px] font-semibold uppercase tracking-widest text-brown mb-3 border-b border-brown/10 pb-1 block">
-                        {col.title}
-                      </Link>
-                      <ul className="flex flex-col gap-4">
-                        {col.items.map(item => (
-                          <li key={item.label}>
-                            <Link href={item.href} onClick={() => setMenuOpen(false)} className="block">
-                              <span className="text-[14px] font-medium text-brown block">{item.label}</span>
-                              {item.desc && <span className="text-[11px] font-light text-brown/60 leading-tight mt-0.5 block">{item.desc}</span>}
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </li>
-
-            {/* Other static links */}
-            {[
-              { label: t.nav.about, href: "/about" },
-              { label: t.nav.contact, href: "/contact" },
-              { label: `${t.nav.wishlist} (${wishlist.length})`, href: "/wishlist" },
-            ].map((n) => (
-              <li key={n.label} className="border-b border-brown/10">
-                <Link
-                  href={n.href}
-                  onClick={() => setMenuOpen(false)}
-                  className={`block py-5 px-2 font-serif text-xl tracking-[.15em] transition-colors hover:bg-sand/20 ${
-                    path === n.href ? "text-burgundy font-medium" : "text-brown"
-                  }`}
-                >
-                  {n.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-
-          <div className="mt-6 border-t border-brown/10 pt-4 px-2">
-            <p className="text-[10px] uppercase tracking-widest text-brown/50 font-semibold mb-2">ACCOUNT</p>
-            {user ? (
-              <div className="space-y-1">
-                <Link href="/account" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 text-xs uppercase tracking-widest text-brown py-1.5 hover:text-burgundy">
-                  <Icon name="user" className="h-4 w-4" />
-                  <span>My Account ({user.name})</span>
-                </Link>
-                <Link href="/account/orders" onClick={() => setMenuOpen(false)} className="block text-xs uppercase tracking-widest text-brown/80 py-1.5 pl-6 hover:text-burgundy">
-                  Orders
-                </Link>
-                <Link href="/wishlist" onClick={() => setMenuOpen(false)} className="block text-xs uppercase tracking-widest text-brown/80 py-1.5 pl-6 hover:text-burgundy">
-                  Wishlist ({wishlist.length})
-                </Link>
-                <Link href="/account/addresses" onClick={() => setMenuOpen(false)} className="block text-xs uppercase tracking-widest text-brown/80 py-1.5 pl-6 hover:text-burgundy">
-                  Addresses
-                </Link>
-                <Link href="/account/security" onClick={() => setMenuOpen(false)} className="block text-xs uppercase tracking-widest text-brown/80 py-1.5 pl-6 hover:text-burgundy">
-                  Security
-                </Link>
-                <button onClick={() => { signOut(); setMenuOpen(false); }} className="block w-full text-left text-xs uppercase tracking-widest text-brown/60 py-1.5 pl-6 hover:text-burgundy">
-                  {t.nav.signOut}
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-1">
-                <button
-                  onClick={() => { setMenuOpen(false); setAuthModalTab("signin"); setAuthModalOpen(true); }}
-                  className="flex items-center gap-2 text-xs uppercase tracking-widest text-brown py-1.5 hover:text-burgundy"
-                >
-                  <Icon name="user" className="h-4 w-4" />
-                  <span>Sign In</span>
-                </button>
-                <button
-                  onClick={() => { setMenuOpen(false); setAuthModalTab("signup"); setAuthModalOpen(true); }}
-                  className="block text-xs uppercase tracking-widest text-brown/80 py-1.5 pl-6 hover:text-burgundy text-left w-full"
-                >
-                  Create Account
-                </button>
-              </div>
-            )}
-          </div>
-
-          <div className="px-2 mt-2">
-            <button
-              onClick={() => { setMenuOpen(false); openDrawer(); }}
-              className="flex items-center justify-between w-full py-2 text-xs uppercase tracking-widest text-brown hover:text-gold transition-colors"
-            >
-              <span className="flex items-center gap-2">
-                <Icon name="accessibility" className="h-4 w-4 text-gold" />
-                <span>{t.a11y.drawerTitle}</span>
-              </span>
-              <span className="text-[10px] text-brown/50 font-mono">Audio & Vision</span>
-            </button>
-          </div>
-        </nav>
-      </div>
-    </header>
+      )}
+    </>
   );
 }

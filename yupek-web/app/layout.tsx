@@ -161,7 +161,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </a>
           <AnnouncementBar />
           <Header />
-          <main id="main">{children}</main>
+          <main id="main" className="w-full max-w-full overflow-x-clip">{children}</main>
           <Footer />
           <CartDrawer />
           <SearchOverlay />

@@ -169,7 +169,7 @@ function CheckoutSuccessContent() {
                 <div className="flex justify-between items-center text-green-900 bg-green-50 p-2 rounded">
                   <span className="font-semibold tracking-wider uppercase text-[10px]">Fulfillment Status:</span>
                   <span className="font-mono text-[11px] font-bold">
-                    Queued for Production (Printify #{order.printify_order_id.slice(-6)})
+                    Queued for Production
                   </span>
                 </div>
               )}

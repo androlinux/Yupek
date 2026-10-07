@@ -28,6 +28,7 @@ export default function Footer() {
         <div>
           <Link href="/" className="inline-block group focus:outline-none" aria-label="YUPEK home">
             <Image
+              unoptimized
               src="/images/logo-light.png"
               alt="YUPEK"
               width={180}
@@ -44,6 +45,7 @@ export default function Footer() {
           </p>
           <div className="mt-6 flex items-center gap-4">
             <Image
+              unoptimized
               src="/images/logo-symbol.png"
               alt=""
               width={24}
@@ -94,14 +96,14 @@ export default function Footer() {
         <div className="wrap flex flex-col justify-between gap-4 py-6 text-[10px] uppercase tracking-[.2em] text-cream/60 md:flex-row items-center">
           <p>© 2026 YUPEK B.V. {t.common.allRightsReserved}.</p>
           <div className="flex flex-wrap gap-6 items-center">
-            <Link href="/about" className="hover:text-cream transition-colors">
+            <Link href="/privacy" className="hover:text-cream transition-colors">
               {t.footer.privacyPolicy}
             </Link>
-            <Link href="/about" className="hover:text-cream transition-colors">
+            <Link href="/terms" className="hover:text-cream transition-colors">
               {t.footer.termsOfService}
             </Link>
-            <Link href="/contact" className="hover:text-cream transition-colors">
-              {t.footer.complimentaryShipping}
+            <Link href="/shipping" className="hover:text-cream transition-colors">
+              {t.footer.shippingPolicy}
             </Link>
             <Link href="/returns" className="hover:text-cream transition-colors">
               {t.footer.returns30Days}

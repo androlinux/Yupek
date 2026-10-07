@@ -3,6 +3,7 @@ const nextConfig = {
   compress: true,
   poweredByHeader: false,
   images: {
+    unoptimized: true,
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 2592000, // 30 days cache for optimized images
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
@@ -37,6 +38,11 @@ const nextConfig = {
           },
         ],
         destination: "https://www.yupek.shop/:path*",
+        permanent: true,
+      },
+      {
+        source: "/privacy-policy",
+        destination: "/privacy",
         permanent: true,
       },
     ];

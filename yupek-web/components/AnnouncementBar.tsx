@@ -20,14 +20,14 @@ export default function AnnouncementBar() {
   const displayBadge = isDefaultText || locale === "nl" ? t.announcement.badge : config.announcementBadge;
 
   const content = (
-    <div className="relative overflow-hidden bg-brown py-2 px-4 text-center text-[10px] uppercase tracking-[.25em] text-cream/90 transition-colors hover:text-cream">
-      <div className="flex items-center justify-center gap-3">
+    <div className="relative overflow-hidden bg-brown py-2 px-3 sm:px-4 text-center text-[10px] uppercase tracking-[.25em] text-cream/90 transition-colors hover:text-cream">
+      <div className="flex items-center justify-center gap-2 sm:gap-3 max-w-full min-w-0">
         {displayBadge && (
-          <span className="hidden sm:inline-block rounded-full border border-gold/40 bg-gold/15 px-2 py-0.5 text-[8px] font-semibold text-gold tracking-widest">
+          <span className="hidden sm:inline-block shrink-0 rounded-full border border-gold/40 bg-gold/15 px-2 py-0.5 text-[8px] font-semibold text-gold tracking-widest">
             {displayBadge}
           </span>
         )}
-        <span className="truncate">{displayText}</span>
+        <span className="truncate min-w-0 block">{displayText}</span>
       </div>
     </div>
   );

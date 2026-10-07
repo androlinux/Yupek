@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAccessibility, type ColorMode, type TextSize } from "./AccessibilityContext";
 import { useLanguage } from "./LanguageContext";
 import Icon from "./ui/Icon";
@@ -36,6 +36,16 @@ export default function AccessibilityDrawer() {
   const { t } = useLanguage();
   const a = t.a11y;
   const [tooltipVisible, setTooltipVisible] = useState(false);
+  const [shouldRender, setShouldRender] = useState(false);
+
+  useEffect(() => {
+    if (drawerOpen) {
+      setShouldRender(true);
+    } else {
+      const timer = setTimeout(() => setShouldRender(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [drawerOpen]);
 
   // Check if any non-default assistive option is actively turned on
   const hasActiveModifiers =
@@ -89,7 +99,7 @@ export default function AccessibilityDrawer() {
     <>
       {/* Floating Accessibility Trigger Button (Bottom Left) */}
       <div
-        className="fixed bottom-6 left-6 z-40 flex items-center gap-3"
+        className="fixed bottom-4 left-4 sm:bottom-6 sm:left-6 z-40 flex items-center gap-3"
         onMouseEnter={() => setTooltipVisible(true)}
         onMouseLeave={() => setTooltipVisible(false)}
       >
@@ -142,16 +152,17 @@ export default function AccessibilityDrawer() {
       )}
 
       {/* Slide-out Accessibility Drawer */}
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label={a.drawerTitle}
-        aria-hidden={!drawerOpen}
-        inert={!drawerOpen || undefined}
-        className={`fixed top-0 bottom-0 left-0 z-50 w-full max-w-md bg-cream text-brown border-r border-brown/20 shadow-2xl flex flex-col transition-transform duration-300 ease-out ${
-          drawerOpen ? "translate-x-0" : "-translate-x-full pointer-events-none"
-        }`}
-      >
+      {shouldRender && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={a.drawerTitle}
+          aria-hidden={!drawerOpen}
+          inert={!drawerOpen || undefined}
+          className={`fixed top-0 bottom-0 left-0 z-50 w-full max-w-full sm:max-w-md bg-cream text-brown border-r border-brown/20 shadow-2xl flex flex-col transition-transform duration-300 ease-out ${
+            drawerOpen ? "translate-x-0" : "-translate-x-full pointer-events-none"
+          }`}
+        >
         {/* Drawer Header */}
         <div className="flex items-start justify-between border-b border-brown/15 p-6 bg-sand/30">
           <div className="flex items-center gap-3">
@@ -518,6 +529,7 @@ export default function AccessibilityDrawer() {
           </p>
         </div>
       </div>
+      )}
     </>
   );
 }

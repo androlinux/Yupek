@@ -293,6 +293,7 @@ export interface Translations {
     privacyPolicy: string;
     termsOfService: string;
     complimentaryShipping: string;
+    shippingPolicy: string;
     returns30Days: string;
     euCompliance: string;
   };
@@ -766,6 +767,7 @@ export const dictionaries: Record<Locale, Translations> = {
       privacyPolicy: "PRIVACY POLICY",
       termsOfService: "TERMS OF SERVICE",
       complimentaryShipping: "COMPLIMENTARY SHIPPING",
+      shippingPolicy: "SHIPPING POLICY",
       returns30Days: "30-DAY RETURNS",
       euCompliance: "EU CONSUMER COMPLIANCE",
     },
@@ -854,7 +856,7 @@ export const dictionaries: Record<Locale, Translations> = {
           directive: "Directive 2000/31/EC & GDPR",
           title: "Data Protection & Digital Fairness",
           scope: "Privacy & Fair Commerce",
-          description: "Your orders, payment credentials, and personal records are processed under strict European General Data Protection Regulation (EU 2016/679) standards with zero third-party commercial sharing.",
+          description: "Your orders, payment credentials, and personal records are processed under strict European General Data Protection Regulation (EU 2016/679) standards with zero third-party commercial marketing sharing. Data is shared exclusively with necessary printing, payment, and delivery partners to fulfill your purchase.",
         },
       ],
       stepsTitle: "HOW TO INITIATE A RETURN",
@@ -1319,6 +1321,7 @@ export const dictionaries: Record<Locale, Translations> = {
       privacyPolicy: "PRIVACYBELEID",
       termsOfService: "ALGEMENE VOORWAARDEN",
       complimentaryShipping: "GRATIS VERZENDING",
+      shippingPolicy: "VERZENDBELEID",
       returns30Days: "30 DAGEN RETOURNEREN",
       euCompliance: "EU CONSUMENTENRECHT",
     },
@@ -1407,7 +1410,7 @@ export const dictionaries: Record<Locale, Translations> = {
           directive: "Richtlijn 2000/31/EG & AVG/GDPR",
           title: "Gegevensbescherming & Eerlijke Handel",
           scope: "Privacy & Consumentenrecht",
-          description: "Uw persoonsgegevens en bestellingen worden behandeld volgens de strengste Europese Algemene Verordening Gegevensbescherming (AVG/GDPR).",
+          description: "Uw persoonsgegevens en bestellingen worden behandeld volgens de strengste Europese Algemene Verordening Gegevensbescherming (AVG/GDPR) met nul commerciële marketingdeling met derden. Gegevens worden uitsluitend gedeeld met noodzakelijke productie-, betaal- en bezorgpartners om uw aankoop te verwerken.",
         },
       ],
       stepsTitle: "HOE EEN RETOUR AAN TE MELDEN",
