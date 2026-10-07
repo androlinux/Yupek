@@ -45,6 +45,13 @@ class TestYupekPaymentPipeline(unittest.TestCase):
         _in_memory_processed_events.clear()
         _in_memory_order_mirror.clear()
 
+        # Mock database connection to prevent test orders from polluting live database
+        self.db_patcher = patch("app.routers.orders.get_db")
+        self.mock_db = self.db_patcher.start()
+        mock_table = MagicMock()
+        self.mock_db.return_value.table.return_value = mock_table
+        mock_table.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value.data = None
+
         # Mock trusted catalog
         self.mock_catalog = [
             {
@@ -104,6 +111,9 @@ class TestYupekPaymentPipeline(unittest.TestCase):
             postalCode="1015 CJ",
             country="Netherlands",
         )
+
+    def tearDown(self):
+        self.db_patcher.stop()
 
     def _calc_total(self, subtotal_cents: int, delivery: str = "standard") -> tuple[int, int, int]:
         free_shipping = delivery == "standard" and subtotal_cents >= config.FREE_SHIPPING_OVER

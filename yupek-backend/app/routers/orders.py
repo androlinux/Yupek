@@ -644,3 +644,56 @@ def get_order_status(order_id: str):
         "created_at": order.get("created_at"),
         "items": order.get("items", []),
     }
+
+
+@router.delete("/api/orders/{order_id}")
+def delete_order(order_id: str, request: Request):
+    """Safely delete a single order record by ID.
+    
+    SAFETY REQUIREMENTS:
+    - Requires specific, non-empty order ID (bulk deletion strictly forbidden).
+    - Requires Admin authorization (x-yupek-admin-auth or cron secret).
+    - Strictly deletes local database records.
+    - NEVER calls Stripe or Printify.
+    """
+    clean_id = (order_id or "").strip()
+    if not clean_id or clean_id in ("all", "*") or len(clean_id) < 3:
+        raise HTTPException(400, "A specific valid order ID is required.")
+
+    admin_auth = request.headers.get("x-yupek-admin-auth")
+    cron_secret = request.headers.get("X-Cron-Secret")
+    if admin_auth != "true" and cron_secret != config.CRON_SECRET:
+        raise HTTPException(401, "Admin authorization required to delete orders.")
+
+    # 1. Remove from in-memory mirror
+    if clean_id in _in_memory_order_mirror:
+        del _in_memory_order_mirror[clean_id]
+
+    # 2. Delete from Supabase orders table
+    try:
+        db = get_db()
+        db.table("orders").delete().eq("id", clean_id).execute()
+    except Exception as exc:
+        logger.info(f"Orders table delete notice: {exc}")
+
+    # 3. Delete from site_config.storeOrders
+    try:
+        db = get_db()
+        row = db.table("site_config").select("value").eq("key", "global").maybe_single().execute().data
+        if row and isinstance(row.get("value"), dict):
+            cfg = row["value"]
+            existing = cfg.get("storeOrders", [])
+            updated = [
+                o for o in existing
+                if str(o.get("id")) != clean_id and str(o.get("orderNumber")) != clean_id
+            ]
+            cfg["storeOrders"] = updated
+            db.table("site_config").upsert({
+                "key": "global",
+                "value": cfg,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }).execute()
+    except Exception as exc:
+        logger.warning(f"site_config storeOrders delete notice: {exc}")
+
+    return {"success": True, "deleted_id": clean_id}

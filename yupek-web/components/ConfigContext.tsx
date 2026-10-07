@@ -17,6 +17,7 @@ interface ConfigContextType {
   deleteSubmission: (id: string) => void;
   addStoreOrder: (order: StoreOrder) => void;
   updateOrderStatus: (orderId: string, status: StoreOrder["status"]) => void;
+  deleteStoreOrder: (orderId: string) => Promise<{ success: boolean; error?: string }>;
   allProducts: Product[];
   catalogProducts: (Product & { isDeleted?: boolean })[];
   getProduct: (slug: string) => Product | undefined;
@@ -361,6 +362,31 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     }).catch(() => {});
   }, []);
 
+  const deleteStoreOrder = useCallback(async (orderId: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const res = await fetch(`/api/orders/${encodeURIComponent(orderId)}`, {
+        method: "DELETE",
+        headers: getAdminHeaders(),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        return { success: false, error: data.error || "Failed to delete order" };
+      }
+
+      const current = getLocalSiteConfig();
+      const updated = (current.storeOrders || []).filter(
+        (o) => o.id !== orderId && o.orderNumber !== orderId
+      );
+      const next = { ...current, storeOrders: updated };
+      setConfig(next);
+      saveLocalSiteConfig(next);
+
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || "Failed to delete order" };
+    }
+  }, []);
+
   return (
     <ConfigContext.Provider
       value={{
@@ -376,6 +402,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
         deleteSubmission,
         addStoreOrder,
         updateOrderStatus,
+        deleteStoreOrder,
         allProducts,
         catalogProducts,
         getProduct,

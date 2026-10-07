@@ -1,4 +1,6 @@
 import { getSupabaseServerClient } from "@/lib/supabaseServer";
+import { promises as fs } from "fs";
+import path from "path";
 
 export interface OrderRecord {
   id: string;
@@ -360,5 +362,100 @@ export async function getUserOrders(userId: string, customerEmail?: string): Pro
 
   // Sort by date descending
   return results.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+}
+
+/**
+ * Permanently deletes an order record by ID:
+ * 1. Removes from inMemoryOrders cache.
+ * 2. Deletes from Supabase dedicated 'orders' table (and related 'order_items' if any).
+ * 3. Removes from Supabase 'site_config.storeOrders' array.
+ * 4. Removes from local development mirror 'data/site-config.json' if not in production.
+ *
+ * SAFETY GUARANTEES:
+ * - Strictly deletes LOCAL database records.
+ * - NEVER calls Stripe or creates refunds.
+ * - NEVER calls Printify or cancels supplier orders.
+ * - NEVER modifies customer profiles or product catalog.
+ */
+export async function deleteOrderRecord(orderId: string): Promise<{ success: boolean; error?: string }> {
+  if (!orderId || typeof orderId !== "string" || !orderId.trim()) {
+    return { success: false, error: "A valid order ID is required" };
+  }
+  const cleanId = orderId.trim();
+
+  // 1. Remove from in-memory cache
+  inMemoryOrders.delete(cleanId);
+
+  const supabase = getSupabaseServerClient();
+
+  // 2. Safely delete from Supabase 'orders' and related 'order_items' tables
+  try {
+    // Delete any dependent order items first if table exists (cascade safety)
+    try {
+      await supabase.from("order_items").delete().eq("order_id", cleanId);
+    } catch {
+      // Table may not exist or not have FK
+    }
+
+    const { error: orderDeleteErr } = await supabase
+      .from("orders")
+      .delete()
+      .or(`id.eq.${cleanId},stripe_payment_intent_id.eq.${cleanId}`);
+
+    if (orderDeleteErr) {
+      console.warn("[Orders Table Delete Notice]", orderDeleteErr.message);
+    }
+  } catch (err: any) {
+    console.warn("[Orders Table Delete Catch]", err.message);
+  }
+
+  // 3. Remove from site_config.storeOrders
+  try {
+    const { data } = await supabase
+      .from("site_config")
+      .select("value")
+      .eq("key", "global")
+      .maybeSingle();
+
+    if (data?.value && typeof data.value === "object") {
+      const cfg = data.value as any;
+      const existing: any[] = Array.isArray(cfg.storeOrders) ? cfg.storeOrders : [];
+      const updated = existing.filter(
+        (o: any) => o.id !== cleanId && o.orderNumber !== cleanId
+      );
+
+      await supabase.from("site_config").upsert({
+        key: "global",
+        value: {
+          ...cfg,
+          storeOrders: updated,
+        },
+        updated_at: new Date().toISOString(),
+      });
+    }
+  } catch (err: any) {
+    console.error("[site_config Orders Delete Error]", err.message);
+  }
+
+  // 4. Disk mirror for local development
+  const isServerlessOrProd =
+    Boolean(process.env.VERCEL) || process.env.NODE_ENV === "production";
+
+  if (!isServerlessOrProd) {
+    try {
+      const configPath = path.join(process.cwd(), "data", "site-config.json");
+      const raw = await fs.readFile(configPath, "utf-8");
+      const parsed = JSON.parse(raw);
+      const orders = Array.isArray(parsed.storeOrders) ? parsed.storeOrders : [];
+      parsed.storeOrders = orders.filter(
+        (o: any) => o.id !== cleanId && o.orderNumber !== cleanId
+      );
+      await fs.writeFile(configPath, JSON.stringify(parsed, null, 2), "utf-8");
+    } catch (saveErr) {
+      console.warn("[Orders delete from disk warning]", saveErr);
+    }
+  }
+
+  return { success: true };
 }
 

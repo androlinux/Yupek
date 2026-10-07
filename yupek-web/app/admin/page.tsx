@@ -8,7 +8,7 @@ import Icon from "@/components/ui/Icon";
 import ImageUploader from "@/components/admin/ImageUploader";
 import ProductCatalogManager from "@/components/admin/ProductCatalogManager";
 import { eur } from "@/lib/catalog";
-import { SiteConfig, ProductOverride } from "@/lib/siteConfig";
+import { SiteConfig, ProductOverride, StoreOrder } from "@/lib/siteConfig";
 
 interface UploadedMediaItem {
   url: string;
@@ -47,6 +47,7 @@ export default function AdminPage() {
     markSubmissionRead,
     deleteSubmission,
     updateOrderStatus,
+    deleteStoreOrder,
   } = useSiteConfig();
   const { user } = useAuth();
 
@@ -395,6 +396,41 @@ export default function AdminPage() {
       ),
     }));
     showToast(`Order status updated to "${status}".`);
+  };
+
+  // Safe Order Deletion State & Handlers
+  const [orderToDelete, setOrderToDelete] = useState<StoreOrder | null>(null);
+  const [deleteOrderLoading, setDeleteOrderLoading] = useState(false);
+  const [paidWarningAcknowledged, setPaidWarningAcknowledged] = useState(false);
+
+  const handleConfirmDeleteOrder = async () => {
+    if (!orderToDelete) return;
+    const targetId = orderToDelete.id || orderToDelete.orderNumber;
+    if (!targetId) return;
+
+    setDeleteOrderLoading(true);
+    try {
+      const res = await deleteStoreOrder(targetId);
+      if (!res.success) {
+        showToast(`Error deleting order: ${res.error || "Failed"}`);
+        return;
+      }
+
+      setForm((prev) => ({
+        ...prev,
+        storeOrders: (prev.storeOrders || []).filter(
+          (o) => o.id !== targetId && o.orderNumber !== targetId
+        ),
+      }));
+
+      showToast(`Order #${orderToDelete.orderNumber || targetId} permanently deleted.`);
+      setOrderToDelete(null);
+      setPaidWarningAcknowledged(false);
+    } catch (err: any) {
+      showToast(`Error deleting order: ${err.message || "Failed"}`);
+    } finally {
+      setDeleteOrderLoading(false);
+    }
   };
 
   // If not authorized yet, show luxury Administrator Login Gate
@@ -773,21 +809,36 @@ export default function AdminPage() {
                         </div>
                       </div>
 
-                      {/* Status changer */}
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] uppercase tracking-wider text-brown/60">Status:</span>
-                        <select
-                          value={order.status}
-                          onChange={(e) => handleOrderStatusChange(order.id, e.target.value)}
-                          className="border border-brown/30 bg-white px-2.5 py-1 text-xs text-brown focus:border-brown focus:outline-none"
+                      {/* Status changer & Safe Delete Action */}
+                      <div className="flex items-center gap-2.5">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] uppercase tracking-wider text-brown/60">Status:</span>
+                          <select
+                            value={order.status}
+                            onChange={(e) => handleOrderStatusChange(order.id, e.target.value)}
+                            className="border border-brown/30 bg-white px-2.5 py-1 text-xs text-brown focus:border-brown focus:outline-none"
+                          >
+                            <option value="New">New</option>
+                            <option value="Processing">Processing</option>
+                            <option value="Paid">Paid</option>
+                            <option value="Shipped">Shipped</option>
+                            <option value="Delivered">Delivered</option>
+                            <option value="Cancelled">Cancelled</option>
+                          </select>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setOrderToDelete(order);
+                            setPaidWarningAcknowledged(false);
+                          }}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium tracking-wider uppercase text-red-700/80 hover:text-white bg-red-50/80 hover:bg-red-700 border border-red-200/80 hover:border-red-700 rounded transition-colors"
+                          title={`Delete order #${order.orderNumber}`}
                         >
-                          <option value="New">New</option>
-                          <option value="Processing">Processing</option>
-                          <option value="Paid">Paid</option>
-                          <option value="Shipped">Shipped</option>
-                          <option value="Delivered">Delivered</option>
-                          <option value="Cancelled">Cancelled</option>
-                        </select>
+                          <Icon name="trash" className="h-3 w-3" />
+                          <span>Delete</span>
+                        </button>
                       </div>
                     </div>
 
@@ -2318,6 +2369,116 @@ export default function AdminPage() {
           </div>
         )}
       </div>
+
+      {/* ========================================================================= */}
+      {/* SAFE DELETE ORDER CONFIRMATION MODAL                                      */}
+      {/* ========================================================================= */}
+      {orderToDelete && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-fadeIn">
+          <div className="bg-[#FAF7F2] border border-brown/30 w-full max-w-lg p-6 md:p-8 rounded shadow-2xl space-y-5 text-left">
+            {/* Modal Header */}
+            <div className="flex items-start gap-3.5">
+              <div className="h-11 w-11 rounded-full bg-red-100 text-red-700 flex items-center justify-center shrink-0 border border-red-200">
+                <Icon name="trash" className="h-5 w-5" />
+              </div>
+              <div>
+                <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-burgundy block">
+                  YUPEK ORDER ADMINISTRATION
+                </span>
+                <h3 className="font-serif text-xl md:text-2xl text-brown font-bold mt-0.5">
+                  Delete this order permanently?
+                </h3>
+                <p className="text-xs text-brown/70 mt-1 leading-relaxed">
+                  This action permanently removes this order from your local store database.
+                  It will <strong className="text-brown">NOT</strong> call Stripe, refund funds, call Printify, or modify customer profiles.
+                </p>
+              </div>
+            </div>
+
+            {/* Order Attributes Required Summary */}
+            <div className="border border-brown/20 bg-white p-4 rounded text-xs space-y-2.5 shadow-xs">
+              <div className="flex items-center justify-between border-b border-brown/10 pb-2">
+                <span className="text-brown/60 uppercase tracking-wider text-[10px] font-semibold">Order Number</span>
+                <span className="font-mono font-bold text-brown text-sm">#{orderToDelete.orderNumber || orderToDelete.id}</span>
+              </div>
+              <div className="flex items-center justify-between border-b border-brown/10 pb-2">
+                <span className="text-brown/60 uppercase tracking-wider text-[10px] font-semibold">Customer Email</span>
+                <span className="font-medium text-brown truncate max-w-[260px]">{orderToDelete.customer?.email || "No email provided"}</span>
+              </div>
+              <div className="flex items-center justify-between border-b border-brown/10 pb-2">
+                <span className="text-brown/60 uppercase tracking-wider text-[10px] font-semibold">Total</span>
+                <span className="font-bold text-burgundy text-sm">€{(orderToDelete.total || 0).toFixed(2)}</span>
+              </div>
+              <div className="flex items-center justify-between border-b border-brown/10 pb-2">
+                <span className="text-brown/60 uppercase tracking-wider text-[10px] font-semibold">Payment Status</span>
+                <span className="uppercase font-semibold tracking-wider text-[11px] px-2 py-0.5 rounded bg-sand/30 text-brown">
+                  {(orderToDelete.payment_status || orderToDelete.status || "pending").toUpperCase()}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-brown/60 uppercase tracking-wider text-[10px] font-semibold">Fulfillment Status</span>
+                <span className="uppercase font-semibold tracking-wider text-[11px] px-2 py-0.5 rounded bg-sand/30 text-brown">
+                  {(orderToDelete.fulfillment_status || "pending").replace(/_/g, " ").toUpperCase()}
+                </span>
+              </div>
+            </div>
+
+            {/* Additional Confirmation for Paid/Fulfilled Orders */}
+            {(orderToDelete.payment_status === "paid" || orderToDelete.status === "Paid" || orderToDelete.fulfillment_status === "shipped" || orderToDelete.fulfillment_status === "delivered") && (
+              <div className="p-3.5 bg-amber-50 border border-amber-300 rounded text-xs space-y-2 text-amber-900">
+                <div className="flex items-start gap-2">
+                  <span className="text-amber-700 font-bold text-sm">⚠️</span>
+                  <p className="leading-relaxed">
+                    <strong>Attention:</strong> This order is marked as <strong>PAID</strong> or in fulfillment. Deleting will permanently remove it from local store records.
+                  </p>
+                </div>
+                <label className="flex items-center gap-2 cursor-pointer pt-1 font-medium select-none">
+                  <input
+                    type="checkbox"
+                    checked={paidWarningAcknowledged}
+                    onChange={(e) => setPaidWarningAcknowledged(e.target.checked)}
+                    className="rounded border-amber-400 text-burgundy focus:ring-burgundy"
+                  />
+                  <span>I understand and confirm deletion of this paid order.</span>
+                </label>
+              </div>
+            )}
+
+            {/* Action Buttons: CANCEL & DELETE ORDER */}
+            <div className="flex items-center justify-end gap-3 pt-2 border-t border-brown/15">
+              <button
+                type="button"
+                disabled={deleteOrderLoading}
+                onClick={() => {
+                  setOrderToDelete(null);
+                  setPaidWarningAcknowledged(false);
+                }}
+                className="px-5 py-2 text-xs font-semibold uppercase tracking-wider text-brown/70 hover:text-brown border border-brown/30 hover:bg-sand/30 rounded transition-colors disabled:opacity-50"
+              >
+                CANCEL
+              </button>
+              <button
+                type="button"
+                disabled={
+                  deleteOrderLoading ||
+                  ((orderToDelete.payment_status === "paid" || orderToDelete.status === "Paid" || orderToDelete.fulfillment_status === "shipped" || orderToDelete.fulfillment_status === "delivered") && !paidWarningAcknowledged)
+                }
+                onClick={handleConfirmDeleteOrder}
+                className="px-6 py-2 text-xs font-semibold uppercase tracking-wider text-white bg-red-700 hover:bg-red-800 rounded transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {deleteOrderLoading ? (
+                  <>
+                    <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-solid border-white border-r-transparent" />
+                    <span>DELETING...</span>
+                  </>
+                ) : (
+                  <span>DELETE ORDER</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
