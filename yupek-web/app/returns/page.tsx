@@ -12,7 +12,7 @@ export default function ReturnsPage() {
   const { config } = useSiteConfig();
   const r = t.returnsPage;
 
-  const cleanPhone = (config.whatsappNumber || "+31644154126").replace(/[^0-9]/g, "");
+
   const returnEmail = config.contactEmail || "daniyarow16@gmail.com";
 
   return (
@@ -270,16 +270,12 @@ export default function ReturnsPage() {
                     <Icon name="mail" className="w-3.5 h-3.5" />
                     <span>{r.contactEmailBtn}</span>
                   </a>
-                  {cleanPhone && (
-                    <a
-                      href={`https://wa.me/${cleanPhone}?text=${encodeURIComponent("Hello YUPEK Concierge, I would like to inquire about returning an item.")}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn border border-cream/30 text-cream hover:bg-cream hover:text-brown transition-colors text-center text-[10px] tracking-[.2em] font-semibold py-3 px-5"
-                    >
-                      {r.contactWhatsAppBtn}
-                    </a>
-                  )}
+                  <Link
+                    href="/contact"
+                    className="btn border border-cream/30 text-cream hover:bg-cream hover:text-brown transition-colors text-center text-[10px] tracking-[.2em] font-semibold py-3 px-5 flex items-center justify-center gap-2"
+                  >
+                    <span>{locale === "nl" ? "KLANTENSERVICE" : "CONTACT SUPPORT"}</span>
+                  </Link>
                 </div>
 
                 <div className="pt-2 text-[10px] text-cream/40 uppercase tracking-widest">

@@ -296,6 +296,33 @@ export interface Translations {
     shippingPolicy: string;
     returns30Days: string;
     euCompliance: string;
+    cookiePreferences: string;
+    supportService: string;
+    contactSupport: string;
+    orderHelp: string;
+    needHelp: string;
+    needHelpDesc: string;
+  };
+  cookies: {
+    bannerTitle: string;
+    bannerDescription: string;
+    acceptAll: string;
+    rejectNonEssential: string;
+    cookieSettings: string;
+    savePreferences: string;
+    modalTitle: string;
+    modalSubtitle: string;
+    essentialTitle: string;
+    essentialStatus: string;
+    essentialDesc: string;
+    analyticsTitle: string;
+    analyticsStatusOff: string;
+    analyticsStatusOn: string;
+    analyticsDesc: string;
+    marketingTitle: string;
+    marketingStatusOff: string;
+    marketingStatusOn: string;
+    marketingDesc: string;
   };
   whatsapp: {
     tooltip: string;
@@ -643,7 +670,7 @@ export const dictionaries: Record<Locale, Translations> = {
     contact: {
       tag: "DIGITAL CLIENT CARE",
       title: "CLIENT CONCIERGE",
-      subtitle: "Whether you have a question about sizing, product details, an order, or international delivery, our client concierge team is here to assist.\n\nFor private product questions or styling enquiries, customers can contact us directly by email or WhatsApp.",
+      subtitle: "Whether you have a question about sizing, product details, an order, or international delivery, our client concierge team is here to assist.\n\nFor private product questions or styling enquiries, customers can contact us directly by email or our contact form.",
       formTitle: "TRANSMIT AN INQUIRY",
       formSubtitle: "Our client concierge team typically responds within two hours during customer care hours.",
       fullName: "Full Name *",
@@ -659,9 +686,9 @@ export const dictionaries: Record<Locale, Translations> = {
       headquartersTag: "DIGITAL CLIENT CONCIERGE",
       studioTitle: "YUPEK CLIENT CONCIERGE",
       conciergeEmail: "EMAIL",
-      telephoneLine: "WHATSAPP",
+      telephoneLine: "TELEPHONE",
       visitingHours: "CUSTOMER CARE",
-      directWhatsAppBtn: "CONTACT VIA WHATSAPP",
+      directWhatsAppBtn: "CONTACT SUPPORT",
       studioTour: "Customer Care",
       cardTitle: "YUPEK CLIENT CONCIERGE",
       cardDescription: "Our client concierge team is available to assist with orders, sizing, product details, shipping and general enquiries.",
@@ -770,6 +797,35 @@ export const dictionaries: Record<Locale, Translations> = {
       shippingPolicy: "SHIPPING POLICY",
       returns30Days: "30-DAY RETURNS",
       euCompliance: "EU CONSUMER COMPLIANCE",
+      cookiePreferences: "COOKIE PREFERENCES",
+      supportService: "SUPPORT SERVICE",
+      contactSupport: "Contact Support",
+      orderHelp: "Order Help",
+      needHelp: "Need help?",
+      needHelpDesc: "Contact our support service for personal assistance with your order or enquiries.",
+    },
+    cookies: {
+      bannerTitle: "YUPEK uses cookies",
+      bannerDescription:
+        "We use essential cookies to keep YUPEK working. With your permission, we may also use analytics and marketing cookies to improve your experience and understand how our website is used.",
+      acceptAll: "ACCEPT ALL",
+      rejectNonEssential: "REJECT NON-ESSENTIAL",
+      cookieSettings: "COOKIE SETTINGS",
+      savePreferences: "SAVE PREFERENCES",
+      modalTitle: "Cookie Settings",
+      modalSubtitle:
+        "Manage your cookie preferences. Essential cookies are required for the website to function.",
+      essentialTitle: "Essential",
+      essentialStatus: "Always active",
+      essentialDesc: "Required for the website to function.",
+      analyticsTitle: "Analytics",
+      analyticsStatusOff: "Off by default",
+      analyticsStatusOn: "Active",
+      analyticsDesc: "Helps us understand how visitors use YUPEK and improve the website.",
+      marketingTitle: "Marketing",
+      marketingStatusOff: "Off by default",
+      marketingStatusOn: "Active",
+      marketingDesc: "Used to measure and improve marketing and advertising.",
     },
     whatsapp: {
       tooltip: "Concierge Online",
@@ -819,7 +875,7 @@ export const dictionaries: Record<Locale, Translations> = {
       withdrawalTitle: "30-DAY STATUTORY RIGHT OF WITHDRAWAL",
       withdrawalSubtitle: "EU Directive 2011/83/EU & YUPEK Standard",
       withdrawalBody1: "In accordance with European Union Directive 2011/83/EU on Consumer Rights, you have the statutory right to withdraw from your purchase within 14 days without giving any reason. At YUPEK, we proudly extend this period to 30 calendar days from the day on which you, or a third party designated by you, acquire physical possession of the items.",
-      withdrawalBody2: "To exercise your right of withdrawal, simply notify us via your account, email (daniyarow16@gmail.com), or direct WhatsApp. When you withdraw from the contract in full, we will reimburse all payments received from you, including initial standard delivery costs, without undue delay and at the latest within 14 days from the day we receive the returned items or proof of return shipment.",
+      withdrawalBody2: "To exercise your right of withdrawal, simply notify us via your account, email (daniyarow16@gmail.com), or our contact portal. When you withdraw from the contract in full, we will reimburse all payments received from you, including initial standard delivery costs, without undue delay and at the latest within 14 days from the day we receive the returned items or proof of return shipment.",
       conditionsTitle: "Return Conditions & Integrity Criteria",
       conditions: [
         "Garments must be returned unworn, unwashed, unaltered, and undamaged.",
@@ -850,7 +906,7 @@ export const dictionaries: Record<Locale, Translations> = {
           directive: "Regulation (EU) 2023/988 / GPSR",
           title: "General Product Safety & Traceability",
           scope: "Consumer Protection & Accountability",
-          description: "Products are designed, manufactured, and inspected to the highest European safety standards. Responsible economic operator established in the European Union: YUPEK (Client Concierge: daniyarov16@gmail.com / WhatsApp: +31644154126).",
+          description: "Products are designed, manufactured, and inspected to the highest European safety standards. Responsible economic operator established in the European Union: YUPEK (Client Concierge: daniyarov16@gmail.com).",
         },
         {
           directive: "Directive 2000/31/EC & GDPR",
@@ -865,7 +921,7 @@ export const dictionaries: Record<Locale, Translations> = {
         {
           stepNumber: "01",
           title: "Contact Concierge",
-          desc: "Notify our team via your account portal, email, or direct WhatsApp with your order number (e.g., YPK-2026-XXXX).",
+          desc: "Notify our team via your account portal, email, or our contact form with your order number (e.g., YPK-2026-XXXX).",
         },
         {
           stepNumber: "02",
@@ -894,7 +950,7 @@ export const dictionaries: Record<Locale, Translations> = {
       conciergeTitle: "NEED PERSONAL ASSISTANCE?",
       conciergeSubtitle: "Our client concierge is at your disposal for sizing exchanges, return labels, or technical inquiries.",
       contactEmailBtn: "EMAIL CONCIERGE",
-      contactWhatsAppBtn: "WHATSAPP CONCIERGE",
+      contactWhatsAppBtn: "CONTACT SUPPORT",
       odrTitle: "EUROPEAN ONLINE DISPUTE RESOLUTION (ODR)",
       odrDesc: "In accordance with Article 14(1) of EU Regulation No 524/2013, the European Commission provides an online platform for out-of-court dispute resolution between European consumers and online traders.",
       odrPlatformBtn: "VISIT EU ODR PLATFORM",
@@ -1197,7 +1253,7 @@ export const dictionaries: Record<Locale, Translations> = {
     contact: {
       tag: "DIGITALE KLANTENSERVICE",
       title: "CLIËNT CONCIËRGE",
-      subtitle: "Of u nu een vraag heeft over maten, productdetails, een bestelling of internationale bezorging: ons cliënt conciërgeteam staat voor u klaar.\n\nVoor specifieke productvragen of stylingadvies kunnen klanten rechtstreeks contact met ons opnemen via e-mail of WhatsApp.",
+      subtitle: "Of u nu een vraag heeft over maten, productdetails, een bestelling of internationale bezorging: ons cliënt conciërgeteam staat voor u klaar.\n\nVoor specifieke productvragen of stylingadvies kunnen klanten rechtstreeks contact met ons opnemen via e-mail of ons contactformulier.",
       formTitle: "STUUR EEN BERICHT",
       formSubtitle: "Ons cliënt conciërgeteam reageert doorgaans binnen twee uur tijdens klantenservice-uren.",
       fullName: "Volledige Naam *",
@@ -1213,9 +1269,9 @@ export const dictionaries: Record<Locale, Translations> = {
       headquartersTag: "DIGITALE CLIËNT CONCIËRGE",
       studioTitle: "YUPEK CLIËNT CONCIËRGE",
       conciergeEmail: "E-MAIL",
-      telephoneLine: "WHATSAPP",
+      telephoneLine: "TELEFOON",
       visitingHours: "KLANTENSERVICE",
-      directWhatsAppBtn: "CONTACT VIA WHATSAPP",
+      directWhatsAppBtn: "CONTACT KLANTENSERVICE",
       studioTour: "Klantenservice",
       cardTitle: "YUPEK CLIËNT CONCIËRGE",
       cardDescription: "Ons cliënt conciërgeteam staat klaar om u te helpen met bestellingen, maten, productdetails, verzending en algemene vragen.",
@@ -1324,6 +1380,35 @@ export const dictionaries: Record<Locale, Translations> = {
       shippingPolicy: "VERZENDBELEID",
       returns30Days: "30 DAGEN RETOURNEREN",
       euCompliance: "EU CONSUMENTENRECHT",
+      cookiePreferences: "COOKIEVOORKEUREN",
+      supportService: "KLANTENSERVICE",
+      contactSupport: "Contact Klantenservice",
+      orderHelp: "Hulp bij Bestelling",
+      needHelp: "Hulp nodig?",
+      needHelpDesc: "Neem contact op met onze klantenservice voor persoonlijke assistentie.",
+    },
+    cookies: {
+      bannerTitle: "YUPEK gebruikt cookies",
+      bannerDescription:
+        "Wij gebruiken essentiële cookies om YUPEK naar behoren te laten functioneren. Met uw toestemming kunnen wij ook analytische en marketingcookies gebruiken om uw ervaring te verbeteren en te begrijpen hoe onze website wordt gebruikt.",
+      acceptAll: "ALLES ACCEPTEREN",
+      rejectNonEssential: "NIET-ESSENTIEEL WEIGEREN",
+      cookieSettings: "COOKIE-INSTELLINGEN",
+      savePreferences: "VOORKEUREN OPSLAAN",
+      modalTitle: "Cookie-instellingen",
+      modalSubtitle:
+        "Beheer uw cookievoorkeuren. Essentiële cookies zijn vereist voor het functioneren van de website.",
+      essentialTitle: "Essentieel",
+      essentialStatus: "Altijd actief",
+      essentialDesc: "Vereist voor het functioneren van de website.",
+      analyticsTitle: "Analytisch",
+      analyticsStatusOff: "Standaard uit",
+      analyticsStatusOn: "Actief",
+      analyticsDesc: "Helpt ons te begrijpen hoe bezoekers YUPEK gebruiken en om de website te verbeteren.",
+      marketingTitle: "Marketing",
+      marketingStatusOff: "Standaard uit",
+      marketingStatusOn: "Actief",
+      marketingDesc: "Wordt gebruikt om marketing en advertenties te meten en te verbeteren.",
     },
     whatsapp: {
       tooltip: "Conciërge Online",
@@ -1373,7 +1458,7 @@ export const dictionaries: Record<Locale, Translations> = {
       withdrawalTitle: "30 DAGEN WETTELIJK HERROEPINGSRECHT",
       withdrawalSubtitle: "EU Richtlijn 2011/83/EU & YUPEK Standaard",
       withdrawalBody1: "Op grond van Richtlijn 2011/83/EU van de Europese Unie betreffende consumentenrechten heeft u het wettelijke recht om binnen een termijn van 14 dagen zonder opgave van redenen de overeenkomst te herroepen. Bij YUPEK verlengen wij deze periode naar 30 kalenderdagen, ingaande op de dag waarop u of een door u aangewezen derde het artikel fysiek in bezit heeft gekregen.",
-      withdrawalBody2: "Om uw herroepingsrecht uit te oefenen, kunt u eenvoudig contact opnemen via uw account, e-mail (daniyarow16@gmail.com) of WhatsApp. Als u de gehele bestelling herroept, vergoeden wij alle ontvangen betalingen, inclusief de initiële standaard bezorgkosten, uiterlijk binnen 14 dagen na ontvangst van de geretourneerde goederen of het bewijs van retourverzending.",
+      withdrawalBody2: "Om uw herroepingsrecht uit te oefenen, kunt u eenvoudig contact opnemen via uw account, e-mail (daniyarow16@gmail.com) of ons contactportaal. Als u de gehele bestelling herroept, vergoeden wij alle ontvangen betalingen, inclusief de initiële standaard bezorgkosten, uiterlijk binnen 14 dagen na ontvangst van de geretourneerde goederen of het bewijs van retourverzending.",
       conditionsTitle: "Retourvoorwaarden & Integriteitscriteria",
       conditions: [
         "Kledingstukken moeten ongedragen, ongewassen, ongewijzigd en onbeschadigd worden geretourneerd.",
@@ -1404,7 +1489,7 @@ export const dictionaries: Record<Locale, Translations> = {
           directive: "Verordening (EU) 2023/988 / GPSR",
           title: "Algemene Productveiligheid & Traceerbaarheid",
           scope: "Consumentenbescherming",
-          description: "Artikelen zijn ontworpen en vervaardigd volgens de hoogste Europese kwaliteits- en veiligheidseisen. Verantwoordelijke marktdeelnemer in de Europese Unie: YUPEK (Cliënt Conciërge: daniyarov16@gmail.com / WhatsApp: +31644154126).",
+          description: "Artikelen zijn ontworpen en vervaardigd volgens de hoogste Europese kwaliteits- en veiligheidseisen. Verantwoordelijke marktdeelnemer in de Europese Unie: YUPEK (Cliënt Conciërge: daniyarov16@gmail.com).",
         },
         {
           directive: "Richtlijn 2000/31/EG & AVG/GDPR",
@@ -1419,7 +1504,7 @@ export const dictionaries: Record<Locale, Translations> = {
         {
           stepNumber: "01",
           title: "Neem Contact Op Met Conciërge",
-          desc: "Meld uw retour via uw account, e-mail of WhatsApp onder vermelding van uw bestelnummer (bijv. YPK-2026-XXXX).",
+          desc: "Meld uw retour via uw account, e-mail of ons contactformulier onder vermelding van uw bestelnummer (bijv. YPK-2026-XXXX).",
         },
         {
           stepNumber: "02",
@@ -1448,7 +1533,7 @@ export const dictionaries: Record<Locale, Translations> = {
       conciergeTitle: "PERSOONLIJKE ONDERSTEUNING NODIG?",
       conciergeSubtitle: "Onze cliënt conciërge staat voor u klaar bij maatruilingen, retourlabels of vragen over EU-rechten.",
       contactEmailBtn: "E-MAIL CONCIËRGE",
-      contactWhatsAppBtn: "WHATSAPP CONCIËRGE",
+      contactWhatsAppBtn: "KLANTENSERVICE",
       odrTitle: "EUROPESE ONLINE GESCHILLENBESLECHTING (ODR)",
       odrDesc: "Overeenkomstig artikel 14 lid 1 van Verordening (EU) nr. 524/2013 biedt de Europese Commissie een platform voor online geschillenbeslechting (ODR) voor buitengerechtelijke beslechting van consumentengeschillen.",
       odrPlatformBtn: "BEZOEK EU ODR PLATFORM",

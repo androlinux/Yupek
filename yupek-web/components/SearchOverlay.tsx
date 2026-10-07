@@ -40,7 +40,7 @@ export default function SearchOverlay() {
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const ref = useRef<HTMLInputElement>(null);
 
-  // useDeferredValue keeps input typing 60fps responsive while filtering
+  // useDeferredValue keeps input typing responsive while filtering
   const deferredQ = useDeferredValue(q);
 
   // Load recent searches from localStorage
@@ -130,7 +130,8 @@ export default function SearchOverlay() {
       aria-label={t.nav.search}
       aria-hidden={!searchOpen}
       inert={!searchOpen || undefined}
-      className={`fixed inset-0 z-50 overflow-y-auto overflow-x-hidden max-w-full bg-cream/98 backdrop-blur-md transition-all duration-300 text-brown ${
+      style={{ backgroundColor: "#FAF7F2", color: "#171717" }}
+      className={`fixed inset-0 z-[80] overflow-y-auto overflow-x-hidden max-w-full transition-all duration-300 ${
         searchOpen ? "opacity-100" : "invisible opacity-0 pointer-events-none"
       }`}
     >
@@ -141,15 +142,19 @@ export default function SearchOverlay() {
       >
         {/* Top Header Actions */}
         <div className="flex items-center justify-between">
-          <span className="text-[10px] uppercase tracking-[.3em] text-gold font-semibold">
+          <span
+            className="text-[10px] uppercase tracking-[.3em] font-semibold"
+            style={{ color: "#555555" }}
+          >
             YUPEK ARCHIVE SEARCH
           </span>
           <button
             aria-label={t.searchOverlay.closeAria}
             onClick={() => setSearchOpen(false)}
-            className="min-h-[44px] min-w-[44px] flex items-center justify-center text-brown hover:text-burgundy transition-all duration-200 ease-out active:scale-95 opacity-80 hover:opacity-100 focus:outline-none"
+            style={{ color: "#171717" }}
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center transition-all duration-200 ease-out active:scale-95 opacity-80 hover:opacity-100 focus:outline-none"
           >
-            <Icon name="close" className="h-5 w-5" />
+            <Icon name="close" className="h-5 w-5 text-[#171717]" strokeWidth={1.5} />
           </button>
         </div>
 
@@ -170,32 +175,42 @@ export default function SearchOverlay() {
               if (e.key === "Enter" && q.trim()) saveRecentSearch(q);
             }}
             placeholder={t.searchOverlay.placeholder}
-            className="w-full border-b-2 border-brown bg-transparent pb-4 pr-10 text-center font-serif text-3xl md:text-5xl lg:text-6xl tracking-[.08em] placeholder:text-brown/20 text-brown focus:outline-none focus:border-gold transition-colors"
+            style={{
+              backgroundColor: "#FAF7F2",
+              color: "#171717",
+              borderColor: "rgba(23, 23, 23, 0.20)",
+            }}
+            className="w-full border-b-2 pb-4 pr-10 text-center font-serif text-3xl md:text-5xl lg:text-6xl tracking-[.08em] focus:outline-none transition-colors placeholder:text-[rgba(23,23,23,0.55)] focus:border-[#171717] [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden"
           />
           {q && (
             <button
               onClick={() => setQ("")}
-              className="absolute right-2 top-1/2 -translate-y-1/2 min-h-[44px] min-w-[44px] flex items-center justify-center text-brown/40 hover:text-brown transition-all duration-200 ease-out active:scale-95 focus:outline-none"
+              style={{ color: "#171717" }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 min-h-[44px] min-w-[44px] flex items-center justify-center opacity-60 hover:opacity-100 transition-all duration-200 ease-out active:scale-95 focus:outline-none"
               aria-label="Clear query"
             >
-              <Icon name="close" className="w-4 h-4" />
+              <Icon name="close" className="w-4 h-4 text-[#171717]" strokeWidth={1.5} />
             </button>
           )}
         </div>
 
-        {/* Quick Suggestion Pills & Recent Searches (shown when query is empty or short) */}
+        {/* Quick Suggestion Pills & Recent Searches (shown when query is empty) */}
         {!q && (
           <div className="mt-8 space-y-6 max-w-3xl mx-auto">
             {/* Recent Searches */}
             {recentSearches.length > 0 && (
               <div>
                 <div className="flex items-center justify-between mb-2.5">
-                  <span className="text-[10px] uppercase tracking-widest text-brown/50 font-mono">
+                  <span
+                    className="text-[10px] uppercase tracking-widest font-mono"
+                    style={{ color: "#555555" }}
+                  >
                     {locale === "nl" ? "Recente Zoekopdrachten" : "Recent Searches"}
                   </span>
                   <button
                     onClick={clearRecentSearches}
-                    className="text-[10px] uppercase tracking-wider text-brown/40 hover:text-gold transition-colors"
+                    style={{ color: "#555555" }}
+                    className="text-[10px] uppercase tracking-wider hover:opacity-100 opacity-70 transition-opacity"
                   >
                     {locale === "nl" ? "Wissen" : "Clear"}
                   </button>
@@ -205,7 +220,12 @@ export default function SearchOverlay() {
                     <button
                       key={term}
                       onClick={() => applyQuery(term)}
-                      className="px-3 py-1.5 text-xs tracking-wider bg-sand/30 border border-brown/15 hover:border-gold hover:bg-sand/60 transition-colors text-brown"
+                      style={{
+                        backgroundColor: "#FAF7F2",
+                        borderColor: "rgba(23, 23, 23, 0.20)",
+                        color: "#171717",
+                      }}
+                      className="px-3 py-1.5 text-xs tracking-wider border hover:bg-[#171717] hover:text-[#FAF7F2] transition-colors"
                     >
                       {term}
                     </button>
@@ -216,7 +236,10 @@ export default function SearchOverlay() {
 
             {/* Trending & Popular Searches */}
             <div>
-              <span className="text-[10px] uppercase tracking-widest text-brown/50 font-mono block mb-2.5">
+              <span
+                className="text-[10px] uppercase tracking-widest font-mono block mb-2.5"
+                style={{ color: "#555555" }}
+              >
                 {locale === "nl" ? "Populaire Zoektermen" : "Popular Searches"}
               </span>
               <div className="flex flex-wrap gap-2">
@@ -224,7 +247,12 @@ export default function SearchOverlay() {
                   <button
                     key={term}
                     onClick={() => applyQuery(term)}
-                    className="px-3 py-1.5 text-xs uppercase tracking-wider bg-white border border-brown/20 hover:border-brown hover:bg-brown hover:text-cream transition-all duration-200"
+                    style={{
+                      backgroundColor: "#FAF7F2",
+                      borderColor: "rgba(23, 23, 23, 0.20)",
+                      color: "#171717",
+                    }}
+                    className="px-3 py-1.5 text-xs uppercase tracking-wider border hover:bg-[#171717] hover:text-[#FAF7F2] transition-all duration-200"
                   >
                     {term}
                   </button>
@@ -237,30 +265,43 @@ export default function SearchOverlay() {
         {/* Category Filter Pills (shown when query is present) */}
         {q && (
           <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
-            {CATEGORY_TABS.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setSelectedCat(tab.id)}
-                className={`px-3 py-1 text-[10px] uppercase tracking-[.2em] border transition-all ${
-                  selectedCat === tab.id
-                    ? "bg-brown text-gold border-gold font-semibold"
-                    : "bg-white/80 border-brown/20 text-brown/70 hover:border-brown"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+            {CATEGORY_TABS.map((tab) => {
+              const active = selectedCat === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setSelectedCat(tab.id)}
+                  style={{
+                    backgroundColor: active ? "#171717" : "#FAF7F2",
+                    color: active ? "#FAF7F2" : "#555555",
+                    borderColor: active ? "#171717" : "rgba(23, 23, 23, 0.20)",
+                  }}
+                  className="px-3 py-1 text-[10px] uppercase tracking-[.2em] border transition-all hover:text-[#171717] hover:border-[#171717]"
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
           </div>
         )}
 
         {/* Search Results Area */}
         <div className="mt-10" aria-live="polite">
           {q && (
-            <div className="flex items-center justify-between pb-4 border-b border-brown/10 mb-8">
-              <span className="text-xs uppercase tracking-widest text-brown/70 font-mono">
+            <div
+              className="flex items-center justify-between pb-4 mb-8"
+              style={{ borderBottom: "1px solid rgba(23, 23, 23, 0.12)" }}
+            >
+              <span
+                className="text-xs uppercase tracking-widest font-mono"
+                style={{ color: "#555555" }}
+              >
                 {rawResults.length} {locale === "nl" ? "stuks gevonden" : "pieces found"}
               </span>
-              <span className="text-[10px] uppercase tracking-widest text-gold font-semibold">
+              <span
+                className="text-[10px] uppercase tracking-widest font-semibold"
+                style={{ color: "#555555" }}
+              >
                 Relevance Ranked
               </span>
             </div>
@@ -268,10 +309,13 @@ export default function SearchOverlay() {
 
           {q && rawResults.length === 0 && (
             <div className="py-16 text-center space-y-3">
-              <p className="font-serif text-2xl text-brown">
+              <p className="font-serif text-2xl" style={{ color: "#171717" }}>
                 {t.searchOverlay.noResults} “{q}”
               </p>
-              <p className="text-xs text-brown/60 max-w-md mx-auto leading-relaxed">
+              <p
+                className="text-xs max-w-md mx-auto leading-relaxed"
+                style={{ color: "#555555" }}
+              >
                 {locale === "nl"
                   ? "Probeer te zoeken op 'Zijde', 'Overhemd', 'T-shirt', 'Denim' of pas uw filters aan."
                   : "Try searching for 'Silk', 'Shirt', 'Tee', 'Denim' or adjusting your filters."}
@@ -287,7 +331,13 @@ export default function SearchOverlay() {
                   onClick={() => handleSelectProduct(p.name)}
                   className="block"
                 >
-                  <div className="relative aspect-[3/4] bg-sand/30 overflow-hidden border border-brown/10 shadow-sm transition-shadow group-hover:shadow-md">
+                  <div
+                    className="relative aspect-[3/4] overflow-hidden shadow-sm transition-shadow group-hover:shadow-md"
+                    style={{
+                      backgroundColor: "#FAF7F2",
+                      border: "1px solid rgba(23, 23, 23, 0.15)",
+                    }}
+                  >
                     <ProductImage
                       src={p.images[0]}
                       alt={p.name}
@@ -295,19 +345,37 @@ export default function SearchOverlay() {
                       className="transition-transform duration-500 group-hover:scale-105"
                     />
                     {p.badge && (
-                      <span className="absolute top-2 left-2 text-[9px] font-semibold tracking-widest uppercase bg-cream px-2 py-0.5 border border-brown/10 text-brown">
+                      <span
+                        className="absolute top-2 left-2 text-[9px] font-semibold tracking-widest uppercase px-2 py-0.5"
+                        style={{
+                          backgroundColor: "#FAF7F2",
+                          color: "#171717",
+                          border: "1px solid rgba(23, 23, 23, 0.20)",
+                        }}
+                      >
                         {p.badge}
                       </span>
                     )}
                   </div>
                   <div className="mt-3">
-                    <span className="text-[9px] uppercase tracking-widest text-gold font-mono block">
+                    <span
+                      className="text-[9px] uppercase tracking-widest font-mono block"
+                      style={{ color: "#555555" }}
+                    >
                       {p.category}
                     </span>
-                    <h4 className="text-[11px] uppercase tracking-[.16em] text-brown font-medium group-hover:text-burgundy transition-colors truncate">
+                    <h4
+                      className="text-[11px] uppercase tracking-[.16em] font-medium transition-opacity group-hover:opacity-75 truncate"
+                      style={{ color: "#171717" }}
+                    >
                       {p.name}
                     </h4>
-                    <p className="text-xs text-brown/70 mt-0.5 font-light">{eur(p.price)}</p>
+                    <p
+                      className="text-xs mt-0.5 font-light"
+                      style={{ color: "#171717" }}
+                    >
+                      {eur(p.price)}
+                    </p>
                   </div>
                 </Link>
               </li>

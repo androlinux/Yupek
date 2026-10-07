@@ -228,17 +228,19 @@ export default function Header() {
         } ${tone}`}
         onMouseLeave={handleMouseLeave}
       >
-        <div className="wrap relative flex items-center justify-between h-16 md:h-20 w-full">
+        <div className="wrap relative flex items-center w-full h-16 lg:h-20">
           {/* ========================================================= */}
-          {/* DESKTOP NAVBAR (>= 768px)                                 */}
-          {/* LEFT: Logo | CENTER: Primary Nav | RIGHT: Actions         */}
+          {/* DESKTOP NAVBAR (>= 1024px)                                */}
+          {/* LEFT: Logo + Nav Links | RIGHT: Actions & Controls        */}
+          {/* Center: Flexible empty space (ml-auto on right actions)   */}
           {/* ========================================================= */}
 
-          {/* DESKTOP LEFT: YUPEK Logo Asset */}
-          <div className="hidden md:flex items-center shrink-0">
+          {/* DESKTOP LEFT CLUSTER: YUPEK Logo + Primary Navigation */}
+          <div className="hidden lg:flex items-center gap-[28px] xl:gap-[36px] shrink-0">
+            {/* YUPEK Logo Asset */}
             <Link
               href="/"
-              className="relative flex items-center py-2 group focus:outline-none"
+              className="relative flex items-center py-2 group focus:outline-none shrink-0"
               aria-label="YUPEK home"
             >
               {/* Light variant for transparent hero */}
@@ -267,88 +269,88 @@ export default function Header() {
                 } group-hover:opacity-80`}
               />
             </Link>
+
+            {/* Primary Navigation: WINKEL, COLLECTIES, OVER YUPEK */}
+            <nav
+              aria-label="Primary"
+              className="flex items-center gap-[28px] xl:gap-[36px]"
+            >
+              {/* SHOP */}
+              <Link
+                href="/shop"
+                onMouseEnter={() => handleMouseEnter("shop")}
+                className="group relative py-2 text-[12px] xl:text-[13px] uppercase tracking-[.22em] xl:tracking-[.26em] font-light transition-all duration-200 ease-out hover:opacity-75 focus:outline-none whitespace-nowrap"
+              >
+                <span className="relative z-10 leading-none">
+                  {t.nav.shop}
+                </span>
+                <span
+                  aria-hidden="true"
+                  className={`absolute bottom-0 left-0 h-[1px] w-full bg-current transition-transform duration-300 ease-out origin-left ${
+                    path.startsWith("/shop")
+                      ? "scale-x-100"
+                      : "scale-x-0 group-hover:scale-x-100"
+                  }`}
+                />
+              </Link>
+
+              {/* COLLECTIONS */}
+              <Link
+                href="/lookbook"
+                onMouseEnter={() => handleMouseEnter("collections")}
+                className="group relative py-2 text-[12px] xl:text-[13px] uppercase tracking-[.22em] xl:tracking-[.26em] font-light transition-all duration-200 ease-out hover:opacity-75 focus:outline-none whitespace-nowrap"
+              >
+                <span className="relative z-10 leading-none">
+                  {t.nav.collections}
+                </span>
+                <span
+                  aria-hidden="true"
+                  className={`absolute bottom-0 left-0 h-[1px] w-full bg-current transition-transform duration-300 ease-out origin-left ${
+                    path.startsWith("/lookbook")
+                      ? "scale-x-100"
+                      : "scale-x-0 group-hover:scale-x-100"
+                  }`}
+                />
+              </Link>
+
+              {/* ABOUT YUPEK */}
+              <Link
+                href="/about"
+                onMouseEnter={handleMouseLeave}
+                className="group relative py-2 text-[12px] xl:text-[13px] uppercase tracking-[.22em] xl:tracking-[.26em] font-light transition-all duration-200 ease-out hover:opacity-75 focus:outline-none whitespace-nowrap"
+              >
+                <span className="relative z-10 leading-none">
+                  {t.nav.about}
+                </span>
+                <span
+                  aria-hidden="true"
+                  className={`absolute bottom-0 left-0 h-[1px] w-full bg-current transition-transform duration-300 ease-out origin-left ${
+                    path === "/about"
+                      ? "scale-x-100"
+                      : "scale-x-0 group-hover:scale-x-100"
+                  }`}
+                />
+              </Link>
+            </nav>
           </div>
 
-          {/* DESKTOP CENTER: Editorial Fashion Navigation */}
-          <nav
-            aria-label="Primary"
-            className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-7 lg:gap-11 xl:gap-14"
-          >
-            {/* SHOP */}
-            <Link
-              href="/shop"
-              onMouseEnter={() => handleMouseEnter("shop")}
-              className="group relative py-2 text-[12px] lg:text-[13px] uppercase tracking-[.28em] font-light transition-all duration-200 ease-out hover:opacity-75 focus:outline-none"
-            >
-              <span className="relative z-10 leading-none">
-                {t.nav.shop}
-              </span>
-              <span
-                aria-hidden="true"
-                className={`absolute bottom-0 left-0 h-[1px] w-full bg-current transition-transform duration-300 ease-out origin-left ${
-                  path.startsWith("/shop")
-                    ? "scale-x-100"
-                    : "scale-x-0 group-hover:scale-x-100"
-                }`}
-              />
-            </Link>
-
-            {/* COLLECTIONS */}
-            <Link
-              href="/lookbook"
-              onMouseEnter={() => handleMouseEnter("collections")}
-              className="group relative py-2 text-[12px] lg:text-[13px] uppercase tracking-[.28em] font-light transition-all duration-200 ease-out hover:opacity-75 focus:outline-none"
-            >
-              <span className="relative z-10 leading-none">
-                {t.nav.collections}
-              </span>
-              <span
-                aria-hidden="true"
-                className={`absolute bottom-0 left-0 h-[1px] w-full bg-current transition-transform duration-300 ease-out origin-left ${
-                  path.startsWith("/lookbook")
-                    ? "scale-x-100"
-                    : "scale-x-0 group-hover:scale-x-100"
-                }`}
-              />
-            </Link>
-
-            {/* ABOUT YUPEK */}
-            <Link
-              href="/about"
-              onMouseEnter={handleMouseLeave}
-              className="group relative py-2 text-[12px] lg:text-[13px] uppercase tracking-[.28em] font-light transition-all duration-200 ease-out hover:opacity-75 focus:outline-none"
-            >
-              <span className="relative z-10 leading-none">
-                {t.nav.about}
-              </span>
-              <span
-                aria-hidden="true"
-                className={`absolute bottom-0 left-0 h-[1px] w-full bg-current transition-transform duration-300 ease-out origin-left ${
-                  path === "/about"
-                    ? "scale-x-100"
-                    : "scale-x-0 group-hover:scale-x-100"
-                }`}
-              />
-            </Link>
-          </nav>
-
           {/* DESKTOP RIGHT: SEARCH, LANGUAGE SWITCHER, ACCOUNT, BAG */}
-          <div className="hidden md:flex items-center gap-3 lg:gap-5 xl:gap-6 justify-end shrink-0">
+          <div className="hidden lg:flex items-center gap-[22px] xl:gap-[28px] ml-auto shrink-0 justify-end">
             {/* SEARCH: [search icon] SEARCH */}
             <button
               id="nav-search-desktop"
               onClick={() => setSearchOpen(true)}
               aria-label={t.nav.search}
-              className="min-h-[44px] min-w-[44px] group relative flex items-center justify-center gap-2 py-2 px-1 text-[11px] lg:text-[12px] uppercase tracking-[.22em] font-light transition-all duration-200 ease-out hover:-translate-y-[1px] opacity-80 hover:opacity-100 focus:outline-none"
+              className="min-h-[44px] group relative flex items-center justify-center gap-2 py-2 px-1 text-[11px] xl:text-[12px] uppercase tracking-[.20em] xl:tracking-[.22em] font-light transition-all duration-200 ease-out hover:-translate-y-[1px] opacity-80 hover:opacity-100 focus:outline-none whitespace-nowrap"
             >
-              <Icon name="search" className="h-[17px] w-[17px] transition-transform duration-200" />
+              <Icon name="search" className="h-[17px] w-[17px] transition-transform duration-200 shrink-0" />
               <span className="leading-none pt-[1px]">
                 {t.nav.search}
               </span>
             </button>
 
             {/* LANGUAGE SWITCHER: Quiet compact pill */}
-            <div className="flex items-center justify-center min-h-[44px] px-0.5">
+            <div className="flex items-center justify-center min-h-[44px] px-0.5 shrink-0">
               <LanguageSwitcher short size="sm" className="inline-flex" />
             </div>
 
@@ -359,9 +361,9 @@ export default function Header() {
                   id="nav-account-desktop"
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                   aria-label={t.nav.account}
-                  className="min-h-[44px] min-w-[44px] group flex items-center justify-center gap-2 py-2 px-1 text-[11px] lg:text-[12px] uppercase tracking-[.22em] font-light transition-all duration-200 ease-out hover:-translate-y-[1px] opacity-80 hover:opacity-100 focus:outline-none"
+                  className="min-h-[44px] group flex items-center justify-center gap-2 py-2 px-1 text-[11px] xl:text-[12px] uppercase tracking-[.20em] xl:tracking-[.22em] font-light transition-all duration-200 ease-out hover:-translate-y-[1px] opacity-80 hover:opacity-100 focus:outline-none whitespace-nowrap"
                 >
-                  <div className="flex h-4 w-4 items-center justify-center rounded-full border border-current text-[8px] font-medium tracking-wider">
+                  <div className="flex h-4 w-4 items-center justify-center rounded-full border border-current text-[8px] font-medium tracking-wider shrink-0">
                     {user.name.charAt(0).toUpperCase()}
                   </div>
                   <span className="leading-none pt-[1px]">
@@ -373,9 +375,9 @@ export default function Header() {
                   id="nav-account-desktop"
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                   aria-label={t.nav.account}
-                  className="min-h-[44px] min-w-[44px] group relative flex items-center justify-center gap-2 py-2 px-1 text-[11px] lg:text-[12px] uppercase tracking-[.22em] font-light transition-all duration-200 ease-out hover:-translate-y-[1px] opacity-80 hover:opacity-100 focus:outline-none"
+                  className="min-h-[44px] group relative flex items-center justify-center gap-2 py-2 px-1 text-[11px] xl:text-[12px] uppercase tracking-[.20em] xl:tracking-[.22em] font-light transition-all duration-200 ease-out hover:-translate-y-[1px] opacity-80 hover:opacity-100 focus:outline-none whitespace-nowrap"
                 >
-                  <Icon name="user" className="h-[17px] w-[17px] transition-transform duration-200" />
+                  <Icon name="user" className="h-[17px] w-[17px] transition-transform duration-200 shrink-0" />
                   <span className="leading-none pt-[1px]">
                     {t.nav.account}
                   </span>
@@ -494,9 +496,9 @@ export default function Header() {
               id="nav-bag-desktop"
               onClick={() => setCartOpen(true)}
               aria-label={`${t.nav.bag}, ${count} items`}
-              className="min-h-[44px] min-w-[44px] group relative flex items-center justify-center gap-2 py-2 px-1 text-[11px] lg:text-[12px] uppercase tracking-[.22em] font-light transition-all duration-200 ease-out hover:-translate-y-[1px] opacity-80 hover:opacity-100 focus:outline-none"
+              className="min-h-[44px] group relative flex items-center justify-center gap-2 py-2 px-1 text-[11px] xl:text-[12px] uppercase tracking-[.20em] xl:tracking-[.22em] font-light transition-all duration-200 ease-out hover:-translate-y-[1px] opacity-80 hover:opacity-100 focus:outline-none whitespace-nowrap"
             >
-              <div className="relative flex items-center justify-center">
+              <div className="relative flex items-center justify-center shrink-0">
                 <Icon name="bag" className="h-[17px] w-[17px] transition-transform duration-200" />
               </div>
               <span className="leading-none pt-[1px]">
@@ -506,12 +508,12 @@ export default function Header() {
           </div>
 
           {/* ========================================================= */}
-          {/* MOBILE NAVBAR (< 768px)                                   */}
-          {/* LEFT: Animated ☰/✕ | CENTER: Logo | RIGHT: Search, Bag   */}
+          {/* MOBILE / TABLET NAVBAR (< 1024px)                          */}
+          {/* LEFT: Animated ☰/✕ | CENTER: Logo | RIGHT: Search, Bag    */}
           {/* ========================================================= */}
 
           {/* MOBILE LEFT: Animated 3-line Hamburger */}
-          <div className="flex md:hidden items-center shrink-0">
+          <div className="flex lg:hidden items-center shrink-0">
             <button
               id="nav-mobile-menu"
               onClick={() => setMenuOpen(!menuOpen)}
@@ -542,7 +544,7 @@ export default function Header() {
           </div>
 
           {/* MOBILE CENTER: Logo Mathematically Centered in Viewport */}
-          <div className="flex md:hidden absolute left-1/2 -translate-x-1/2 items-center justify-center pointer-events-auto">
+          <div className="flex lg:hidden absolute left-1/2 -translate-x-1/2 items-center justify-center pointer-events-auto">
             <Link
               href="/"
               aria-label="YUPEK home"
@@ -575,7 +577,7 @@ export default function Header() {
           </div>
 
           {/* MOBILE RIGHT: Search and Bag */}
-          <div className="flex md:hidden items-center gap-0.5 justify-end shrink-0">
+          <div className="flex lg:hidden items-center gap-0.5 justify-end shrink-0">
             <button
               id="nav-search-mobile"
               onClick={() => setSearchOpen(true)}
@@ -607,7 +609,7 @@ export default function Header() {
         {/* DESKTOP EDITORIAL SUB-PANEL (Warm Ivory, High Contrast)   */}
         {/* ========================================================= */}
         <div
-          className={`hidden md:block absolute left-0 top-full w-full bg-[#FAF7F2] text-brown border-b border-brown/15 shadow-[0_20px_48px_rgba(43,29,20,0.08)] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] origin-top z-40 ${
+          className={`hidden lg:block absolute left-0 top-full w-full bg-[#FAF7F2] text-brown border-b border-brown/15 shadow-[0_20px_48px_rgba(43,29,20,0.08)] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] origin-top z-40 ${
             activeMenu
               ? "opacity-100 translate-y-0 pointer-events-auto visible"
               : "opacity-0 -translate-y-2 pointer-events-none invisible"

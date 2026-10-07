@@ -60,7 +60,7 @@ export default function ContactPage() {
     }
   };
 
-  const cleanWaNumber = (config.whatsappNumber || "+31644154126").replace(/[^0-9]/g, "");
+
 
   return (
     <div className="py-16 md:py-24">
@@ -81,8 +81,8 @@ export default function ContactPage() {
               </p>
               <p>
                 {locale === "nl"
-                  ? "Voor specifieke productvragen of stylingadvies kunnen klanten rechtstreeks contact met ons opnemen via e-mail of WhatsApp."
-                  : "For private product questions or styling enquiries, customers can contact us directly by email or WhatsApp."}
+                  ? "Voor specifieke productvragen of stylingadvies kunnen klanten rechtstreeks contact met ons opnemen via e-mail of ons contactformulier hieronder."
+                  : "For private product questions or styling enquiries, customers can contact us directly by email or our contact form below."}
               </p>
             </div>
           </div>
@@ -257,16 +257,10 @@ export default function ContactPage() {
 
                   <div>
                     <span className="text-[10px] uppercase tracking-widest text-brown/50 block mb-1">
-                      {t.contact.telephoneLine || "WHATSAPP"}
+                      {locale === "nl" ? "TELEFOON" : "TELEPHONE"}
                     </span>
                     <a
-                      href={`https://wa.me/${cleanWaNumber}?text=${encodeURIComponent(
-                        locale === "nl"
-                          ? "Hallo YUPEK, ik heb een vraag over uw collectie."
-                          : "Hello YUPEK, I have an inquiry regarding your collection."
-                      )}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      href={`tel:${(config.contactPhone || "+31644154126").replace(/\s+/g, "")}`}
                       className="text-xs font-medium text-brown hover:text-burgundy transition-colors"
                     >
                       {config.contactPhone || "+31644154126"}
@@ -282,27 +276,6 @@ export default function ContactPage() {
                       <p className="font-medium text-brown">10:00 – 19:00 CET</p>
                     </div>
                   </div>
-                </div>
-
-                {/* Instant WhatsApp Concierge Button */}
-                <div className="border-t border-brown/10 pt-5">
-                  <a
-                    href={`https://wa.me/${cleanWaNumber}?text=${encodeURIComponent(
-                      config.whatsappMessage && locale === "en"
-                        ? config.whatsappMessage
-                        : locale === "nl"
-                        ? "Hallo YUPEK, ik heb een vraag over uw collectie."
-                        : "Hello YUPEK, I have an inquiry regarding your collection."
-                    )}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex w-full items-center justify-center gap-3 bg-[#25D366] text-white py-3.5 px-4 text-xs font-medium tracking-wider hover:bg-[#20ba5a] transition-all shadow-sm"
-                  >
-                    <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                      <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766 0-3.187-2.59-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.007c.106.005.249-.04.39.299.144.347.491 1.2.534 1.287.043.087.072.188.014.303-.058.116-.087.188-.173.289l-.26.303c-.087.087-.179.182-.077.357.101.174.449.741.964 1.2.662.591 1.221.774 1.394.86.173.086.275.072.376-.044.101-.116.433-.506.549-.679.116-.173.231-.144.39-.086s1.011.477 1.184.564.289.13.332.202c.044.073.044.419-.1.824z" />
-                    </svg>
-                    <span>{t.contact.directWhatsAppBtn || "CONTACT VIA WHATSAPP"}</span>
-                  </a>
                 </div>
               </div>
             </ScrollReveal>

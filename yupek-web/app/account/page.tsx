@@ -196,16 +196,12 @@ function ProfileContent() {
               {t.account.conciergeDesc}
             </p>
             <div className="mt-4 flex flex-col gap-2">
-              <a
-                href={`https://wa.me/31612345678?text=${encodeURIComponent(
-                  `Hello YUPEK! I am ${user?.name} (${user?.email}) requesting styling assistance.`
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 bg-[#25D366] text-white px-4 py-2.5 text-xs uppercase tracking-wider font-medium hover:bg-[#20ba5a] transition-colors shadow-sm"
+              <Link
+                href="/contact"
+                className="inline-flex items-center justify-center gap-2 bg-burgundy text-cream px-4 py-2.5 text-xs uppercase tracking-wider font-medium hover:bg-burgundy/90 transition-colors shadow-sm"
               >
-                <span>{t.account.whatsAppConciergeBtn}</span>
-              </a>
+                <span>{locale === "nl" ? "Klantenservice Berichten" : "Contact Concierge"}</span>
+              </Link>
               <Link
                 href="/contact"
                 className="text-center text-xs text-brown/70 hover:text-burgundy hover:underline py-1"
