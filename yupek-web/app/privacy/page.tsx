@@ -13,7 +13,7 @@ export default function PrivacyPage() {
 
   const isNl = locale === "nl";
   const contactEmail = config.contactEmail || "daniyarov16@gmail.com";
-  const cleanPhone = (config.whatsappNumber || "+31644154126").replace(/[^0-9]/g, "");
+
 
   return (
     <div className="bg-cream min-h-screen text-brown selection:bg-gold selection:text-white">
@@ -228,16 +228,12 @@ export default function PrivacyPage() {
                 <Icon name="mail" className="w-3.5 h-3.5" />
                 <span>{isNl ? "E-MAIL CONCIËRGE" : "EMAIL CONCIERGE"}</span>
               </a>
-              {cleanPhone && (
-                <a
-                  href={`https://wa.me/${cleanPhone}?text=${encodeURIComponent("Hello YUPEK, I have a question regarding privacy and data protection.")}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn border border-cream/30 text-cream hover:bg-cream hover:text-brown transition-colors text-center text-[10px] tracking-[.2em] font-semibold py-3 px-6"
-                >
-                  {isNl ? "WHATSAPP ASSISTENTIE" : "WHATSAPP ASSISTANCE"}
-                </a>
-              )}
+              <Link
+                href="/contact"
+                className="btn border border-cream/30 text-cream hover:bg-cream hover:text-brown transition-colors text-center text-[10px] tracking-[.2em] font-semibold py-3 px-6"
+              >
+                {isNl ? "KLANTENSERVICE BERICHTEN" : "CONTACT SUPPORT"}
+              </Link>
             </div>
           </div>
         </ScrollReveal>

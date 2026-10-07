@@ -4,7 +4,6 @@ import { ConfigProvider } from "./ConfigContext";
 import { AuthProvider, useAuth } from "./AuthContext";
 import { supabase } from "@/lib/supabase";
 import AuthModal from "./AuthModal";
-import WhatsAppButton from "./WhatsAppButton";
 
 export type CartLine = { 
   slug: string; 
@@ -135,9 +134,10 @@ function StoreProviderInner({ children }: { children: ReactNode }) {
     <StoreCtx.Provider value={value}>
       {children}
       <AuthModal />
-      <WhatsAppButton />
       <AccessibilityWidgets />
       <AdminHotkey />
+      <CookieBanner />
+      <CookieSettingsModal />
     </StoreCtx.Provider>
   );
 }
@@ -146,18 +146,23 @@ import AdminHotkey from "./AdminHotkey";
 import { LanguageProvider } from "./LanguageContext";
 import { AccessibilityProvider } from "./AccessibilityContext";
 import AccessibilityWidgets from "./AccessibilityWidgets";
+import { CookieConsentProvider } from "./CookieConsentContext";
+import CookieBanner from "./CookieBanner";
+import CookieSettingsModal from "./CookieSettingsModal";
 
 export default function Providers({ children }: { children: ReactNode }) {
   return (
     <LanguageProvider>
       <AccessibilityProvider>
-        <ConfigProvider>
-          <AuthProvider>
-            <StoreProviderInner>
-              {children}
-            </StoreProviderInner>
-          </AuthProvider>
-        </ConfigProvider>
+        <CookieConsentProvider>
+          <ConfigProvider>
+            <AuthProvider>
+              <StoreProviderInner>
+                {children}
+              </StoreProviderInner>
+            </AuthProvider>
+          </ConfigProvider>
+        </CookieConsentProvider>
       </AccessibilityProvider>
     </LanguageProvider>
   );
