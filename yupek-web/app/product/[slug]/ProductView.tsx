@@ -510,7 +510,7 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
 
           {/* Size Guide Table */}
           {guide && (
-            <div className="mt-4 border border-brown/15 bg-sand/10 p-4 transition-all">
+            <div className="mt-4 border border-brown/15 bg-sand/10 p-4 transition-all overflow-x-auto max-w-full">
               <table className="w-full text-left text-xs">
                 <caption className="sr-only">{t.product.sizeGuideCaption}</caption>
                 <thead>
@@ -649,7 +649,19 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
               },
               {
                 title: t.product.shippingTitle,
-                body: t.product.shippingBody,
+                body: (
+                  <div className="space-y-3">
+                    <p>{t.product.shippingBody}</p>
+                    <div className="pt-1">
+                      <Link
+                        href="/shipping"
+                        className="inline-flex items-center gap-1.5 text-[11px] font-semibold tracking-[.18em] uppercase text-gold hover:text-brown transition-colors underline underline-offset-4"
+                      >
+                        {locale === "nl" ? "Bekijk volledig verzendbeleid & levertijden" : "View Full Shipping & Delivery Policy"} &rarr;
+                      </Link>
+                    </div>
+                  </div>
+                ),
               },
               {
                 title: t.product.euRulesTitle,

@@ -132,7 +132,7 @@ export default function AuthModal() {
       >
         <button
           onClick={() => setAuthModalOpen(false)}
-          className="absolute right-5 top-5 p-1 text-brown/60 hover:text-brown transition-colors"
+          className="absolute right-4 top-4 min-h-[44px] min-w-[44px] flex items-center justify-center text-brown/60 hover:text-brown transition-all duration-200 ease-out active:scale-95 opacity-80 hover:opacity-100 focus:outline-none"
           aria-label={t.common.close}
         >
           <Icon name="close" className="h-5 w-5" />
@@ -140,6 +140,7 @@ export default function AuthModal() {
 
         <div className="text-center">
           <Image
+            unoptimized
             src="/images/logo.png"
             alt="YUPEK"
             width={160}

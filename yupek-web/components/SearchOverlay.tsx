@@ -87,6 +87,17 @@ export default function SearchOverlay() {
     return () => window.removeEventListener("keydown", handleKey);
   }, [searchOpen, setSearchOpen]);
 
+  // Lock body scroll when search overlay is open
+  useEffect(() => {
+    if (searchOpen) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = prev;
+      };
+    }
+  }, [searchOpen]);
+
   // Reset query on overlay close
   useEffect(() => {
     if (!searchOpen) {
@@ -119,11 +130,15 @@ export default function SearchOverlay() {
       aria-label={t.nav.search}
       aria-hidden={!searchOpen}
       inert={!searchOpen || undefined}
-      className={`fixed inset-0 z-50 overflow-y-auto bg-cream/98 backdrop-blur-md transition-opacity duration-300 text-brown ${
+      className={`fixed inset-0 z-50 overflow-y-auto overflow-x-hidden max-w-full bg-cream/98 backdrop-blur-md transition-all duration-300 text-brown ${
         searchOpen ? "opacity-100" : "invisible opacity-0 pointer-events-none"
       }`}
     >
-      <div className="wrap max-w-5xl py-8 md:py-12">
+      <div
+        className={`wrap max-w-5xl py-8 md:py-12 transform transition-all duration-300 ease-out ${
+          searchOpen ? "opacity-100 translate-y-0 scale-100" : "opacity-0 -translate-y-2 scale-[0.98]"
+        }`}
+      >
         {/* Top Header Actions */}
         <div className="flex items-center justify-between">
           <span className="text-[10px] uppercase tracking-[.3em] text-gold font-semibold">
@@ -132,9 +147,9 @@ export default function SearchOverlay() {
           <button
             aria-label={t.searchOverlay.closeAria}
             onClick={() => setSearchOpen(false)}
-            className="p-2 text-brown hover:text-gold transition-colors focus:outline-none"
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center text-brown hover:text-burgundy transition-all duration-200 ease-out active:scale-95 opacity-80 hover:opacity-100 focus:outline-none"
           >
-            <Icon name="close" className="h-6 w-6" />
+            <Icon name="close" className="h-5 w-5" />
           </button>
         </div>
 
@@ -160,10 +175,10 @@ export default function SearchOverlay() {
           {q && (
             <button
               onClick={() => setQ("")}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-brown/40 hover:text-brown transition-colors"
+              className="absolute right-2 top-1/2 -translate-y-1/2 min-h-[44px] min-w-[44px] flex items-center justify-center text-brown/40 hover:text-brown transition-all duration-200 ease-out active:scale-95 focus:outline-none"
               aria-label="Clear query"
             >
-              <Icon name="close" className="w-5 h-5" />
+              <Icon name="close" className="w-4 h-4" />
             </button>
           )}
         </div>

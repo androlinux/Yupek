@@ -111,7 +111,7 @@ function OrderDetailContent() {
   const getFulfillmentDisplay = (status: string) => {
     switch (status) {
       case "printify_order_created":
-        return locale === "nl" ? "Printify bestelling aangemaakt" : "Printify Order Created";
+        return locale === "nl" ? "In productie genomen" : "Queued for Production";
       case "sent_to_production":
       case "in_production":
         return locale === "nl" ? "In productie" : "In Production";

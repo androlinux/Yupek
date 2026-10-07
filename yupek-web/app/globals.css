@@ -4,12 +4,18 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
+  max-width: 100%;
 }
 
 body {
   @apply bg-cream text-brown font-sans antialiased;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  max-width: 100%;
+  width: 100%;
+  position: relative;
 }
 
 body::after {
@@ -31,23 +37,29 @@ body::after {
   .label {
     @apply text-[11px] uppercase tracking-[.22em];
   }
+
   .h-display {
     @apply font-serif font-light leading-[1.02] tracking-[.04em];
   }
+
   .btn {
     @apply inline-flex items-center justify-center border border-brown px-8 py-3.5 text-[11px] uppercase tracking-[.22em] transition-all duration-300 disabled:opacity-40;
   }
+
   .btn-dark {
     @apply bg-brown text-cream hover:bg-black;
   }
+
   .btn-line {
     @apply bg-transparent text-brown hover:bg-brown hover:text-cream;
   }
+
   .btn-light {
     @apply border-cream text-cream hover:bg-cream hover:text-brown;
   }
+
   .wrap {
-    @apply mx-auto w-full max-w-[1440px] px-5 md:px-10;
+    @apply mx-auto w-full max-w-[1440px] px-4 sm:px-5 md:px-10;
   }
 }
 
@@ -56,6 +68,7 @@ body::after {
     opacity: 0;
     transform: translateY(16px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -66,6 +79,7 @@ body::after {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -84,13 +98,16 @@ body::after {
   width: 6px;
   height: 6px;
 }
+
 ::-webkit-scrollbar-track {
   background: #F6F1E7;
 }
+
 ::-webkit-scrollbar-thumb {
   background: #D9CBB0;
   border-radius: 3px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: #A88B4A;
 }
@@ -99,9 +116,12 @@ body::after {
   html {
     scroll-behavior: auto;
   }
-  .fade-up, .fade-in {
+
+  .fade-up,
+  .fade-in {
     animation: none !important;
   }
+
   * {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
@@ -112,6 +132,7 @@ body::after {
 html.a11y-text-large {
   font-size: 115% !important;
 }
+
 html.a11y-text-xlarge {
   font-size: 130% !important;
 }
@@ -146,13 +167,16 @@ html.a11y-pause-animations *::after {
 html.a11y-high-contrast {
   color-scheme: dark;
 }
+
 html.a11y-high-contrast body {
   background-color: #000000 !important;
   color: #FFFFFF !important;
 }
+
 html.a11y-high-contrast body::after {
   display: none !important;
 }
+
 html.a11y-high-contrast .bg-cream,
 html.a11y-high-contrast .bg-sand,
 html.a11y-high-contrast .bg-sand\/15,
@@ -163,11 +187,13 @@ html.a11y-high-contrast .bg-white {
   color: #FFFFFF !important;
   border-color: #FFFFFF !important;
 }
+
 html.a11y-high-contrast .bg-brown {
   background-color: #000000 !important;
   color: #FFFFFF !important;
   border-color: #E2B24D !important;
 }
+
 html.a11y-high-contrast .text-brown,
 html.a11y-high-contrast .text-brown\/80,
 html.a11y-high-contrast .text-brown\/70,
@@ -175,20 +201,24 @@ html.a11y-high-contrast .text-brown\/60,
 html.a11y-high-contrast .text-brown\/50 {
   color: #FFFFFF !important;
 }
+
 html.a11y-high-contrast .text-gold {
   color: #F8D26A !important;
   font-weight: 700 !important;
 }
+
 html.a11y-high-contrast .btn {
-  border: 2px solid #F8D26A !important;
+  border: 3px solid #F8D26A !important;
   background-color: #000000 !important;
   color: #F8D26A !important;
   font-weight: 700 !important;
 }
+
 html.a11y-high-contrast .btn:hover {
   background-color: #F8D26A !important;
   color: #000000 !important;
 }
+
 html.a11y-high-contrast :focus-visible {
   outline: 3px solid #F8D26A !important;
   outline-offset: 4px !important;
@@ -198,12 +228,15 @@ html.a11y-high-contrast :focus-visible {
 html.a11y-filter-deuteranopia {
   filter: url(#deuteranopia-filter);
 }
+
 html.a11y-filter-protanopia {
   filter: url(#protanopia-filter);
 }
+
 html.a11y-filter-tritanopia {
   filter: url(#tritanopia-filter);
 }
+
 html.a11y-filter-monochrome {
   filter: grayscale(100%) contrast(125%);
 }
