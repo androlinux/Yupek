@@ -102,12 +102,23 @@ def handle_printify_order_event(event_type: str, resource: dict[str, Any], event
 
     current_status = order.get("fulfillment_status", "pending_payment")
     target_status = current_status
-    if event_type == "order:sent-to-production":
+    if event_type == "order:created":
+        target_status = "printify_order_created"
+    elif event_type == "order:sent-to-production":
         target_status = "in_production"
     elif event_type == "order:shipment:created":
         target_status = "shipped"
     elif event_type == "order:shipment:delivered":
         target_status = "delivered"
+    elif event_type == "order:updated":
+        # Keep current fulfillment status unless shipments indicate otherwise
+        if resource_data.get("status") == "fulfilled":
+            target_status = "delivered"
+        elif resource_data.get("shipments"):
+            target_status = "shipped"
+
+    if printify_order_id and not order.get("printify_order_id"):
+        order["printify_order_id"] = printify_order_id
 
     current_rank = status_rank.get(current_status, 0)
     target_rank = status_rank.get(target_status, 0)
@@ -359,6 +370,8 @@ async def handle_printify_webhook(request: Request):
         "product:publish:started",
     }
     supported_order_events = {
+        "order:created",
+        "order:updated",
         "order:sent-to-production",
         "order:shipment:created",
         "order:shipment:delivered",

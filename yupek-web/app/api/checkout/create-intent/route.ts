@@ -124,10 +124,23 @@ export async function POST(req: NextRequest) {
     }
 
     // Shipping in integer cents
-    const isExpress = delivery === "express";
-    let shippingCents = isExpress ? 995 : 495;
-    if (!isExpress && subtotalCents >= 10000) {
-      shippingCents = 0; // Free shipping over €100
+    const deliveryMethod = body.delivery || "standard";
+    const deliveryLabel = body.delivery_label || (
+      deliveryMethod === "express" ? "Express Delivery" :
+      deliveryMethod === "economy" ? "Economy Delivery" :
+      deliveryMethod === "priority" ? "Priority Delivery" :
+      "Standard Delivery"
+    );
+
+    let shippingCents: number;
+    if (typeof body.shipping_cents === "number" && body.shipping_cents >= 0) {
+      shippingCents = Math.round(body.shipping_cents);
+    } else {
+      const isExpress = deliveryMethod === "express";
+      shippingCents = isExpress ? 995 : 495;
+      if (!isExpress && subtotalCents >= 10000) {
+        shippingCents = 0; // Free shipping over €100
+      }
     }
 
     const totalCents = subtotalCents + shippingCents;
@@ -233,6 +246,8 @@ export async function POST(req: NextRequest) {
       shipping_cents: shippingCents,
       vat_cents: vatCents,
       total_cents: totalCents,
+      shipping_method: deliveryMethod,
+      shipping_method_label: deliveryLabel,
       payment_status: "pending",
       fulfillment_status: "pending_payment",
       stripe_payment_intent_id: paymentIntentId,

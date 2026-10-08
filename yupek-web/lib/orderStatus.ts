@@ -359,6 +359,8 @@ export function sanitizeCustomerOrder(order: any): any {
     total_cents: order.total_cents || 0,
     payment_status: order.payment_status || "pending",
     fulfillment_status: order.fulfillment_status || "pending_payment",
+    shipping_method: order.shipping_method || null,
+    shipping_method_label: order.shipping_method_label || order.deliveryMethod || null,
     carrier: order.carrier || null,
     tracking_number: order.tracking_number || null,
     tracking_url: isSafeExternalUrl(order.tracking_url) ? order.tracking_url : null,

@@ -22,7 +22,6 @@ export default function Checkout() {
   const { user } = useAuth();
   const { t, locale } = useLanguage();
 
-  const [d, setD] = useState<"standard" | "express">("standard");
   const [email, setEmail] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -39,10 +38,21 @@ export default function Checkout() {
   const [orderId, setOrderId] = useState<string | null>(null);
   const [stripePromise, setStripePromise] = useState<any>(null);
 
-  const deliveryOptions = {
-    standard: { label: t.checkout.standardCourier, note: t.checkout.standardNote, price: 4.95 },
-    express: { label: t.checkout.expressCourier, note: t.checkout.expressNote, price: 9.95 },
-  };
+  // Dynamic Shipping Methods State
+  const [shippingOptions, setShippingOptions] = useState<Array<{
+    id: string;
+    label: string;
+    description: string;
+    amount_cents: number;
+    amount_formatted: string;
+    currency: string;
+    is_free: boolean;
+    estimated_days_min: number;
+    estimated_days_max: number;
+  }>>([]);
+  const [selectedDelivery, setSelectedDelivery] = useState<string>("standard");
+  const [calculatingShipping, setCalculatingShipping] = useState(false);
+  const [shippingError, setShippingError] = useState<string | null>(null);
 
   // Pre-fill user data if authenticated
   useEffect(() => {
@@ -66,11 +76,81 @@ export default function Checkout() {
     setStripePromise(getStripe());
   }, []);
 
+  // Live Shipping Calculation from Printify API / Backend
+  const calculateLiveShipping = async (targetCountry: string) => {
+    if (!lines.length) return;
+    setCalculatingShipping(true);
+    try {
+      const orderItems = lines.map((l) => {
+        const p = getProduct(l.slug);
+        return {
+          slug: l.slug,
+          title: l.title || p?.name || l.slug,
+          size: l.size,
+          color: l.color,
+          quantity: l.qty,
+          variant_id: l.printifyVariantId,
+          productId: l.productId || p?.id,
+          supplierProductId: l.printifyProductId || p?.supplierProductId,
+        };
+      });
+
+      const res = await fetch("/api/shipping/calculate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          address: {
+            country: targetCountry,
+            street,
+            city,
+            postalCode,
+            firstName,
+            lastName,
+            email,
+            phone,
+          },
+          items: orderItems,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.options) && data.options.length > 0) {
+          setShippingOptions(data.options);
+          setShippingError(null);
+          if (!data.options.some((o: any) => o.id === selectedDelivery)) {
+            setSelectedDelivery(data.options[0].id);
+          }
+        } else {
+          setShippingOptions([]);
+          setShippingError("Server temporarily unavailable. Please try again.");
+        }
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        setShippingOptions([]);
+        setShippingError(errData.error || "Server temporarily unavailable. Please try again.");
+      }
+    } catch (err) {
+      console.warn("[Live Shipping Rate Notice]", err);
+      setShippingOptions([]);
+      setShippingError("Server temporarily unavailable. Please try again.");
+    } finally {
+      setCalculatingShipping(false);
+    }
+  };
+
+  useEffect(() => {
+    if (lines.length > 0 && country) {
+      calculateLiveShipping(country);
+    }
+  }, [country, lines.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const sub = useCartTotal(lines);
   const freeOver = config.freeShippingThreshold || site.freeShippingOver;
-  const ship = d === "standard" && sub >= freeOver ? 0 : deliveryOptions[d].price;
+  const currentOption = shippingOptions.find((o) => o.id === selectedDelivery) || shippingOptions[0];
+  const isFree = currentOption?.id === "standard" && sub >= freeOver;
+  const ship = isFree ? 0 : (currentOption ? currentOption.amount_cents / 100 : 0);
   const total = sub + ship;
-  const vat = Math.round((total - total / 1.21) * 100) / 100;
 
   if (!lines.length) {
     return (
@@ -88,6 +168,12 @@ export default function Checkout() {
   const handleProceedToPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+
+    if (!currentOption || shippingOptions.length === 0) {
+      setErrorMessage(shippingError || "Server temporarily unavailable. Please try again.");
+      return;
+    }
+
     setLoadingIntent(true);
 
     const orderItems = lines.map((l) => {
@@ -119,7 +205,9 @@ export default function Checkout() {
         country,
       },
       items: orderItems,
-      delivery: d,
+      delivery: selectedDelivery,
+      delivery_label: currentOption?.label,
+      shipping_cents: Math.round(ship * 100),
     };
 
     try {
@@ -161,9 +249,9 @@ export default function Checkout() {
 
         {step === "details" ? (
           <form className="space-y-10" onSubmit={handleProceedToPayment}>
-            {/* Contact */}
+            {/* 01 • Contact */}
             <fieldset className="space-y-4">
-              <legend className="label mb-3 text-brown">{t.checkout.clientContact}</legend>
+              <legend className="label mb-3 text-brown">01 • {t.checkout.clientContact.toUpperCase()}</legend>
               <div>
                 <label htmlFor="checkout-email" className="sr-only">
                   {t.checkout.emailPlaceholder}
@@ -183,9 +271,9 @@ export default function Checkout() {
               </div>
             </fieldset>
 
-            {/* Shipping Address */}
+            {/* 02 • Shipping Address */}
             <fieldset className="grid gap-5 sm:grid-cols-2">
-              <legend className="label mb-3 sm:col-span-2 text-brown">{t.checkout.deliveryDestination}</legend>
+              <legend className="label mb-3 sm:col-span-2 text-brown">02 • {t.checkout.deliveryDestination.toUpperCase()}</legend>
               <div>
                 <label htmlFor="checkout-first-name" className="sr-only">
                   {t.checkout.firstName}
@@ -293,7 +381,11 @@ export default function Checkout() {
                   aria-label={t.checkout.deliveryDestination}
                   autoComplete="country-name"
                   value={country}
-                  onChange={(e) => setCountry(e.target.value)}
+                  onChange={(e) => {
+                    const newCountry = e.target.value;
+                    setCountry(newCountry);
+                    calculateLiveShipping(newCountry);
+                  }}
                 >
                   {site.countries.map((c) => (
                     <option key={c} value={c}>
@@ -304,47 +396,77 @@ export default function Checkout() {
               </div>
             </fieldset>
 
-            {/* Delivery speed */}
-            <fieldset>
-              <legend className="label mb-3 text-brown">{t.checkout.shippingMethod}</legend>
-              {(Object.keys(deliveryOptions) as (keyof typeof deliveryOptions)[]).map((k) => (
-                <label
-                  key={k}
-                  htmlFor={`delivery-${k}`}
-                  className={`flex cursor-pointer items-center justify-between border p-4 transition-colors [&:not(:first-of-type)]:mt-2 ${
-                    d === k ? "border-brown bg-sand/20" : "border-brown/20 hover:border-brown/40"
-                  }`}
-                >
-                  <span className="flex items-center gap-3">
-                    <input
-                      id={`delivery-${k}`}
-                      type="radio"
-                      name="delivery"
-                      aria-label={`${deliveryOptions[k].label} - ${deliveryOptions[k].note}`}
-                      checked={d === k}
-                      onChange={() => setD(k)}
-                      className="accent-brown"
-                    />
-                    <span>
-                      <span className="label block text-xs">{deliveryOptions[k].label}</span>
-                      <span className="text-[11px] text-brown/60">{deliveryOptions[k].note}</span>
-                    </span>
+            {/* 03 • SHIPPING METHOD */}
+            <fieldset className="space-y-3">
+              <div className="flex items-center justify-between mb-2">
+                <legend className="label text-brown">03 • {t.checkout.shippingMethod.toUpperCase()}</legend>
+                {calculatingShipping && (
+                  <span className="text-[10px] text-brown/50 animate-pulse tracking-wider">
+                    {locale === "nl" ? "Tarieven berekenen..." : "Calculating rates..."}
                   </span>
-                  <span className="text-xs font-medium">
-                    {k === "standard" && sub >= freeOver ? (
-                      <span className="text-green-800 font-semibold">{t.checkout.complimentary}</span>
-                    ) : (
-                      eur(deliveryOptions[k].price)
-                    )}
-                  </span>
-                </label>
-              ))}
+                )}
+              </div>
+
+              {shippingError && shippingOptions.length === 0 && (
+                <div className="p-3.5 text-xs bg-amber-50/75 border border-amber-300 text-amber-900 rounded-sm leading-relaxed">
+                  {shippingError}
+                </div>
+              )}
+
+              {calculatingShipping && shippingOptions.length === 0 && (
+                <div className="p-3.5 text-xs text-brown/60 border border-brown/15 bg-sand/10 animate-pulse rounded-sm">
+                  {locale === "nl" ? "Live verzendtarieven ophalen..." : "Retrieving live delivery rates..."}
+                </div>
+              )}
+
+              <div className="space-y-2">
+                {shippingOptions.map((opt) => {
+                  const isSelected = selectedDelivery === opt.id;
+                  const optFree = opt.id === "standard" && sub >= freeOver;
+                  const priceLabel = optFree ? (
+                    <span className="text-green-800 font-semibold">{t.checkout.complimentary}</span>
+                  ) : (
+                    eur(opt.amount_cents / 100)
+                  );
+
+                  return (
+                    <label
+                      key={opt.id}
+                      htmlFor={`delivery-${opt.id}`}
+                      className={`flex cursor-pointer items-center justify-between border p-3.5 sm:p-4 transition-all duration-200 ${
+                        isSelected
+                          ? "border-brown bg-sand/25 shadow-sm"
+                          : "border-brown/20 bg-transparent hover:border-brown/40"
+                      }`}
+                    >
+                      <span className="flex items-center gap-3 min-w-0 pr-2">
+                        <input
+                          id={`delivery-${opt.id}`}
+                          type="radio"
+                          name="delivery"
+                          aria-label={`${opt.label} - ${opt.description}`}
+                          checked={isSelected}
+                          onChange={() => setSelectedDelivery(opt.id)}
+                          className="accent-brown shrink-0"
+                        />
+                        <span className="min-w-0">
+                          <span className="label block text-xs font-semibold text-brown">{opt.label}</span>
+                          <span className="text-[11px] text-brown/65 block mt-0.5 break-words">{opt.description}</span>
+                        </span>
+                      </span>
+                      <span className="text-xs font-medium shrink-0 ml-2 text-right whitespace-nowrap">
+                        {priceLabel}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
             </fieldset>
 
             <button
               type="submit"
-              disabled={loadingIntent}
-              className="btn btn-dark w-full py-4 text-xs tracking-[.25em] flex items-center justify-center gap-2"
+              disabled={loadingIntent || calculatingShipping || shippingOptions.length === 0}
+              className="btn btn-dark w-full py-4 text-xs tracking-[.25em] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loadingIntent ? (
                 <>
@@ -444,12 +566,10 @@ export default function Checkout() {
             <dd className="font-medium">{eur(sub)}</dd>
           </div>
           <div className="flex justify-between">
-            <dt>{t.common.complimentaryShipping} ({deliveryOptions[d].label.split(" ")[0]})</dt>
-            <dd className="font-medium">{ship ? eur(ship) : t.checkout.complimentary}</dd>
-          </div>
-          <div className="flex justify-between text-brown/60">
-            <dt>{t.checkout.inclVat}</dt>
-            <dd>{eur(vat)}</dd>
+            <dt>{t.checkout.shippingMethod}{currentOption ? ` (${currentOption.label.split(" ")[0]})` : ""}</dt>
+            <dd className="font-medium">
+              {currentOption ? (ship > 0 ? eur(ship) : t.checkout.complimentary) : (calculatingShipping ? "..." : "—")}
+            </dd>
           </div>
           <div className="label flex justify-between pt-4 border-t border-brown/10 text-sm font-semibold text-brown">
             <dt>{t.checkout.estimatedTotal}</dt>
