@@ -123,6 +123,12 @@ export default function SearchOverlay() {
     ref.current?.focus();
   };
 
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) {
+      setSearchOpen(false);
+    }
+  };
+
   return (
     <div
       role="dialog"
@@ -130,6 +136,7 @@ export default function SearchOverlay() {
       aria-label={t.nav.search}
       aria-hidden={!searchOpen}
       inert={!searchOpen || undefined}
+      onClick={handleBackdropClick}
       style={{ backgroundColor: "#FAF7F2", color: "#171717" }}
       className={`fixed inset-0 z-[80] overflow-y-auto overflow-x-hidden max-w-full transition-all duration-300 ${
         searchOpen ? "opacity-100" : "invisible opacity-0 pointer-events-none"
@@ -149,6 +156,7 @@ export default function SearchOverlay() {
             YUPEK ARCHIVE SEARCH
           </span>
           <button
+            type="button"
             aria-label={t.searchOverlay.closeAria}
             onClick={() => setSearchOpen(false)}
             style={{ color: "#171717" }}
@@ -180,14 +188,18 @@ export default function SearchOverlay() {
               color: "#171717",
               borderColor: "rgba(23, 23, 23, 0.20)",
             }}
-            className="w-full border-b-2 pb-4 pr-10 text-center font-serif text-3xl md:text-5xl lg:text-6xl tracking-[.08em] focus:outline-none transition-colors placeholder:text-[rgba(23,23,23,0.55)] focus:border-[#171717] [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden"
+            className="w-full border-b-2 pb-4 pr-10 text-center font-serif text-2xl sm:text-4xl md:text-5xl lg:text-6xl tracking-[.08em] focus:outline-none transition-colors placeholder:text-[rgba(23,23,23,0.55)] focus:border-[#171717] [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden"
           />
           {q && (
             <button
-              onClick={() => setQ("")}
+              type="button"
+              onClick={() => {
+                setQ("");
+                ref.current?.focus();
+              }}
               style={{ color: "#171717" }}
               className="absolute right-2 top-1/2 -translate-y-1/2 min-h-[44px] min-w-[44px] flex items-center justify-center opacity-60 hover:opacity-100 transition-all duration-200 ease-out active:scale-95 focus:outline-none"
-              aria-label="Clear query"
+              aria-label={locale === "nl" ? "Zoekopdracht wissen" : "Clear query"}
             >
               <Icon name="close" className="w-4 h-4 text-[#171717]" strokeWidth={1.5} />
             </button>
@@ -308,8 +320,8 @@ export default function SearchOverlay() {
           )}
 
           {q && rawResults.length === 0 && (
-            <div className="py-16 text-center space-y-3">
-              <p className="font-serif text-2xl" style={{ color: "#171717" }}>
+            <div className="py-16 text-center space-y-4">
+              <p className="font-serif text-2xl md:text-3xl" style={{ color: "#171717" }}>
                 {t.searchOverlay.noResults} “{q}”
               </p>
               <p
@@ -317,9 +329,31 @@ export default function SearchOverlay() {
                 style={{ color: "#555555" }}
               >
                 {locale === "nl"
-                  ? "Probeer te zoeken op 'Zijde', 'Overhemd', 'T-shirt', 'Denim' of pas uw filters aan."
-                  : "Try searching for 'Silk', 'Shirt', 'Tee', 'Denim' or adjusting your filters."}
+                  ? "Geen artikelen gevonden die overeenkomen met uw zoekopdracht. Wis uw zoekterm of ontdek de volledige collectie."
+                  : "No garments matched your search query. Clear your search or explore the complete collection."}
               </p>
+              <div className="pt-3 flex flex-wrap items-center justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQ("");
+                    ref.current?.focus();
+                  }}
+                  className="px-5 py-2.5 text-xs uppercase tracking-[.18em] border border-[#171717]/40 text-[#171717] hover:bg-[#171717] hover:text-[#FAF7F2] transition-colors"
+                >
+                  {locale === "nl" ? "Zoekopdracht wissen" : "Clear Search"}
+                </button>
+                <Link
+                  href="/shop"
+                  onClick={() => {
+                    setSearchOpen(false);
+                    setQ("");
+                  }}
+                  className="px-5 py-2.5 text-xs uppercase tracking-[.18em] bg-[#171717] text-[#FAF7F2] border border-[#171717] hover:bg-transparent hover:text-[#171717] transition-colors"
+                >
+                  {locale === "nl" ? "Bekijk alle artikelen" : "Browse All Products"}
+                </Link>
+              </div>
             </div>
           )}
 

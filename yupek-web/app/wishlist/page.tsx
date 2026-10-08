@@ -9,7 +9,7 @@ import ScrollReveal from "@/components/ScrollReveal";
 export default function Wishlist() {
   const { wishlist } = useStore();
   const { allProducts } = useSiteConfig();
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const items = allProducts.filter((p) => wishlist.includes(p.slug));
 
   return (
@@ -23,14 +23,29 @@ export default function Wishlist() {
             {t.nav.wishlist}
           </h1>
           <p className="mt-3 text-xs text-brown/60">
-            {t.account.emptyArchiveSubtitle}
+            {items.length > 0
+              ? `${items.length} ${
+                  locale === "nl"
+                    ? items.length === 1
+                      ? "kledingstuk bewaard"
+                      : "kledingstukken bewaard"
+                    : items.length === 1
+                    ? "piece saved"
+                    : "pieces saved"
+                }`
+              : t.account.emptyArchiveSubtitle}
           </p>
         </div>
       </ScrollReveal>
 
       {items.length ? (
         <ScrollReveal delayMs={100}>
-          <ProductGrid items={items} />
+          <ProductGrid items={items} centerIfFew={true} />
+          <div className="mt-16 text-center">
+            <Link href="/shop" className="btn btn-line text-xs py-3 px-8">
+              {locale === "nl" ? "Verder Winkelen" : "Continue Shopping"}
+            </Link>
+          </div>
         </ScrollReveal>
       ) : (
         <div className="py-20 text-center border border-dashed border-brown/20 bg-sand/10 p-8 max-w-lg mx-auto">

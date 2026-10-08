@@ -239,7 +239,10 @@ export function searchProducts(q: string, list?: Product[]): Product[] {
     const catLower = p.category.toLowerCase();
     const descLower = `${p.description} ${isCustomerFacingDescriptor(p.descriptor) ? p.descriptor : ""}`.toLowerCase();
     const tagsLower = p.tags.map((t) => t.toLowerCase());
-    const colorsLower = p.colors.map((c) => c.toLowerCase());
+    const colorsLower: string[] = [
+      ...p.colors.map((c) => c.toLowerCase()),
+      ...(p.variants?.flatMap((v) => (v.color ? [v.color.toLowerCase()] : [])) || []),
+    ];
     const matLower = p.material.toLowerCase();
 
     // Exact full query match
@@ -266,8 +269,16 @@ export function searchProducts(q: string, list?: Product[]): Product[] {
         tokenMatched = true;
       }
 
+      // Category synonyms
+      const isSynonym =
+        (catLower === "tees" && (token === "tee" || token === "tees" || token === "t-shirt" || token === "tshirt" || token === "t-shirts")) ||
+        (catLower === "shirts" && (token === "shirt" || token === "shirts" || token === "overhemd")) ||
+        (catLower === "sweatshirts" && (token === "sweatshirt" || token === "sweatshirts" || token === "sweater" || token === "hoodie" || token === "trui")) ||
+        (catLower === "trousers" && (token === "trouser" || token === "trousers" || token === "pants" || token === "pant" || token === "pantalon")) ||
+        (catLower === "denim" && (token === "denim" || token === "jeans" || token === "spijkerbroek"));
+
       // Category / Gender matches
-      if (catLower === token || catLower.includes(token) || p.gender.toLowerCase() === token) {
+      if (catLower === token || catLower.includes(token) || p.gender.toLowerCase() === token || isSynonym) {
         score += 25;
         tokenMatched = true;
       }
