@@ -25,7 +25,15 @@ export async function POST(req: NextRequest) {
     const validatedItems: OrderRecord["items"] = [];
 
     for (const rawItem of items) {
-      const quantity = Math.max(1, Math.floor(Number(rawItem.qty || rawItem.quantity) || 1));
+      const rawQty = rawItem.qty ?? rawItem.quantity;
+      const parsedQty = Number(rawQty);
+      if (!Number.isInteger(parsedQty) || parsedQty < 1 || parsedQty > 10) {
+        return NextResponse.json(
+          { error: `Invalid quantity for item '${rawItem.title || rawItem.slug || "item"}'. Quantity must be an integer between 1 and 10.` },
+          { status: 400 }
+        );
+      }
+      const quantity = parsedQty;
 
       // Match product strictly from trusted catalog
       const matchedProduct = trustedCatalog.find((p) => {
@@ -42,30 +50,61 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // Match variant
+      // Match and validate variant relationship
+      const productVariants = matchedProduct.variants || [];
+      const requestedVariantId = rawItem.variant_id || rawItem.variantId || rawItem.printifyVariantId;
       let matchedVariant: any = null;
-      if (rawItem.variant_id || rawItem.variantId || rawItem.printifyVariantId) {
-        const targetVarId = String(rawItem.variant_id || rawItem.variantId || rawItem.printifyVariantId);
-        matchedVariant = (matchedProduct.variants || []).find((v: any) => String(v.variant_id || v.id) === targetVarId);
+
+      if (requestedVariantId) {
+        const targetVarId = String(requestedVariantId);
+        matchedVariant = productVariants.find((v: any) => String(v.variant_id || v.id) === targetVarId);
+        if (!matchedVariant) {
+          return NextResponse.json(
+            { error: `Selected variant does not exist or does not belong to product '${matchedProduct.name}'.` },
+            { status: 400 }
+          );
+        }
+      } else if (rawItem.size && rawItem.color) {
+        matchedVariant = productVariants.find((v: any) => {
+          const optStr = JSON.stringify(v.options || {}).toLowerCase();
+          return (
+            (String(v.size || "").toLowerCase() === rawItem.size.toLowerCase() &&
+             String(v.color || "").toLowerCase() === rawItem.color.toLowerCase()) ||
+            (optStr.includes(rawItem.size.toLowerCase()) && optStr.includes(rawItem.color.toLowerCase()))
+          );
+        });
+      } else if (rawItem.size) {
+        matchedVariant = productVariants.find((v: any) => String(v.size || "").toLowerCase() === rawItem.size.toLowerCase());
       }
 
-      if (!matchedVariant && rawItem.size && rawItem.color) {
-        matchedVariant = (matchedProduct.variants || []).find((v: any) => {
-          const optStr = JSON.stringify(v.options || {}).toLowerCase();
-          return optStr.includes(rawItem.size.toLowerCase()) && optStr.includes(rawItem.color.toLowerCase());
-        });
+      if (productVariants.length > 0 && !matchedVariant) {
+        return NextResponse.json(
+          { error: `Please select a valid size and color for product '${matchedProduct.name}'.` },
+          { status: 400 }
+        );
+      }
+
+      // Stock / availability check
+      if (matchedVariant && (matchedVariant.is_enabled === false || matchedVariant.is_available === false)) {
+        return NextResponse.json(
+          { error: `Selected variant for '${matchedProduct.name}' is currently out of stock.` },
+          { status: 400 }
+        );
       }
 
       // Authoritative unit price in integer cents
       let unitPriceCents = 0;
-      if (matchedVariant?.price_cents) {
+      if (matchedVariant?.price_cents && Number(matchedVariant.price_cents) > 0) {
         unitPriceCents = Math.round(Number(matchedVariant.price_cents));
-      } else if (matchedVariant?.price !== undefined) {
+      } else if (matchedVariant?.price !== undefined && Number(matchedVariant.price) > 0) {
         unitPriceCents = Math.round(Number(matchedVariant.price) * 100);
-      } else if (matchedProduct.price !== undefined) {
+      } else if (matchedProduct.price !== undefined && Number(matchedProduct.price) > 0) {
         unitPriceCents = Math.round(Number(matchedProduct.price) * 100);
       } else {
-        unitPriceCents = 2699; // Fallback
+        return NextResponse.json(
+          { error: `Invalid pricing configuration for product '${matchedProduct.name}'.` },
+          { status: 500 }
+        );
       }
 
       subtotalCents += unitPriceCents * quantity;
@@ -74,9 +113,9 @@ export async function POST(req: NextRequest) {
         product_id: matchedProduct.id,
         supplier_product_id: matchedProduct.supplierProductId || matchedProduct.id,
         slug: matchedProduct.slug,
-        variant_id: matchedVariant?.variant_id || matchedVariant?.id || rawItem.variant_id || rawItem.printifyVariantId,
-        color: rawItem.color || matchedVariant?.color || "Default",
-        size: rawItem.size || matchedVariant?.size || "M",
+        variant_id: matchedVariant ? (matchedVariant.variant_id || matchedVariant.id) : undefined,
+        color: matchedVariant?.color || rawItem.color || "Default",
+        size: matchedVariant?.size || rawItem.size || "M",
         quantity,
         unit_price_cents: unitPriceCents,
         image: rawItem.image || matchedProduct.images?.[0] || "",
@@ -100,9 +139,9 @@ export async function POST(req: NextRequest) {
 
     if (bodyOrderId) {
       existingOrder = await getOrderRecordById(bodyOrderId);
-      if (existingOrder && existingOrder.payment_status === "paid") {
+      if (existingOrder && (existingOrder.payment_status === "paid" || existingOrder.payment_status === "refunded")) {
         return NextResponse.json(
-          { error: "Payment for this order has already succeeded." },
+          { error: `Payment for this order has already ${existingOrder.payment_status}.` },
           { status: 400 }
         );
       }
@@ -160,6 +199,13 @@ export async function POST(req: NextRequest) {
         paymentIntentId = intent.id;
       }
     } else {
+      if (process.env.NODE_ENV === "production") {
+        console.error("[Stripe Production Error] STRIPE_SECRET_KEY is not configured in production environment.");
+        return NextResponse.json(
+          { error: "Payment processing is currently unavailable. Please contact support or try again later." },
+          { status: 503 }
+        );
+      }
       console.warn("[Stripe Warning] STRIPE_SECRET_KEY not set. Using test mock intent for development.");
       paymentIntentId = existingOrder?.stripe_payment_intent_id || `pi_test_${Date.now()}`;
       clientSecret = `${paymentIntentId}_secret_test`;

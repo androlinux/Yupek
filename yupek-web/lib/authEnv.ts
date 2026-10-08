@@ -90,7 +90,14 @@ export function getBaseOrigin(request?: Request): string {
 export function getOAuthRedirectUrl(nextPath?: string): string {
   const origin = getBaseOrigin();
   const callbackUrl = `${origin}/auth/callback`;
-  if (nextPath && nextPath !== "/account") {
+  if (
+    nextPath &&
+    nextPath !== "/account" &&
+    nextPath.startsWith("/") &&
+    !nextPath.startsWith("//") &&
+    !nextPath.startsWith("/\\") &&
+    !nextPath.includes("\\")
+  ) {
     return `${callbackUrl}?next=${encodeURIComponent(nextPath)}`;
   }
   return callbackUrl;

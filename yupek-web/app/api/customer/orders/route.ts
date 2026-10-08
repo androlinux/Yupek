@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { getUserOrders } from "@/lib/orderPersistence";
+import { sanitizeCustomerOrder } from "@/lib/orderStatus";
 
 export const dynamic = "force-dynamic";
 
@@ -33,16 +34,18 @@ export async function GET(req: NextRequest) {
           return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
         const orders = await getUserOrders(userFromToken.user.id, userFromToken.user.email);
-        return NextResponse.json({ success: true, orders });
+        const sanitizedOrders = (orders || []).map(sanitizeCustomerOrder);
+        return NextResponse.json({ success: true, orders: sanitizedOrders });
       }
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const orders = await getUserOrders(user.id, user.email);
+    const sanitizedOrders = (orders || []).map(sanitizeCustomerOrder);
 
     return NextResponse.json({
       success: true,
-      orders,
+      orders: sanitizedOrders,
     });
   } catch (err: any) {
     console.error("[Customer Orders GET Error]", err);

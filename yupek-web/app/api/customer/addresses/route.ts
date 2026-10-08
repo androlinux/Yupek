@@ -87,6 +87,11 @@ export async function POST(req: NextRequest) {
       is_default,
     } = body;
 
+    const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (id && !UUID_REGEX.test(String(id).trim())) {
+      return NextResponse.json({ error: "Invalid address ID" }, { status: 400 });
+    }
+
     if (!first_name || !last_name || !address1 || !city || !postal_code) {
       return NextResponse.json(
         { error: "First name, last name, street address, city, and postal code are required." },
@@ -107,14 +112,14 @@ export async function POST(req: NextRequest) {
 
     const addressRecord = {
       user_id: user.id,
-      first_name: String(first_name).trim(),
-      last_name: String(last_name).trim(),
-      address1: String(address1).trim(),
-      address2: address2 ? String(address2).trim() : "",
-      city: String(city).trim(),
-      postal_code: String(postal_code).trim(),
-      country: country ? String(country).trim() : "Netherlands",
-      phone: phone ? String(phone).trim() : "",
+      first_name: String(first_name).trim().slice(0, 100),
+      last_name: String(last_name).trim().slice(0, 100),
+      address1: String(address1).trim().slice(0, 255),
+      address2: address2 ? String(address2).trim().slice(0, 255) : "",
+      city: String(city).trim().slice(0, 100),
+      postal_code: String(postal_code).trim().slice(0, 30),
+      country: country ? String(country).trim().slice(0, 100) : "Netherlands",
+      phone: phone ? String(phone).trim().slice(0, 50) : "",
       is_default: Boolean(is_default),
       updated_at: now,
     };
@@ -125,7 +130,7 @@ export async function POST(req: NextRequest) {
       const { data, error } = await supabase
         .from("addresses")
         .update(addressRecord)
-        .eq("id", id)
+        .eq("id", String(id).trim())
         .eq("user_id", user.id)
         .select()
         .single();
@@ -166,15 +171,16 @@ export async function DELETE(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
 
-    if (!id) {
-      return NextResponse.json({ error: "Address ID required" }, { status: 400 });
+    const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!id || !UUID_REGEX.test(String(id).trim())) {
+      return NextResponse.json({ error: "Valid address ID required" }, { status: 400 });
     }
 
     const supabase = getSupabaseServerClient();
     const { error } = await supabase
       .from("addresses")
       .delete()
-      .eq("id", id)
+      .eq("id", String(id).trim())
       .eq("user_id", user.id);
 
     if (error) throw error;

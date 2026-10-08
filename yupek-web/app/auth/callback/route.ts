@@ -39,8 +39,17 @@ export async function GET(request: Request) {
 
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      // Ensure target destination is safe relative path
-      const targetPath = next.startsWith("/") ? next : `/${next}`;
+      // Ensure target destination is a safe relative path within our application
+      let targetPath = "/account";
+      if (
+        next &&
+        next.startsWith("/") &&
+        !next.startsWith("//") &&
+        !next.startsWith("/\\") &&
+        !next.includes("\\")
+      ) {
+        targetPath = next;
+      }
       return NextResponse.redirect(`${baseOrigin}${targetPath}`);
     } else {
       console.error("[Auth Callback] Exchange code error:", error.message);

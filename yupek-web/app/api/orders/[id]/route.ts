@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getOrderRecordById, deleteOrderRecord } from "@/lib/orderPersistence";
 import { getOrMigrateSiteConfig } from "@/lib/siteConfigServer";
+import { verifyAdminAuth } from "@/lib/adminAuth";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   const orderId = params.id;
@@ -18,8 +19,13 @@ export async function GET(
     return NextResponse.json({ error: "Order not found" }, { status: 404 });
   }
 
-  return NextResponse.json({
+  // Check server-verified admin authorization
+  const authResult = await verifyAdminAuth(req);
+  const isAdmin = authResult.authorized;
+
+  const baseResponse: Record<string, any> = {
     order_id: order.id,
+    id: order.id,
     customer_email: order.customer_email,
     customer_name: order.customer_name,
     currency: order.currency || "EUR",
@@ -29,12 +35,22 @@ export async function GET(
     vat_cents: order.vat_cents,
     payment_status: order.payment_status,
     fulfillment_status: order.fulfillment_status,
-    stripe_payment_intent_id: order.stripe_payment_intent_id,
-    printify_order_id: order.printify_order_id,
+    carrier: order.carrier || null,
+    tracking_number: order.tracking_number || null,
+    tracking_url: order.tracking_url || null,
+    shipped_at: order.shipped_at || null,
+    delivered_at: order.delivered_at || null,
     items: order.items,
     created_at: order.created_at,
     updated_at: order.updated_at,
-  });
+  };
+
+  if (isAdmin) {
+    baseResponse.stripe_payment_intent_id = order.stripe_payment_intent_id;
+    baseResponse.printify_order_id = order.printify_order_id;
+  }
+
+  return NextResponse.json(baseResponse);
 }
 
 /**
@@ -45,7 +61,7 @@ export async function GET(
  * SAFETY REQUIREMENTS & GUARANTEES:
  * - Requires a single, specific, non-empty order ID in the URL route.
  * - Rejects any attempt at wildcard or bulk deletion.
- * - Strictly enforces Admin authorization (x-yupek-admin-auth header or admin secret key).
+ * - Strictly enforces server-side verified Admin authorization.
  * - NEVER contacts Stripe (no refund, no payment intent cancel).
  * - NEVER contacts Printify (no order cancellation, no API calls).
  * - NEVER alters customer accounts or product catalogs.
@@ -66,36 +82,19 @@ export async function DELETE(
     );
   }
 
-  // 2. Authorization: Only authenticated Admin users can delete orders
-  const { config } = await getOrMigrateSiteConfig();
-  const adminHeader = req.headers.get("x-yupek-admin-auth");
-  const adminKey = req.headers.get("x-yupek-admin-key");
-  const authHeader = req.headers.get("authorization");
-
-  const configuredPass = String(config.adminPassword || "yupek2026").trim();
-
-  let isAuthorized = false;
-  if (adminHeader === "true") {
-    isAuthorized = true;
-  } else if (adminKey && (adminKey === configuredPass || adminKey === "yupek2026" || adminKey === "admin")) {
-    isAuthorized = true;
-  } else if (authHeader) {
-    const token = authHeader.replace(/^Bearer\s+/i, "").trim();
-    if (token === configuredPass || token === "yupek2026" || token === "admin") {
-      isAuthorized = true;
-    }
-  }
-
-  if (!isAuthorized) {
+  // 2. Authorization: Only verified Admin users can delete orders
+  const authResult = await verifyAdminAuth(req);
+  if (!authResult.authorized) {
     return NextResponse.json(
-      { error: "Unauthorized: Administrator authentication required to delete orders." },
-      { status: 401 }
+      { error: authResult.errorMessage || "Unauthorized: Administrator authentication required to delete orders." },
+      { status: authResult.errorStatus || 401 }
     );
   }
 
   // 3. Verify order exists before deletion
   const existing = await getOrderRecordById(orderId);
   if (!existing) {
+    const { config } = await getOrMigrateSiteConfig();
     const storeOrders: any[] = Array.isArray(config.storeOrders) ? config.storeOrders : [];
     const foundInConfig = storeOrders.some(
       (o: any) => o.id === orderId || o.orderNumber === orderId

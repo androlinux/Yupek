@@ -1,10 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { syncPrintifyProductLocal } from "@/lib/printifySync";
 import { getBackendApiUrl } from "@/lib/apiConfig";
+import { verifyAdminAuth } from "@/lib/adminAuth";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
+  // Enforce server-side verified admin authorization
+  const authRes = await verifyAdminAuth(req);
+  if (!authRes.authorized) {
+    return NextResponse.json(
+      { error: authRes.errorMessage || "Unauthorized: Administrator authentication required to trigger sync." },
+      { status: authRes.errorStatus || 401 }
+    );
+  }
+
   const backendUrl = getBackendApiUrl();
   if (backendUrl) {
     try {

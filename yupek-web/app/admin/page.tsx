@@ -48,6 +48,7 @@ export default function AdminPage() {
     deleteSubmission,
     updateOrderStatus,
     deleteStoreOrder,
+    retryPrintifyFulfillment,
   } = useSiteConfig();
   const { user } = useAuth();
 
@@ -175,6 +176,7 @@ export default function AdminPage() {
       setAuthorized(true);
       try {
         sessionStorage.setItem("yupek_admin_auth", "true");
+        sessionStorage.setItem("yupek_admin_key", enteredPass);
       } catch {}
       showToast("✓ Welcome back, Administrator.");
       setIsLoggingIn(false);
@@ -188,6 +190,7 @@ export default function AdminPage() {
     setAuthorized(false);
     try {
       sessionStorage.removeItem("yupek_admin_auth");
+      sessionStorage.removeItem("yupek_admin_key");
     } catch {}
     setAdminUsernameInput("");
     setAdminPasswordInput("");
@@ -430,6 +433,48 @@ export default function AdminPage() {
       showToast(`Error deleting order: ${err.message || "Failed"}`);
     } finally {
       setDeleteOrderLoading(false);
+    }
+  };
+
+  // Manual Printify Retry State & Handlers
+  const [orderToRetryFulfill, setOrderToRetryFulfill] = useState<StoreOrder | null>(null);
+  const [retryFulfillLoading, setRetryFulfillLoading] = useState(false);
+  const [retryFulfillError, setRetryFulfillError] = useState<string | null>(null);
+
+  const handleConfirmRetryFulfill = async () => {
+    if (!orderToRetryFulfill) return;
+    const targetId = orderToRetryFulfill.id || orderToRetryFulfill.orderNumber;
+    if (!targetId) return;
+
+    setRetryFulfillLoading(true);
+    setRetryFulfillError(null);
+    try {
+      const res = await retryPrintifyFulfillment(targetId);
+      if (!res.success) {
+        setRetryFulfillError(res.error || "Printify fulfillment could not be created. The order remains paid and can be retried.");
+        return;
+      }
+
+      setForm((prev) => ({
+        ...prev,
+        storeOrders: (prev.storeOrders || []).map((o) =>
+          o.id === targetId || o.orderNumber === targetId
+            ? {
+                ...o,
+                printify_order_id: res.printify_order_id,
+                fulfillment_status: (res.fulfillment_status || "printify_order_created") as StoreOrder["fulfillment_status"],
+                status: "Processing",
+              }
+            : o
+        ),
+      }));
+
+      showToast("Printify order created successfully.");
+      setOrderToRetryFulfill(null);
+    } catch (err: any) {
+      setRetryFulfillError(err.message || "Failed to retry Printify fulfillment. The order remains paid.");
+    } finally {
+      setRetryFulfillLoading(false);
     }
   };
 
@@ -806,6 +851,42 @@ export default function AdminPage() {
                               </span>
                             </>
                           )}
+                          {order.tracking_number && (
+                            <>
+                              <span>&bull;</span>
+                              <span className="inline-flex items-center gap-1 font-mono text-[10px] bg-emerald-50 text-emerald-900 px-2 py-0.5 rounded border border-emerald-300 font-semibold" title="Shipment Tracking">
+                                <Icon name="truck" className="h-3 w-3 text-emerald-700" />
+                                <span>{order.carrier ? `${order.carrier}: ` : ""}{order.tracking_number}</span>
+                                {order.tracking_url && (
+                                  <a
+                                    href={order.tracking_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="ml-1 text-emerald-800 underline hover:text-emerald-950 font-bold"
+                                    title="Open tracking page"
+                                  >
+                                    [TRACK]
+                                  </a>
+                                )}
+                              </span>
+                            </>
+                          )}
+                          {order.shipped_at && (
+                            <>
+                              <span>&bull;</span>
+                              <span className="text-[10px] text-brown/60">
+                                Shipped: {new Date(order.shipped_at).toLocaleDateString()}
+                              </span>
+                            </>
+                          )}
+                          {order.delivered_at && (
+                            <>
+                              <span>&bull;</span>
+                              <span className="text-[10px] text-emerald-800 font-medium">
+                                Delivered: {new Date(order.delivered_at).toLocaleDateString()}
+                              </span>
+                            </>
+                          )}
                         </div>
                       </div>
 
@@ -826,6 +907,29 @@ export default function AdminPage() {
                             <option value="Cancelled">Cancelled</option>
                           </select>
                         </div>
+
+                        {/* Retry Printify Fulfillment Button:
+                            Shown strictly for paid orders with NO printify_order_id */}
+                        {(order.payment_status === "paid" || order.status === "Paid") &&
+                          !order.printify_order_id &&
+                          order.payment_status !== "failed" &&
+                          order.payment_status !== "pending" &&
+                          order.payment_status !== "refunded" &&
+                          order.status !== "Cancelled" &&
+                          order.fulfillment_status !== "cancelled" && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setOrderToRetryFulfill(order);
+                                setRetryFulfillError(null);
+                              }}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium tracking-wider uppercase text-blue-900 hover:text-white bg-blue-50 hover:bg-blue-700 border border-blue-300 hover:border-blue-700 rounded transition-colors shadow-xs"
+                              title={`Retry Printify fulfillment for #${order.orderNumber}`}
+                            >
+                              <Icon name="refresh" className="h-3 w-3" />
+                              <span>Retry Printify Fulfillment</span>
+                            </button>
+                        )}
 
                         <button
                           type="button"
@@ -2473,6 +2577,101 @@ export default function AdminPage() {
                   </>
                 ) : (
                   <span>DELETE ORDER</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ========================================================================= */}
+      {/* MANUAL PRINTIFY FULFILLMENT RETRY CONFIRMATION MODAL                      */}
+      {/* ========================================================================= */}
+      {orderToRetryFulfill && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-fadeIn">
+          <div className="bg-[#FAF7F2] border border-brown/30 w-full max-w-lg p-6 md:p-8 rounded shadow-2xl space-y-5 text-left">
+            {/* Modal Header */}
+            <div className="flex items-start gap-3.5">
+              <div className="h-11 w-11 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center shrink-0 border border-blue-200">
+                <Icon name="refresh" className="h-5 w-5" />
+              </div>
+              <div>
+                <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-blue-900 block">
+                  PRINTIFY FULFILLMENT DISPATCH
+                </span>
+                <h3 className="font-serif text-xl md:text-2xl text-brown font-bold mt-0.5">
+                  Retry Printify fulfillment for this paid order?
+                </h3>
+                <p className="text-xs text-brown/70 mt-1 leading-relaxed">
+                  This will send the paid order to Printify Shop 29215191 for production and fulfillment.
+                  The customer will <strong className="text-brown">NOT</strong> be charged again.
+                </p>
+              </div>
+            </div>
+
+            {/* Error Message if Retry Failed */}
+            {retryFulfillError && (
+              <div className="p-3 bg-red-50 border border-red-200 text-red-800 rounded text-xs">
+                <strong className="block font-semibold mb-0.5">Fulfillment Notice:</strong>
+                {retryFulfillError}
+              </div>
+            )}
+
+            {/* Order Summary */}
+            <div className="border border-brown/20 bg-white p-4 rounded text-xs space-y-2.5 shadow-xs">
+              <div className="flex items-center justify-between border-b border-brown/10 pb-2">
+                <span className="text-brown/60 uppercase tracking-wider text-[10px] font-semibold">Order Number</span>
+                <span className="font-mono font-bold text-brown text-sm">#{orderToRetryFulfill.orderNumber || orderToRetryFulfill.id}</span>
+              </div>
+              <div className="flex items-center justify-between border-b border-brown/10 pb-2">
+                <span className="text-brown/60 uppercase tracking-wider text-[10px] font-semibold">Customer</span>
+                <span className="font-medium text-brown truncate max-w-[260px]">
+                  {orderToRetryFulfill.customer?.firstName} {orderToRetryFulfill.customer?.lastName} ({orderToRetryFulfill.customer?.email})
+                </span>
+              </div>
+              <div className="flex items-center justify-between border-b border-brown/10 pb-2">
+                <span className="text-brown/60 uppercase tracking-wider text-[10px] font-semibold">Total (incl. VAT)</span>
+                <span className="font-bold text-burgundy text-sm">€{(orderToRetryFulfill.total || 0).toFixed(2)}</span>
+              </div>
+              <div className="flex items-center justify-between border-b border-brown/10 pb-2">
+                <span className="text-brown/60 uppercase tracking-wider text-[10px] font-semibold">Payment Status</span>
+                <span className="uppercase font-bold tracking-wider text-[10px] px-2 py-0.5 rounded bg-green-100 text-green-800 border border-green-300">
+                  PAID
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-brown/60 uppercase tracking-wider text-[10px] font-semibold">Target Fulfillment</span>
+                <span className="font-mono text-[10px] font-bold text-blue-900 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                  Printify Shop 29215191
+                </span>
+              </div>
+            </div>
+
+            {/* Action Buttons: CANCEL & RETRY FULFILLMENT */}
+            <div className="flex items-center justify-end gap-3 pt-2 border-t border-brown/15">
+              <button
+                type="button"
+                disabled={retryFulfillLoading}
+                onClick={() => {
+                  setOrderToRetryFulfill(null);
+                  setRetryFulfillError(null);
+                }}
+                className="px-5 py-2 text-xs font-semibold uppercase tracking-wider text-brown/70 hover:text-brown border border-brown/30 hover:bg-sand/30 rounded transition-colors disabled:opacity-50"
+              >
+                CANCEL
+              </button>
+              <button
+                type="button"
+                disabled={retryFulfillLoading}
+                onClick={handleConfirmRetryFulfill}
+                className="px-6 py-2 text-xs font-semibold uppercase tracking-wider text-white bg-blue-700 hover:bg-blue-800 rounded transition-colors shadow-sm disabled:opacity-50 flex items-center gap-2"
+              >
+                {retryFulfillLoading ? (
+                  <>
+                    <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-solid border-white border-r-transparent" />
+                    <span>SENDING TO PRINTIFY...</span>
+                  </>
+                ) : (
+                  <span>RETRY FULFILLMENT</span>
                 )}
               </button>
             </div>

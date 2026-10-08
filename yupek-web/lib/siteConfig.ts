@@ -76,6 +76,12 @@ export interface StoreOrder {
     | "failed";
   stripe_payment_intent_id?: string | null;
   printify_order_id?: string | null;
+  tracking_number?: string | null;
+  carrier?: string | null;
+  tracking_url?: string | null;
+  shipped_at?: string | null;
+  delivered_at?: string | null;
+  shipped_email_sent?: boolean;
   emailNotificationSent?: boolean;
   emailNotificationRecipient?: string;
   emailNotificationError?: string;

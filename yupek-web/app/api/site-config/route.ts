@@ -7,19 +7,25 @@ import path from "path";
 
 export const dynamic = "force-dynamic";
 
+import { verifyAdminAuth } from "@/lib/adminAuth";
+
 const CONFIG_FILE_PATH = path.join(process.cwd(), "data", "site-config.json");
 
-// Helper to determine whether the caller has admin authorization
-function isCallerAdmin(req: NextRequest, body?: any, currentConfig?: SiteConfig): boolean {
-  // 1. Check header set by authenticated admin session in browser
-  const adminHeader = req.headers.get("x-yupek-admin-auth");
-  if (adminHeader === "true") return true;
+// Helper to determine whether the caller has verified admin authorization
+async function isCallerAdmin(req: NextRequest, body?: any, currentConfig?: SiteConfig): Promise<boolean> {
+  const authRes = await verifyAdminAuth(req);
+  if (authRes.authorized) return true;
 
-  // 2. Check if body contains matching admin password
+  // Check if body contains matching admin password
   if (body && currentConfig) {
     const enteredPass = String(body.adminPassword || "").trim();
-    const configuredPass = String(currentConfig.adminPassword || "yupek2026").trim();
-    if (enteredPass && (enteredPass === configuredPass || (configuredPass === "yupek2026" && enteredPass === "admin"))) {
+    const envAdmin = process.env.YUPEK_ADMIN_KEY?.trim();
+    const isProd = process.env.NODE_ENV === "production";
+    const configuredPass = String(envAdmin || currentConfig.adminPassword || (isProd ? "" : "yupek2026")).trim();
+    if (enteredPass && configuredPass && enteredPass === configuredPass) {
+      return true;
+    }
+    if (!isProd && enteredPass && (enteredPass === "yupek2026" || enteredPass === "admin")) {
       return true;
     }
   }
@@ -40,7 +46,7 @@ function sanitizePublicConfig(config: SiteConfig): SiteConfig {
 export async function GET(request: NextRequest) {
   try {
     const { config } = await getOrMigrateSiteConfig();
-    const isAdmin = isCallerAdmin(request, undefined, config);
+    const isAdmin = await isCallerAdmin(request, undefined, config);
 
     if (isAdmin) {
       return NextResponse.json(config);
@@ -61,7 +67,7 @@ export async function POST(request: NextRequest) {
     const { config: currentConfig } = await getOrMigrateSiteConfig();
 
     // Enforce Admin Authentication
-    if (!isCallerAdmin(request, body, currentConfig)) {
+    if (!(await isCallerAdmin(request, body, currentConfig))) {
       return NextResponse.json(
         { error: "Unauthorized: Admin authentication is required to save site configuration." },
         { status: 401 }

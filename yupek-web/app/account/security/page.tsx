@@ -236,6 +236,38 @@ function SecurityContent() {
             </div>
           </form>
         </div>
+
+        {/* Customer Privacy & Account Deletion (GDPR Art. 17) */}
+        <div className="mt-8 border border-brown/15 bg-white p-6 sm:p-8 shadow-sm">
+          <div className="border-b border-brown/10 pb-3">
+            <span className="label tracking-[.25em] text-gold text-[10px] uppercase font-semibold">
+              {locale === "nl" ? "AVG / GDPR PRIVACYRECHTEN" : "GDPR PRIVACY & DATA RIGHTS"}
+            </span>
+            <h3 className="font-serif text-xl text-brown mt-1">
+              {locale === "nl" ? "Accountverwijdering & Gegevenswissing" : "Account Deletion & Data Erasure"}
+            </h3>
+          </div>
+          <div className="mt-4 text-xs text-brown/75 space-y-3 leading-relaxed">
+            <p>
+              {locale === "nl"
+                ? "Onder artikel 17 van de AVG (recht op vergetelheid) kunt u te allen tijde verzoeken om volledige verwijdering van uw klantaccount, profielgegevens, adressen en verlanglijst."
+                : "Under Article 17 of the GDPR (Right to Erasure), you may request complete deletion of your customer account, profile information, saved addresses, and wishlist."}
+            </p>
+            <p className="bg-sand/20 border-l-2 border-brown/30 p-3 text-[11px] text-brown/70 font-mono">
+              {locale === "nl"
+                ? "Wettelijke bewaartermijn: Fiscale bestel- en factuurgegevens worden bewaard conform de wettelijke fiscale bewaarplicht (7 jaar, Boek 7 BW / Belastingdienst)."
+                : "Statutory fiscal notice: Invoices and transactional order history are retained in accordance with mandatory fiscal accounting laws (7 years under Dutch tax regulations)."}
+            </p>
+            <p>
+              {locale === "nl"
+                ? "Om uw account en persoonsgegevens te laten wissen, kunt u een verzoek sturen naar onze privacy conciërge via "
+                : "To initiate an account deletion and personal data erasure request, contact our privacy concierge at "}
+              <a href="mailto:daniyarov16@gmail.com?subject=Account%20Deletion%20Request" className="font-mono underline text-brown hover:text-gold">
+                [PRIVACY CONTACT EMAIL — currently daniyarov16@gmail.com]
+              </a>.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

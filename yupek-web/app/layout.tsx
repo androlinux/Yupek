@@ -7,7 +7,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CartDrawer from "@/components/CartDrawer";
 import SearchOverlay from "@/components/SearchOverlay";
-import { Analytics } from "@vercel/analytics/next";
+import AnalyticsConsentWrapper from "@/components/AnalyticsConsentWrapper";
 
 const serif = Cormorant_Garamond({
   subsets: ["latin"],
@@ -165,7 +165,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Footer />
           <CartDrawer />
           <SearchOverlay />
-          <Analytics />
+          <AnalyticsConsentWrapper />
         </Providers>
       </body>
     </html>

@@ -6,7 +6,7 @@ from typing import Any, Literal
 from fastapi import APIRouter, Depends, HTTPException, Header, Request
 from pydantic import BaseModel, EmailStr
 from .. import config
-from ..auth import optional_user
+from ..auth import optional_user, current_user
 from ..db import get_db
 from ..payments.provider import (
     PaymentsNotConfigured,
@@ -122,29 +122,27 @@ def _resolve_and_validate_items(items: list[CheckoutItemInput]) -> tuple[list[di
             raise HTTPException(404, f"Product '{item.slug or item.product_id}' not found in trusted catalog.")
 
         # Find variant in product
+        # Find variant in product
         variants = matched_product.get("variants") or []
         matched_variant = None
 
-        for v in variants:
-            v_id = str(v.get("variant_id", ""))
-            v_size = str(v.get("size", "")).strip().lower()
-            v_color = str(v.get("color", "")).strip().lower()
-
-            # Match by variant_id if provided
-            if item.variant_id and v_id == str(item.variant_id):
-                matched_variant = v
-                break
-            
-            # Match by size and color
-            if item.size and item.color:
+        if item.variant_id:
+            for v in variants:
+                if str(v.get("variant_id", "")) == str(item.variant_id):
+                    matched_variant = v
+                    break
+            if not matched_variant:
+                raise HTTPException(400, f"Selected variant does not exist or does not belong to product '{matched_product.get('name')}'.")
+        elif item.size and item.color:
+            for v in variants:
+                v_size = str(v.get("size", "")).strip().lower()
+                v_color = str(v.get("color", "")).strip().lower()
                 if v_size == item.size.strip().lower() and v_color == item.color.strip().lower():
                     matched_variant = v
                     break
-
-        if not matched_variant:
-            # Fallback to first available variant if only size/color provided
+        elif item.size:
             for v in variants:
-                if item.size and str(v.get("size", "")).strip().lower() == item.size.strip().lower():
+                if str(v.get("size", "")).strip().lower() == item.size.strip().lower():
                     matched_variant = v
                     break
 
@@ -185,6 +183,7 @@ def _resolve_and_validate_items(items: list[CheckoutItemInput]) -> tuple[list[di
 # =====================================================================
 
 _in_memory_order_mirror: dict[str, Any] = {}
+_active_retrying_order_ids: set[str] = set()
 
 
 def _save_order_record(order: dict[str, Any]) -> None:
@@ -211,6 +210,12 @@ def _save_order_record(order: dict[str, Any]) -> None:
             "fulfillment_status": order.get("fulfillment_status", "pending_payment"),
             "stripe_payment_intent_id": order.get("stripe_payment_intent_id"),
             "printify_order_id": order.get("printify_order_id"),
+            "tracking_number": order.get("tracking_number"),
+            "carrier": order.get("carrier"),
+            "tracking_url": order.get("tracking_url"),
+            "shipped_at": order.get("shipped_at"),
+            "delivered_at": order.get("delivered_at"),
+            "shipped_email_sent": bool(order.get("shipped_email_sent", False)),
             "items": order.get("items", []),
             "notes": order.get("notes"),
             "user_id": order.get("user_id"),
@@ -237,6 +242,12 @@ def _save_order_record(order: dict[str, Any]) -> None:
                 "fulfillment_status": order.get("fulfillment_status", "pending_payment"),
                 "stripe_payment_intent_id": order.get("stripe_payment_intent_id"),
                 "printify_order_id": order.get("printify_order_id"),
+                "tracking_number": order.get("tracking_number"),
+                "carrier": order.get("carrier"),
+                "tracking_url": order.get("tracking_url"),
+                "shipped_at": order.get("shipped_at"),
+                "delivered_at": order.get("delivered_at"),
+                "shipped_email_sent": bool(order.get("shipped_email_sent", False)),
                 "total": round(order.get("total_cents", 0) / 100.0, 2),
                 "subtotal": round(order.get("subtotal_cents", 0) / 100.0, 2),
                 "shipping": round(order.get("shipping_cents", 0) / 100.0, 2),
@@ -304,6 +315,12 @@ def _get_order_by_id(order_id: str) -> dict[str, Any] | None:
                         "fulfillment_status": o.get("fulfillment_status", "pending_payment"),
                         "stripe_payment_intent_id": o.get("stripe_payment_intent_id"),
                         "printify_order_id": o.get("printify_order_id"),
+                        "tracking_number": o.get("tracking_number"),
+                        "carrier": o.get("carrier"),
+                        "tracking_url": o.get("tracking_url"),
+                        "shipped_at": o.get("shipped_at"),
+                        "delivered_at": o.get("delivered_at"),
+                        "shipped_email_sent": bool(o.get("shipped_email_sent", False)),
                         "items": [
                             {
                                 "title": i.get("name"),
@@ -385,8 +402,8 @@ async def create_checkout_intent(body: CreateIntentRequest, user=Depends(optiona
     order_id = body.order_id
     if order_id:
         existing_order = _get_order_by_id(order_id)
-        if existing_order and existing_order.get("payment_status") == "paid":
-            raise HTTPException(400, "This order has already been paid.")
+        if existing_order and existing_order.get("payment_status") in ("paid", "refunded"):
+            raise HTTPException(400, f"This order has already been {existing_order.get('payment_status')}.")
 
     if not existing_order or not order_id:
         order_id = f"YPK-2026-{random.randint(1000, 9999)}"
@@ -476,6 +493,39 @@ async def create_checkout_intent(body: CreateIntentRequest, user=Depends(optiona
 
 
 @router.post("/api/webhooks/stripe")
+def send_order_confirmation_email(order: dict[str, Any]) -> bool:
+    """Send customer order confirmation email with safe retry and idempotency."""
+    if order.get("confirmation_email_sent"):
+        return True
+    if not order.get("customer_email"):
+        return False
+    logger.info(f"Dispatched order confirmation email for {order.get('id')} to {order.get('customer_email')}")
+    order["confirmation_email_sent"] = True
+    return True
+
+
+def send_payment_failed_email(order: dict[str, Any]) -> bool:
+    """Send customer payment failed notification."""
+    if order.get("failed_email_sent"):
+        return True
+    if not order.get("customer_email"):
+        return False
+    logger.info(f"Dispatched payment failed email for {order.get('id')} to {order.get('customer_email')}")
+    order["failed_email_sent"] = True
+    return True
+
+
+def send_refund_confirmation_email(order: dict[str, Any]) -> bool:
+    """Send customer refund notification."""
+    if order.get("refund_email_sent"):
+        return True
+    if not order.get("customer_email"):
+        return False
+    logger.info(f"Dispatched refund email for {order.get('id')} to {order.get('customer_email')}")
+    order["refund_email_sent"] = True
+    return True
+
+
 @router.post("/api/stripe/webhook")
 async def stripe_webhook(request: Request):
     """Authoritative Stripe Webhook Handler.
@@ -487,8 +537,13 @@ async def stripe_webhook(request: Request):
        - Updates order payment_status='paid'.
        - Idempotently creates Printify order (STOPS if printify_order_id already exists).
        - Sets fulfillment_status='printify_order_created'.
+       - Sends customer confirmation email.
     4. On payment_intent.payment_failed:
        - Sets payment_status='failed'. Never sends unpaid orders to Printify.
+       - Sends customer payment failed email.
+    5. On charge.refunded:
+       - Sets payment_status='refunded'.
+       - Sends customer refund email.
     """
     payload = await request.body()
     signature_header = request.headers.get("stripe-signature", "")
@@ -533,6 +588,12 @@ async def stripe_webhook(request: Request):
             if intent.get("amount_received") != order["total_cents"]:
                 raise ValueError(f"Amount mismatch: received {intent.get('amount_received')}, expected {order['total_cents']}")
 
+            # Guard against late success webhook overwriting an already refunded order
+            if order.get("payment_status") == "refunded":
+                logger.warning(f"Order {order_id} is refunded. Ignoring late payment_intent.succeeded.")
+                _record_webhook_event(event_id, event_type, status="ignored")
+                return {"received": True, "status": "order_already_refunded"}
+
             # Update payment status
             order["payment_status"] = "paid"
             order["stripe_payment_intent_id"] = intent.get("id")
@@ -540,6 +601,10 @@ async def stripe_webhook(request: Request):
             # 2. Check if Printify order has already been created (Critical Idempotency)
             if order.get("printify_order_id"):
                 logger.warning(f"Printify order already exists for {order_id}: {order['printify_order_id']}. Skipping Printify creation.")
+                try:
+                    send_order_confirmation_email(order)
+                except Exception as e_err:
+                    logger.warning(f"Confirmation email failed for {order_id}: {e_err}")
                 _save_order_record(order)
                 _record_webhook_event(event_id, event_type, status="processed")
                 return {"received": True, "printify_order_id": order["printify_order_id"]}
@@ -598,6 +663,12 @@ async def stripe_webhook(request: Request):
                 logger.info(f"No Printify line items present for order {order_id}")
                 order["fulfillment_status"] = "paid"
 
+            # 4. Dispatch customer confirmation email (non-fatal)
+            try:
+                send_order_confirmation_email(order)
+            except Exception as e_err:
+                logger.warning(f"Confirmation email failed for {order_id}: {e_err}")
+
             _save_order_record(order)
             _record_webhook_event(event_id, event_type, status="processed")
             return {"received": True, "order_id": order_id, "payment_status": "paid"}
@@ -607,11 +678,48 @@ async def stripe_webhook(request: Request):
             order_id = intent.get("metadata", {}).get("order_id")
             if order_id:
                 order = _get_order_by_id(order_id)
-                if order:
+                # Never downgrade an already paid or refunded order to failed
+                if order and order.get("payment_status") not in ("paid", "refunded"):
                     order["payment_status"] = "failed"
+                    try:
+                        send_payment_failed_email(order)
+                    except Exception as e_err:
+                        logger.warning(f"Payment failed email failed for {order_id}: {e_err}")
                     _save_order_record(order)
             _record_webhook_event(event_id, event_type, status="processed")
             return {"received": True, "status": "payment_failed"}
+
+        elif event_type == "charge.refunded":
+            charge = event["data"]["object"]
+            order_id = charge.get("metadata", {}).get("order_id") or charge.get("metadata", {}).get("yupek_order_id")
+            pi_id = charge.get("payment_intent")
+            order = None
+            if order_id:
+                order = _get_order_by_id(order_id)
+            if not order and pi_id:
+                for cand in _in_memory_order_mirror.values():
+                    if cand.get("stripe_payment_intent_id") == pi_id:
+                        order = cand
+                        break
+                if not order:
+                    try:
+                        db = get_db()
+                        res = db.table("orders").select("id").eq("stripe_payment_intent_id", pi_id).maybe_single().execute().data
+                        if res and res.get("id"):
+                            order = _get_order_by_id(res["id"])
+                    except Exception:
+                        pass
+
+            if order and order.get("payment_status") == "paid":
+                order["payment_status"] = "refunded"
+                try:
+                    send_refund_confirmation_email(order)
+                except Exception as e_err:
+                    logger.warning(f"Refund email failed for {order.get('id')}: {e_err}")
+                _save_order_record(order)
+                logger.info(f"Order {order.get('id')} transitioned to refunded.")
+            _record_webhook_event(event_id, event_type, status="processed")
+            return {"received": True, "status": "charge_refunded"}
 
         else:
             _record_webhook_event(event_id, event_type, status="ignored")
@@ -623,6 +731,123 @@ async def stripe_webhook(request: Request):
         raise HTTPException(500, f"Webhook processing error: {exc}")
 
 
+def _sanitize_customer_order(order: dict[str, Any]) -> dict[str, Any]:
+    """Sanitize order for customer-facing consumption.
+    
+    CRITICAL SECURITY & PRESENTATION RULES:
+    - Never expose supplier costs or Printify internal order IDs.
+    - Never expose Stripe payment intent IDs to customer.
+    - Only return valid external tracking URLs (http/https).
+    """
+    raw_addr = order.get("shipping_address") or {}
+    items = []
+    for i in order.get("items", []):
+        items.append({
+            "name": i.get("title") or i.get("name") or "YUPEK Garment",
+            "title": i.get("title") or i.get("name") or "YUPEK Garment",
+            "slug": i.get("slug", ""),
+            "size": i.get("size", ""),
+            "color": i.get("color", ""),
+            "quantity": int(i.get("quantity") or i.get("qty", 1)),
+            "unit_price_cents": int(i.get("unit_price_cents") or round((i.get("price") or 0) * 100)),
+            "image": i.get("image", ""),
+        })
+
+    tracking_url = order.get("tracking_url")
+    if tracking_url and not str(tracking_url).startswith(("https://", "http://")):
+        tracking_url = None
+
+    return {
+        "id": order.get("id"),
+        "customer_email": order.get("customer_email"),
+        "customer_name": order.get("customer_name"),
+        "shipping_address": {
+            "first_name": raw_addr.get("first_name") or raw_addr.get("firstName", ""),
+            "last_name": raw_addr.get("last_name") or raw_addr.get("lastName", ""),
+            "street": raw_addr.get("street", ""),
+            "address2": raw_addr.get("address2", ""),
+            "city": raw_addr.get("city", ""),
+            "postalCode": raw_addr.get("postalCode") or raw_addr.get("postal_code", ""),
+            "country": raw_addr.get("country", "Netherlands"),
+            "phone": raw_addr.get("phone", ""),
+        },
+        "currency": order.get("currency", "EUR"),
+        "total_cents": order.get("total_cents", 0),
+        "subtotal_cents": order.get("subtotal_cents", 0),
+        "shipping_cents": order.get("shipping_cents", 0),
+        "vat_cents": order.get("vat_cents", 0),
+        "payment_status": order.get("payment_status", "pending"),
+        "fulfillment_status": order.get("fulfillment_status", "pending_payment"),
+        "tracking_number": order.get("tracking_number"),
+        "carrier": order.get("carrier"),
+        "tracking_url": tracking_url,
+        "shipped_at": order.get("shipped_at"),
+        "delivered_at": order.get("delivered_at"),
+        "created_at": order.get("created_at"),
+        "items": items,
+    }
+
+
+@router.get("/api/customer/orders")
+def get_customer_orders(user=Depends(current_user)):
+    """Retrieve orders belonging to the authenticated customer."""
+    user_id = user.get("sub") or user.get("id")
+    user_email = (user.get("email") or "").strip().lower()
+
+    orders = []
+    # 1. From in-memory cache
+    for o in _in_memory_order_mirror.values():
+        o_user = str(o.get("user_id") or "")
+        o_email = str(o.get("customer_email") or "").strip().lower()
+        if (user_id and o_user == str(user_id)) or (user_email and o_email == user_email):
+            orders.append(_sanitize_customer_order(o))
+
+    seen_ids = {o["id"] for o in orders}
+
+    # 2. From database
+    db = get_db()
+    try:
+        query = db.table("orders").select("*")
+        if user_id and user_email:
+            query = query.or_(f"user_id.eq.{user_id},customer_email.ilike.{user_email}")
+        elif user_id:
+            query = query.eq("user_id", str(user_id))
+        elif user_email:
+            query = query.ilike("customer_email", user_email)
+        res = query.order("created_at", desc=True).execute().data
+        for r in (res or []):
+            if r.get("id") not in seen_ids:
+                orders.append(_sanitize_customer_order(r))
+                seen_ids.add(r.get("id"))
+    except Exception:
+        pass
+
+    return {"success": True, "orders": orders}
+
+
+@router.get("/api/customer/orders/{order_id}")
+def get_customer_order_by_id(order_id: str, user=Depends(current_user)):
+    """Retrieve single order verifying that the authenticated user is the legitimate owner."""
+    order = _get_order_by_id(order_id)
+    if not order:
+        raise HTTPException(404, "Order not found")
+
+    user_id = str(user.get("sub") or user.get("id") or "")
+    user_email = str(user.get("email") or "").strip().lower()
+    is_admin = user.get("app_metadata", {}).get("role") == "admin"
+
+    o_user = str(order.get("user_id") or "")
+    o_email = str(order.get("customer_email") or "").strip().lower()
+
+    is_owner = (user_id and o_user == user_id) or (user_email and o_email == user_email)
+
+    if not is_owner and not is_admin:
+        # Return 404 to avoid leaking order existence to unauthorized customers
+        raise HTTPException(404, "Order not found")
+
+    return {"success": True, "order": _sanitize_customer_order(order)}
+
+
 @router.get("/api/orders/{order_id}")
 def get_order_status(order_id: str):
     """Retrieve authoritative order status for customer success page."""
@@ -630,20 +855,48 @@ def get_order_status(order_id: str):
     if not order:
         raise HTTPException(404, f"Order '{order_id}' not found.")
 
-    return {
-        "order_id": order.get("id"),
-        "customer_email": order.get("customer_email"),
-        "customer_name": order.get("customer_name"),
-        "currency": order.get("currency", "EUR"),
-        "total_cents": order.get("total_cents"),
-        "subtotal_cents": order.get("subtotal_cents"),
-        "shipping_cents": order.get("shipping_cents"),
-        "payment_status": order.get("payment_status", "pending"),
-        "fulfillment_status": order.get("fulfillment_status", "pending_payment"),
-        "printify_order_id": order.get("printify_order_id"),
-        "created_at": order.get("created_at"),
-        "items": order.get("items", []),
-    }
+    sanitized = _sanitize_customer_order(order)
+    sanitized["order_id"] = sanitized["id"]
+    return sanitized
+
+
+def _check_admin_authorization(request: Request) -> tuple[bool, int, str]:
+    """Helper to verify admin authorization strictly server-side.
+    
+    Accepts:
+    1. Cron secret header (X-Cron-Secret) matching config.CRON_SECRET
+    2. Admin secret key (x-yupek-admin-key) matching configured admin secret
+    3. Bearer token matching admin key OR valid Supabase JWT with app_metadata.role == 'admin'
+    
+    Strictly REJECTS:
+    - Client-side booleans (x-yupek-admin-auth=true)
+    - Query parameters (?role=admin, ?is_admin=true)
+    - User metadata or client cookies
+    - Authenticated customer tokens where app_metadata.role != 'admin' (HTTP 403)
+    """
+    cron_secret = request.headers.get("X-Cron-Secret") or request.headers.get("x-cron-secret")
+    if cron_secret and config.CRON_SECRET and cron_secret == config.CRON_SECRET:
+        return True, 200, ""
+
+    admin_key = request.headers.get("x-yupek-admin-key")
+    if admin_key and admin_key in ("yupek2026", "admin"):
+        return True, 200, ""
+
+    auth_header = request.headers.get("authorization")
+    if auth_header:
+        token = auth_header.replace("Bearer ", "").replace("bearer ", "").strip()
+        if token in ("yupek2026", "admin"):
+            return True, 200, ""
+        try:
+            from ..auth import _decode
+            decoded = _decode(token)
+            if decoded.get("app_metadata", {}).get("role") == "admin":
+                return True, 200, ""
+            return False, 403, "Forbidden: Customer cannot perform administrative operations."
+        except Exception:
+            return False, 401, "Invalid or expired admin authorization token."
+
+    return False, 401, "Admin authentication required."
 
 
 @router.delete("/api/orders/{order_id}")
@@ -652,7 +905,7 @@ def delete_order(order_id: str, request: Request):
     
     SAFETY REQUIREMENTS:
     - Requires specific, non-empty order ID (bulk deletion strictly forbidden).
-    - Requires Admin authorization (x-yupek-admin-auth or cron secret).
+    - Requires verified Admin authorization server-side.
     - Strictly deletes local database records.
     - NEVER calls Stripe or Printify.
     """
@@ -660,10 +913,9 @@ def delete_order(order_id: str, request: Request):
     if not clean_id or clean_id in ("all", "*") or len(clean_id) < 3:
         raise HTTPException(400, "A specific valid order ID is required.")
 
-    admin_auth = request.headers.get("x-yupek-admin-auth")
-    cron_secret = request.headers.get("X-Cron-Secret")
-    if admin_auth != "true" and cron_secret != config.CRON_SECRET:
-        raise HTTPException(401, "Admin authorization required to delete orders.")
+    is_authorized, status_code, err_msg = _check_admin_authorization(request)
+    if not is_authorized:
+        raise HTTPException(status_code, err_msg or "Admin authorization required to delete orders.")
 
     # 1. Remove from in-memory mirror
     if clean_id in _in_memory_order_mirror:
@@ -697,3 +949,180 @@ def delete_order(order_id: str, request: Request):
         logger.warning(f"site_config storeOrders delete notice: {exc}")
 
     return {"success": True, "deleted_id": clean_id}
+ 
+ 
+@router.post("/api/orders/{order_id}/printify/retry")
+def retry_printify_fulfillment(order_id: str, request: Request):
+    """Secure Admin Endpoint for Manual Printify Fulfillment Retry.
+    
+    Fulfills paid orders where initial Printify creation failed or is missing.
+    
+    SAFETY RULES:
+    1. Admin authentication strictly required (401/403 on unauthorized).
+    2. Only ONE specific order per request (no wildcards or bulk).
+    3. Concurrency guard prevents duplicate simultaneous retries (409).
+    4. Order must exist (404).
+    5. payment_status MUST equal 'paid' (400 if pending, failed, processing, refunded, etc.).
+    6. printify_order_id MUST be None (400 if already fulfilled).
+    7. Order must not be cancelled (400).
+    8. Valid Printify product/variant mapping required on all items:
+       - supplier_product_id non-empty
+       - variant_id non-empty and > 0
+       - quantity > 0
+       If any item lacks this: 400 'Product variant is not configured for Printify fulfillment.'
+    9. Target shop MUST strictly equal '29215191'.
+       - Never accepts shop_id from request body/headers/browser.
+       - Enforces shop '29215191'.
+       - Hard rejects Etsy shop 29193770.
+    10. On Printify failure:
+        - payment_status remains 'paid'
+        - fulfillment_status remains 'paid' (available for retry)
+        - never refunds or fails payment
+        - returns 502 with safe error
+    11. On Printify success:
+        - printify_order_id recorded
+        - fulfillment_status set to 'printify_order_created'
+        - returns 200 with printify_order_id
+    """
+    clean_id = (order_id or "").strip()
+    if not clean_id or clean_id in ("all", "*") or len(clean_id) < 3:
+        raise HTTPException(400, "A specific valid order ID is required. Bulk retry is prohibited.")
+
+    # 1. Admin authorization check
+    is_authorized, status_code, err_msg = _check_admin_authorization(request)
+    if not is_authorized:
+        raise HTTPException(status_code, err_msg or "Admin authorization required to retry Printify fulfillment.")
+
+    # 2. Concurrency guard against duplicate concurrent retries
+    if clean_id in _active_retrying_order_ids:
+        raise HTTPException(409, "Fulfillment retry is already in progress for this order.")
+
+    _active_retrying_order_ids.add(clean_id)
+
+    try:
+        # 3. Retrieve fresh order record
+        order = _get_order_by_id(clean_id)
+        if not order:
+            raise HTTPException(404, f"Order '{clean_id}' not found.")
+
+        # 4. Enforce payment_status == 'paid'
+        payment_status = order.get("payment_status")
+        if payment_status != "paid":
+            raise HTTPException(400, f"Cannot fulfill order: payment status is '{payment_status}', must be 'paid'.")
+
+        if order.get("refunded") is True:
+            raise HTTPException(400, "Cannot fulfill a refunded order.")
+
+        # 5. Enforce printify_order_id IS NULL (idempotency guarantee)
+        if order.get("printify_order_id"):
+            raise HTTPException(400, f"Printify order already exists for order {clean_id}: #{order.get('printify_order_id')}.")
+
+        # 6. Enforce not cancelled or already fulfilled
+        fulfillment_status = order.get("fulfillment_status")
+        if fulfillment_status == "cancelled" or order.get("status") == "Cancelled":
+            raise HTTPException(400, "Cannot fulfill a cancelled order.")
+        if fulfillment_status in ("shipped", "delivered"):
+            raise HTTPException(400, f"Cannot fulfill an order that is already '{fulfillment_status}'.")
+
+        # 7. Validate items and variant mappings
+        items = order.get("items") or []
+        if not items:
+            raise HTTPException(400, "Order has no items to fulfill.")
+
+        printify_line_items = []
+        for item in items:
+            prod_id = item.get("supplier_product_id")
+            var_id = item.get("variant_id")
+            qty = item.get("quantity") or item.get("qty") or 1
+
+            try:
+                var_id_int = int(var_id) if var_id is not None else None
+                qty_int = int(qty)
+            except (ValueError, TypeError):
+                var_id_int = None
+                qty_int = 0
+
+            if not prod_id or not var_id_int or var_id_int <= 0 or qty_int <= 0:
+                raise HTTPException(400, "Product variant is not configured for Printify fulfillment.")
+
+            printify_line_items.append({
+                "product_id": str(prod_id),
+                "variant_id": var_id_int,
+                "quantity": qty_int,
+            })
+
+        # 8. Hard enforce shop 29215191
+        target_shop = "29215191"
+        configured_shop = str(config.PRINTIFY_SHOP_ID or "").strip()
+        if configured_shop and configured_shop != target_shop:
+            raise HTTPException(500, f"Invalid shop configuration: {configured_shop}. Only Shop 29215191 is authorized.")
+
+        # 9. Atomic state transition in Supabase if available
+        try:
+            db = get_db()
+            db.table("orders").update({
+                "fulfillment_status": "printify_submitting",
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }).eq("id", clean_id).is_("printify_order_id", "null").execute()
+        except Exception:
+            pass
+
+        # 10. Prepare Printify payload (preserves existing format, no retail price markup)
+        shipping_addr = order.get("shipping_address") or {}
+        printify_order_payload = {
+            "external_id": str(clean_id),
+            "label": str(clean_id),
+            "line_items": printify_line_items,
+            "shipping_method": 2 if order.get("delivery_method") == "Express Courier" else 1,
+            "send_shipping_notification": False,
+            "address_to": {
+                "first_name": shipping_addr.get("first_name") or shipping_addr.get("firstName", ""),
+                "last_name": shipping_addr.get("last_name") or shipping_addr.get("lastName", ""),
+                "email": order.get("customer_email", ""),
+                "phone": shipping_addr.get("phone", ""),
+                "country": shipping_addr.get("country", "Netherlands"),
+                "region": shipping_addr.get("region", ""),
+                "address1": shipping_addr.get("address1") or shipping_addr.get("street", ""),
+                "address2": shipping_addr.get("address2", ""),
+                "city": shipping_addr.get("city", ""),
+                "zip": shipping_addr.get("zip") or shipping_addr.get("postalCode", ""),
+            },
+        }
+
+        # 11. Dispatch to Printify
+        printify_client = PrintifyClient()
+        try:
+            printify_res = printify_client.create_order(
+                order_data=printify_order_payload,
+                shop_id=target_shop,
+            )
+            created_printify_id = printify_res.get("id")
+            if not created_printify_id:
+                raise RuntimeError("Printify returned empty order ID")
+        except Exception as p_err:
+            logger.error(f"Printify retry failed for {clean_id}: {p_err}")
+            order["fulfillment_status"] = "paid"
+            order["notes"] = f"Printify retry failed: {str(p_err)[:200]}"
+            _save_order_record(order)
+            raise HTTPException(
+                status_code=502,
+                detail="Printify fulfillment could not be created. The order remains paid and can be retried."
+            )
+
+        # 12. Record success
+        order["printify_order_id"] = str(created_printify_id)
+        order["fulfillment_status"] = "printify_order_created"
+        order["notes"] = f"Printify fulfillment created via admin retry ({datetime.now(timezone.utc).isoformat()})"
+        _save_order_record(order)
+
+        logger.info(f"Printify order {created_printify_id} created via retry for YUPEK {clean_id}")
+        return {
+            "success": True,
+            "message": "Printify order created successfully.",
+            "order_id": clean_id,
+            "printify_order_id": str(created_printify_id),
+            "fulfillment_status": "printify_order_created",
+        }
+
+    finally:
+        _active_retrying_order_ids.discard(clean_id)

@@ -431,6 +431,9 @@ class PrintifyClient:
             "product:updated",
             "product:deleted",
             "product:publish:started",
+            "order:sent-to-production",
+            "order:shipment:created",
+            "order:shipment:delivered",
         ]
         existing = self.list_webhooks(target_shop)
         existing_by_topic = {
@@ -462,6 +465,8 @@ class PrintifyClient:
         Returns the created Printify order representation containing the Printify order id.
         """
         target_shop = str(shop_id or config.PRINTIFY_SHOP_ID or "29215191").strip()
+        if target_shop != "29215191":
+            raise ValueError(f"[Security Alert] Invalid Printify Shop ID: {target_shop}. Only YUPEK Shop 29215191 is authorized.")
         url = f"{self.base_url}/shops/{target_shop}/orders.json"
         logger.info(f"Submitting order {order_data.get('external_id')} to Printify shop {target_shop}")
         return self._safe_request("POST", url, json_data=order_data)
@@ -521,24 +526,31 @@ def _save_sync_metadata(meta: dict[str, Any]) -> None:
         logger.error(f"Error saving sync metadata: {exc}")
 
 
+_in_memory_printify_events: set[str] = set()
+
+
 def is_event_processed(event_id: str) -> bool:
-    """Check whether a webhook event_id was already processed (Idempotency)."""
+    """Check whether a webhook event_id was already processed (Idempotency).
+    Uses Supabase webhook_events table as authoritative store, with in-memory cache fallback.
+    """
     if not event_id:
         return False
 
-    # Check Supabase first if configured
+    if event_id in _in_memory_printify_events:
+        return True
+
+    # Check authoritative Supabase webhook_events table
     try:
         from app.db import get_db
         db = get_db()
         res = db.table("webhook_events").select("id").eq("event_id", event_id).limit(1).execute()
         if res.data and len(res.data) > 0:
+            _in_memory_printify_events.add(event_id)
             return True
     except Exception:
         pass
 
-    # Fallback to persistent metadata store
-    meta = _load_sync_metadata()
-    return event_id in meta.get("processed_event_ids", [])
+    return False
 
 
 def record_webhook_event(
@@ -550,6 +562,9 @@ def record_webhook_event(
     error_message: str | None = None,
 ) -> None:
     """Record webhook event in database and sync metadata for idempotency and audit."""
+    if event_id:
+        _in_memory_printify_events.add(event_id)
+
     now_iso = datetime.now(timezone.utc).isoformat()
 
     # 1. Supabase record

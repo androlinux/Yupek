@@ -30,9 +30,13 @@ export function getStoredConsent(): CookieConsentPreferences | null {
     // 1. Try localStorage first (fast synchronous access)
     const local = localStorage.getItem(CONSENT_STORAGE_KEY);
     if (local) {
-      const parsed = JSON.parse(local);
-      if (isValidConsent(parsed)) {
-        return parsed;
+      try {
+        const parsed = JSON.parse(local);
+        if (isValidConsent(parsed)) {
+          return parsed;
+        }
+      } catch {
+        // Malformed JSON in localStorage
       }
     }
 
@@ -43,13 +47,19 @@ export function getStoredConsent(): CookieConsentPreferences | null {
 
     if (cookieMatch) {
       const rawVal = cookieMatch.split("=")[1];
-      const parsed = JSON.parse(decodeURIComponent(rawVal));
-      if (isValidConsent(parsed)) {
-        // Sync back to localStorage if missing
+      if (rawVal) {
         try {
-          localStorage.setItem(CONSENT_STORAGE_KEY, JSON.stringify(parsed));
-        } catch {}
-        return parsed;
+          const parsed = JSON.parse(decodeURIComponent(rawVal));
+          if (isValidConsent(parsed)) {
+            // Sync back to localStorage if missing
+            try {
+              localStorage.setItem(CONSENT_STORAGE_KEY, JSON.stringify(parsed));
+            } catch {}
+            return parsed;
+          }
+        } catch {
+          // Malformed JSON in cookie
+        }
       }
     }
   } catch {
@@ -61,6 +71,7 @@ export function getStoredConsent(): CookieConsentPreferences | null {
 
 /**
  * Validate that an arbitrary parsed object satisfies CookieConsentPreferences
+ * Enforces version matching so outdated consent can be cleanly invalidated.
  */
 function isValidConsent(obj: any): obj is CookieConsentPreferences {
   return (
@@ -69,7 +80,8 @@ function isValidConsent(obj: any): obj is CookieConsentPreferences {
     obj.essential === true &&
     typeof obj.analytics === "boolean" &&
     typeof obj.marketing === "boolean" &&
-    typeof obj.timestamp === "string"
+    typeof obj.timestamp === "string" &&
+    obj.version === CONSENT_VERSION
   );
 }
 
