@@ -143,7 +143,6 @@ function OrderDetailContent() {
 
   const subtotalEuro = order.subtotal_cents / 100;
   const shippingEuro = order.shipping_cents / 100;
-  const vatEuro = order.vat_cents / 100;
   const totalEuro = order.total_cents / 100;
   const placedDate = formatOrderDate(order.created_at, locale, true);
 
@@ -305,12 +304,6 @@ function OrderDetailContent() {
                   <span>{isNl ? "Verzendkosten" : "Shipping"}</span>
                   <span>{shippingEuro === 0 ? (isNl ? "Gratis" : "Free") : eur(shippingEuro)}</span>
                 </div>
-                {vatEuro > 0 && (
-                  <div className="flex justify-between text-brown/60 text-[11px]">
-                    <span>{isNl ? "Inbegrepen BTW (21%)" : "Included VAT (21%)"}</span>
-                    <span>{eur(vatEuro)}</span>
-                  </div>
-                )}
                 <div className="border-t border-brown/15 pt-3 flex justify-between font-bold text-sm text-brown font-serif">
                   <span>{isNl ? "Totaal" : "Total"}</span>
                   <span className="font-mono">{eur(totalEuro)}</span>

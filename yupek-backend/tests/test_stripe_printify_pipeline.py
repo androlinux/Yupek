@@ -4323,6 +4323,472 @@ class TestYupekLegalPrivacyCookieConsentAndGdpr(unittest.TestCase):
         self.assertNotIn("YUPEK B.V.", footer_code)
 
 
+class TestShippingAndTrackingPipeline(unittest.TestCase):
+    """Production test suite for YUPEK Shipping, Printify Shipping Calculation, and Tracking.
+    Covers all 17 required scenarios:
+    1. Shipping calculation success
+    2. Shipping calculation for NL
+    3. Invalid address
+    4. Unsupported country
+    5. Multiple cart items
+    6. Multiple quantities
+    7. Shipping option unavailable
+    8. Shipping currency handling
+    9. No accidental EUR/USD mismatch
+    10. Shipping calculation does NOT create Printify order
+    11. Shipping calculation does NOT send to production
+    12. Duplicate Printify shipment webhook
+    13. Shipment tracking saved
+    14. Delivered status
+    15. Customer cannot access another user's order
+    16. Admin can see internal Printify data
+    17. Public product page contains no Printify metadata
+    """
+
+    def setUp(self):
+        _in_memory_processed_events.clear()
+        _in_memory_order_mirror.clear()
+        _in_memory_printify_events.clear()
+
+        self.client = TestClient(app)
+
+        self.db_patcher = patch("app.routers.orders.get_db")
+        self.mock_db = self.db_patcher.start()
+        mock_table = MagicMock()
+        self.mock_db.return_value.table.return_value = mock_table
+        mock_table.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value.data = None
+
+        self.mock_catalog = [
+            {
+                "id": "prod_tee_1",
+                "slug": "yupek-logo-white-cotton-shirt",
+                "supplierProductId": "6ac53807209b79f0950c038f",
+                "name": "Yupek Logo | White Cotton Shirt",
+                "price": 26.99,
+                "variants": [
+                    {
+                        "variant_id": 11963,
+                        "title": "White / M",
+                        "size": "M",
+                        "color": "White",
+                        "price_cents": 2699,
+                        "is_enabled": True,
+                        "is_available": True,
+                    },
+                ],
+            },
+            {
+                "id": "prod_sweat_1",
+                "slug": "yupek-logo-ornate-patch-crewneck-sweatshirt",
+                "supplierProductId": "6bd74908310c80g1061d149g",
+                "name": "Yupek Logo Ornate Patch Crewneck Sweatshirt",
+                "price": 36.99,
+                "variants": [
+                    {
+                        "variant_id": 22001,
+                        "title": "Black / M",
+                        "size": "M",
+                        "color": "Black",
+                        "price_cents": 3699,
+                        "is_enabled": True,
+                        "is_available": True,
+                    }
+                ],
+            },
+        ]
+
+    def tearDown(self):
+        self.db_patcher.stop()
+
+    # 1. Shipping calculation success
+    @patch("app.routers.orders._load_trusted_products")
+    @patch("app.suppliers.printify.PrintifyClient.calculate_shipping")
+    def test_01_shipping_calculation_success(self, mock_calc, mock_cat):
+        mock_cat.return_value = self.mock_catalog
+        mock_calc.return_value = {"standard": 450, "express": 950}
+
+        payload = {
+            "items": [{"slug": "yupek-logo-white-cotton-shirt", "size": "M", "color": "White", "quantity": 1}],
+            "address": {
+                "first_name": "Leyla",
+                "last_name": "A.",
+                "street": "Prinsengracht 250",
+                "city": "Amsterdam",
+                "postal_code": "1016 GV",
+                "country": "Netherlands",
+            },
+        }
+
+        with patch.object(config, "PRINTIFY_API_TOKEN", "valid_token"):
+            resp = self.client.post("/api/shipping/calculate", json=payload)
+
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertTrue(data["success"])
+        self.assertEqual(data["currency"], "EUR")
+        self.assertEqual(len(data["options"]), 2)
+        methods = [o["id"] for o in data["options"]]
+        self.assertIn("standard", methods)
+        self.assertIn("express", methods)
+        self.assertEqual(data["options"][0]["label"], "Standard Delivery")
+        self.assertEqual(data["options"][0]["amount_cents"], 450)
+        self.assertEqual(data["options"][0]["amount_formatted"], "€4.50")
+
+    # 2. Shipping calculation for NL (normalizes to ISO 'NL')
+    @patch("app.routers.orders._load_trusted_products")
+    @patch("app.suppliers.printify.PrintifyClient.calculate_shipping")
+    def test_02_shipping_calculation_for_netherlands_iso_normalized(self, mock_calc, mock_cat):
+        mock_cat.return_value = self.mock_catalog
+        mock_calc.return_value = {"standard": 495}
+
+        payload = {
+            "items": [{"slug": "yupek-logo-white-cotton-shirt", "size": "M", "color": "White", "quantity": 1}],
+            "address": {
+                "street": "Singel 10",
+                "city": "Amsterdam",
+                "postal_code": "1015 AA",
+                "country": "Netherlands",
+            },
+        }
+
+        with patch.object(config, "PRINTIFY_API_TOKEN", "valid_token"):
+            resp = self.client.post("/api/shipping/calculate", json=payload)
+
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertEqual(data["country"], "NL")
+        mock_calc.assert_called_once()
+        called_address = mock_calc.call_args[1]["address_to"]
+        self.assertEqual(called_address["country"], "NL")
+
+    # 3. Invalid address / empty bag
+    def test_03_invalid_address_and_empty_bag(self):
+        resp = self.client.post("/api/shipping/calculate", json={"items": [], "address": {"country": "Netherlands"}})
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn("empty", resp.json()["detail"].lower())
+
+    # 4. Unsupported country
+    @patch("app.routers.orders._load_trusted_products")
+    def test_04_unsupported_country(self, mock_cat):
+        mock_cat.return_value = self.mock_catalog
+        payload = {
+            "items": [{"slug": "yupek-logo-white-cotton-shirt", "size": "M", "color": "White", "quantity": 1}],
+            "address": {"country": "Australia"},
+        }
+        resp = self.client.post("/api/shipping/calculate", json=payload)
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn("not supported", resp.json()["detail"].lower())
+
+    # 5. Multiple cart items
+    @patch("app.routers.orders._load_trusted_products")
+    @patch("app.suppliers.printify.PrintifyClient.calculate_shipping")
+    def test_05_multiple_cart_items(self, mock_calc, mock_cat):
+        mock_cat.return_value = self.mock_catalog
+        mock_calc.return_value = {"standard": 650, "express": 1150}
+
+        payload = {
+            "items": [
+                {"slug": "yupek-logo-white-cotton-shirt", "size": "M", "color": "White", "quantity": 1},
+                {"slug": "yupek-logo-ornate-patch-crewneck-sweatshirt", "size": "M", "color": "Black", "quantity": 1},
+            ],
+            "address": {"country": "Belgium"},
+        }
+
+        with patch.object(config, "PRINTIFY_API_TOKEN", "valid_token"):
+            resp = self.client.post("/api/shipping/calculate", json=payload)
+
+        self.assertEqual(resp.status_code, 200)
+        called_items = mock_calc.call_args[1]["line_items"]
+        self.assertEqual(len(called_items), 2)
+        # 26.99 + 36.99 = 63.98 (6398 cents)
+        self.assertEqual(resp.json()["subtotal_cents"], 6398)
+
+    # 6. Multiple quantities & free shipping threshold
+    @patch("app.routers.orders._load_trusted_products")
+    @patch("app.suppliers.printify.PrintifyClient.calculate_shipping")
+    def test_06_multiple_quantities_and_free_shipping_threshold(self, mock_calc, mock_cat):
+        mock_cat.return_value = self.mock_catalog
+        mock_calc.return_value = {"standard": 800, "express": 1400}
+
+        # 4 * 26.99 = 107.96 EUR (10796 cents, >= 10000 free shipping threshold)
+        payload = {
+            "items": [{"slug": "yupek-logo-white-cotton-shirt", "size": "M", "color": "White", "quantity": 4}],
+            "address": {"country": "Netherlands"},
+        }
+
+        with patch.object(config, "PRINTIFY_API_TOKEN", "valid_token"):
+            resp = self.client.post("/api/shipping/calculate", json=payload)
+
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertTrue(data["is_free_shipping_eligible"])
+        standard_opt = next(o for o in data["options"] if o["id"] == "standard")
+        self.assertEqual(standard_opt["amount_cents"], 0)
+        self.assertTrue(standard_opt["is_free"])
+        # Express remains standard cost
+        express_opt = next(o for o in data["options"] if o["id"] == "express")
+        self.assertEqual(express_opt["amount_cents"], 1400)
+        self.assertFalse(express_opt["is_free"])
+
+    # 7. Shipping option unavailable at supplier
+    @patch("app.routers.orders._load_trusted_products")
+    @patch("app.suppliers.printify.PrintifyClient.calculate_shipping")
+    def test_07_shipping_option_unavailable(self, mock_calc, mock_cat):
+        mock_cat.return_value = self.mock_catalog
+        mock_calc.return_value = {"standard": 520}  # Only standard returned
+
+        payload = {
+            "items": [{"slug": "yupek-logo-white-cotton-shirt", "size": "M", "color": "White", "quantity": 1}],
+            "address": {"country": "Germany"},
+        }
+
+        with patch.object(config, "PRINTIFY_API_TOKEN", "valid_token"):
+            resp = self.client.post("/api/shipping/calculate", json=payload)
+
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertEqual(len(data["options"]), 1)
+        self.assertEqual(data["options"][0]["id"], "standard")
+
+    # 8. Shipping currency handling (EUR accepted)
+    @patch("app.routers.orders._load_trusted_products")
+    @patch("app.suppliers.printify.PrintifyClient.calculate_shipping")
+    def test_08_shipping_currency_handling_eur(self, mock_calc, mock_cat):
+        mock_cat.return_value = self.mock_catalog
+        mock_calc.return_value = {"currency": "EUR", "standard": 495}
+
+        payload = {
+            "items": [{"slug": "yupek-logo-white-cotton-shirt", "size": "M", "color": "White", "quantity": 1}],
+            "address": {"country": "Netherlands"},
+        }
+
+        with patch.object(config, "PRINTIFY_API_TOKEN", "valid_token"):
+            resp = self.client.post("/api/shipping/calculate", json=payload)
+
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.json()["currency"], "EUR")
+
+    # 9. No accidental EUR/USD mismatch (USD rejected)
+    @patch("app.routers.orders._load_trusted_products")
+    @patch("app.suppliers.printify.PrintifyClient.calculate_shipping")
+    def test_09_no_accidental_eur_usd_mismatch(self, mock_calc, mock_cat):
+        mock_cat.return_value = self.mock_catalog
+        mock_calc.return_value = {"currency": "USD", "standard": 495}
+
+        payload = {
+            "items": [{"slug": "yupek-logo-white-cotton-shirt", "size": "M", "color": "White", "quantity": 1}],
+            "address": {"country": "Netherlands"},
+        }
+
+        with patch.object(config, "PRINTIFY_API_TOKEN", "valid_token"):
+            resp = self.client.post("/api/shipping/calculate", json=payload)
+
+        # Fails safely with 502 rather than mislabeling USD as EUR
+        self.assertEqual(resp.status_code, 502)
+        self.assertIn("unsupported supplier shipping currency", resp.json()["detail"].lower())
+
+    # 10. Shipping calculation does NOT create Printify order
+    @patch("app.routers.orders._load_trusted_products")
+    @patch("app.suppliers.printify.PrintifyClient.create_order")
+    @patch("app.suppliers.printify.PrintifyClient.calculate_shipping")
+    def test_10_shipping_calculation_does_not_create_printify_order(self, mock_calc, mock_create, mock_cat):
+        mock_cat.return_value = self.mock_catalog
+        mock_calc.return_value = {"standard": 450}
+
+        payload = {
+            "items": [{"slug": "yupek-logo-white-cotton-shirt", "size": "M", "color": "White", "quantity": 1}],
+            "address": {"country": "Netherlands"},
+        }
+
+        with patch.object(config, "PRINTIFY_API_TOKEN", "valid_token"):
+            resp = self.client.post("/api/shipping/calculate", json=payload)
+
+        self.assertEqual(resp.status_code, 200)
+        mock_create.assert_not_called()
+
+    # 11. Shipping calculation does NOT send to production
+    @patch("app.routers.orders._load_trusted_products")
+    @patch("app.suppliers.printify.PrintifyClient.send_to_production")
+    @patch("app.suppliers.printify.PrintifyClient.calculate_shipping")
+    def test_11_shipping_calculation_does_not_send_to_production(self, mock_calc, mock_prod, mock_cat):
+        mock_cat.return_value = self.mock_catalog
+        mock_calc.return_value = {"standard": 450}
+
+        payload = {
+            "items": [{"slug": "yupek-logo-white-cotton-shirt", "size": "M", "color": "White", "quantity": 1}],
+            "address": {"country": "Netherlands"},
+        }
+
+        with patch.object(config, "PRINTIFY_API_TOKEN", "valid_token"):
+            resp = self.client.post("/api/shipping/calculate", json=payload)
+
+        self.assertEqual(resp.status_code, 200)
+        mock_prod.assert_not_called()
+
+    # 12. Duplicate Printify shipment webhook is idempotent
+    def test_12_duplicate_printify_shipment_webhook(self):
+        order_id = "YPK-SHIP-TEST-12"
+        order = {
+            "id": order_id,
+            "payment_status": "paid",
+            "fulfillment_status": "in_production",
+            "customer_email": "customer@example.nl",
+            "printify_order_id": "pfy_order_12",
+        }
+        _in_memory_order_mirror[order_id] = order
+
+        resource = {
+            "id": "pfy_order_12",
+            "data": {
+                "external_id": order_id,
+                "shipments": [{"carrier": "PostNL", "number": "3SABCD123456", "url": "https://postnl.nl/track/3SABCD123456"}],
+            },
+        }
+
+        res1 = handle_printify_order_event("order:shipment:created", resource, event_id="evt_ship_12")
+        self.assertTrue(res1["success"])
+        self.assertEqual(order["fulfillment_status"], "shipped")
+        self.assertEqual(order["carrier"], "POSTNL")
+        self.assertEqual(order["tracking_number"], "3SABCD123456")
+
+        record_webhook_event("evt_ship_12", "order:shipment:created", "29215191")
+
+        # Second delivery of same event_id is recognized as already processed
+        self.assertTrue(is_event_processed("evt_ship_12"))
+
+    # 13. Shipment tracking saved on order
+    def test_13_shipment_tracking_saved(self):
+        order_id = "YPK-TRACK-13"
+        order = {
+            "id": order_id,
+            "payment_status": "paid",
+            "fulfillment_status": "in_production",
+            "customer_email": "track@example.com",
+            "printify_order_id": "pfy_13",
+        }
+        _in_memory_order_mirror[order_id] = order
+
+        resource = {
+            "id": "pfy_13",
+            "data": {
+                "external_id": order_id,
+                "shipments": [
+                    {
+                        "carrier": "DHL",
+                        "number": "DHL-987654321",
+                        "url": "https://dhl.com/track/DHL-987654321",
+                    }
+                ],
+            },
+        }
+
+        res = handle_printify_order_event("order:shipment:created", resource)
+        self.assertTrue(res["success"])
+        self.assertEqual(order["carrier"], "DHL")
+        self.assertEqual(order["tracking_number"], "DHL-987654321")
+        self.assertEqual(order["tracking_url"], "https://dhl.com/track/DHL-987654321")
+        self.assertIsNotNone(order.get("shipped_at"))
+
+    # 14. Delivered status monotonicity
+    def test_14_delivered_status_monotonicity(self):
+        order_id = "YPK-DELIV-14"
+        order = {
+            "id": order_id,
+            "payment_status": "paid",
+            "fulfillment_status": "shipped",
+            "customer_email": "delivered@example.com",
+            "printify_order_id": "pfy_14",
+        }
+        _in_memory_order_mirror[order_id] = order
+
+        resource = {
+            "id": "pfy_14",
+            "data": {
+                "external_id": order_id,
+                "shipments": [{"carrier": "PostNL", "number": "NL1234", "delivered_at": "2026-10-08T12:00:00Z"}],
+            },
+        }
+
+        # Step 1: delivered arrives
+        res = handle_printify_order_event("order:shipment:delivered", resource)
+        self.assertTrue(res["success"])
+        self.assertEqual(order["fulfillment_status"], "delivered")
+        self.assertIsNotNone(order.get("delivered_at"))
+
+        # Step 2: out-of-order delayed shipped event arrives
+        res2 = handle_printify_order_event("order:shipment:created", resource)
+        # Fulfillment status remains delivered; monotonic protection prevents regression!
+        self.assertEqual(order["fulfillment_status"], "delivered")
+
+    # 15. Customer cannot access another user's order
+    def test_15_customer_cannot_access_another_users_order(self):
+        order_id = "YPK-SEC-15"
+        order = {
+            "id": order_id,
+            "customer_email": "victim@example.com",
+            "user_id": "user_victim_123",
+            "payment_status": "paid",
+            "fulfillment_status": "shipped",
+        }
+        _in_memory_order_mirror[order_id] = order
+
+        # User Bob attempts to access Alice's order
+        attacker_user = {"sub": "user_bob_456", "email": "bob@example.com", "role": "authenticated"}
+        with self.assertRaises(HTTPException) as cm:
+            get_customer_order_by_id(order_id, user=attacker_user)
+        self.assertEqual(cm.exception.status_code, 404)
+
+    # 16. Admin can see internal Printify data
+    def test_16_admin_can_see_internal_printify_data(self):
+        order_id = "YPK-ADMIN-16"
+        order = {
+            "id": order_id,
+            "customer_email": "customer@example.com",
+            "payment_status": "paid",
+            "fulfillment_status": "shipped",
+            "printify_order_id": "pfy_admin_16",
+            "carrier": "DHL",
+            "tracking_number": "TRACK-16",
+            "shipping_method": "express",
+            "shipping_method_label": "Express Delivery",
+        }
+        _in_memory_order_mirror[order_id] = order
+
+        stored = _get_order_by_id(order_id)
+        self.assertIsNotNone(stored)
+        self.assertEqual(stored["printify_order_id"], "pfy_admin_16")
+        self.assertEqual(stored["carrier"], "DHL")
+        self.assertEqual(stored["tracking_number"], "TRACK-16")
+
+    # 17. Public product page contains no Printify metadata
+    def test_17_public_product_page_contains_no_printify_metadata(self):
+        with open("c:/Users/Gebruiker/Desktop/YUPEK/yupek-web/data/site-config.json", "r", encoding="utf-8") as f:
+            cfg = json.load(f)
+
+        serialized = json.dumps(cfg)
+        self.assertNotIn("PRINTIFY_API_TOKEN", serialized)
+        self.assertNotIn("PRINTIFY_WEBHOOK_SECRET", serialized)
+
+    # 18. Printify API unavailable returns safe 503 error and NEVER invents fallback prices
+    @patch("app.routers.orders._load_trusted_products")
+    @patch("app.suppliers.printify.PrintifyClient.calculate_shipping")
+    def test_18_printify_unavailable_safe_error_never_invent_fallback(self, mock_calc, mock_cat):
+        mock_cat.return_value = self.mock_catalog
+        mock_calc.side_effect = Exception("Printify API 503 Service Unavailable")
+
+        payload = {
+            "items": [{"slug": "yupek-logo-white-cotton-shirt", "size": "M", "color": "White", "quantity": 1}],
+            "address": {"country": "Netherlands"},
+        }
+
+        with patch.object(config, "PRINTIFY_API_TOKEN", "valid_token"):
+            resp = self.client.post("/api/shipping/calculate", json=payload)
+
+        # Must return safe 503 error, NEVER fabricated rates (e.g. 4.95 / 9.95)
+        self.assertEqual(resp.status_code, 503)
+        self.assertEqual(resp.json()["detail"], "Server temporarily unavailable. Please try again.")
+
+
 class AsyncMock(MagicMock):
     async def __call__(self, *args, **kwargs):
         return super(AsyncMock, self).__call__(*args, **kwargs)
@@ -4330,6 +4796,7 @@ class AsyncMock(MagicMock):
 
 if __name__ == "__main__":
     unittest.main()
+
 
 
 

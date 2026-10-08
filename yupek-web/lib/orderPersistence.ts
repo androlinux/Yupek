@@ -46,6 +46,12 @@ export interface OrderRecord {
   delivered_email_sent?: boolean;
   failed_email_sent?: boolean;
   refund_email_sent?: boolean;
+  shipping_method?: string | null;
+  shipping_method_label?: string | null;
+  shipping_currency?: string | null;
+  shipping_provider?: string | null;
+  estimated_delivery_min?: number | null;
+  estimated_delivery_max?: number | null;
   items: Array<{
     product_id?: string;
     supplier_product_id?: string;
@@ -82,7 +88,7 @@ export async function persistOrderRecord(order: OrderRecord): Promise<void> {
 
   // 1. Attempt write to Supabase dedicated 'orders' table
   try {
-    const { error } = await supabase.from("orders").upsert({
+    const upsertData: any = {
       id: order.id,
       customer_email: order.customer_email,
       customer_name: order.customer_name,
@@ -107,10 +113,16 @@ export async function persistOrderRecord(order: OrderRecord): Promise<void> {
       user_id: order.user_id || null,
       created_at: order.created_at,
       updated_at: order.updated_at,
-    });
-    if (error) {
-      // Table may not have been migrated yet in PostgREST schema cache
-      console.warn("[Orders Table Notice]", error.message);
+    };
+    if (order.shipping_method) upsertData.shipping_method = order.shipping_method;
+    if (order.shipping_method_label) upsertData.shipping_method_label = order.shipping_method_label;
+
+    const { error } = await supabase.from("orders").upsert(upsertData);
+    if (error && (upsertData.shipping_method || upsertData.shipping_method_label)) {
+      // Table may not have migration 007 columns yet; retry without them
+      delete upsertData.shipping_method;
+      delete upsertData.shipping_method_label;
+      await supabase.from("orders").upsert(upsertData);
     }
   } catch (err: any) {
     console.warn("[Orders Table Catch]", err.message);
@@ -160,6 +172,8 @@ export async function persistOrderRecord(order: OrderRecord): Promise<void> {
         shipping: order.shipping_cents / 100,
         total: order.total_cents / 100,
         currency: order.currency,
+        deliveryMethod: order.shipping_method_label || "Standard Delivery",
+        shippingMethod: order.shipping_method || "standard",
         status: order.payment_status === "paid" ? "Paid" : order.payment_status === "failed" ? "Failed" : "Pending",
         payment_status: order.payment_status,
         fulfillment_status: order.fulfillment_status,
@@ -253,6 +267,8 @@ export async function getOrderRecordById(orderId: string): Promise<OrderRecord |
           fulfillment_status: match.fulfillment_status || "pending_payment",
           stripe_payment_intent_id: match.stripe_payment_intent_id || null,
           printify_order_id: match.printify_order_id || null,
+          shipping_method: match.shippingMethod || match.shipping_method || null,
+          shipping_method_label: match.deliveryMethod || match.shipping_method_label || null,
           tracking_number: match.tracking_number ?? null,
           carrier: match.carrier ?? null,
           tracking_url: match.tracking_url ?? null,

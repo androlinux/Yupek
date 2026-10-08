@@ -31,21 +31,18 @@ export default function TrackingCard({
     deliveredAt
   );
 
-  // If no tracking data exists and order is still before shipment, return null or a gentle note
+  // If no tracking data exists and order is still before shipment, return elegant message
   if (!hasTrackingData) {
-    if (fulfillmentStatus === "in_production" || fulfillmentStatus === "sent_to_production" || fulfillmentStatus === "printify_order_created") {
-      return (
-        <div className="border border-brown/10 bg-sand/10 p-4 text-xs text-brown/70 flex items-center gap-3">
-          <Icon name="truck" className="h-4 w-4 text-brown/50 shrink-0" />
-          <span>
-            {isNl
-              ? "Volgnummer wordt beschikbaar zodra uw pakket is overhandigd aan de bezorgdienst."
-              : "Tracking information will be provided as soon as your package is dispatched with the courier."}
-          </span>
-        </div>
-      );
-    }
-    return null;
+    return (
+      <div className="border border-brown/15 bg-sand/15 p-4 text-xs text-brown/75 flex items-center gap-3">
+        <Icon name="truck" className="h-4 w-4 text-brown/50 shrink-0" />
+        <span>
+          {isNl
+            ? "Traceerinformatie wordt hier weergegeven zodra uw bestelling is verzonden."
+            : "Tracking information will appear here once your order ships."}
+        </span>
+      </div>
+    );
   }
 
   const isDelivered = Boolean(deliveredAt || fulfillmentStatus === "delivered");

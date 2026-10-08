@@ -48,12 +48,31 @@ class CheckoutItemInput(BaseModel):
     quantity: int = 1
 
 
+class ShippingAddressInput(BaseModel):
+    first_name: str | None = ""
+    last_name: str | None = ""
+    street: str | None = ""
+    city: str | None = ""
+    postal_code: str | None = ""
+    country: str = "Netherlands"
+    email: EmailStr | None = None
+    phone: str | None = ""
+
+
+class CalculateShippingRequest(BaseModel):
+    items: list[CheckoutItemInput]
+    address: ShippingAddressInput
+
+
 class CreateIntentRequest(BaseModel):
     customer: CustomerShippingAddress
     items: list[CheckoutItemInput]
-    delivery: Literal["standard", "express"] = "standard"
+    delivery: str = "standard"
+    delivery_label: str | None = None
+    shipping_cents: int | None = None
     order_id: str | None = None
     user_id: str | None = None
+
 
 
 # =====================================================================
@@ -194,36 +213,49 @@ def _save_order_record(order: dict[str, Any]) -> None:
     _in_memory_order_mirror[order_id] = dict(order)
 
     # 1. Attempt dedicated orders table
+    order_table_payload = {
+        "id": order_id,
+        "customer_email": order.get("customer_email", ""),
+        "customer_name": order.get("customer_name", ""),
+        "shipping_address": order.get("shipping_address", {}),
+        "currency": order.get("currency", "EUR"),
+        "subtotal_cents": order.get("subtotal_cents", 0),
+        "shipping_cents": order.get("shipping_cents", 0),
+        "vat_cents": order.get("vat_cents", 0),
+        "total_cents": order.get("total_cents", 0),
+        "payment_status": order.get("payment_status", "pending"),
+        "fulfillment_status": order.get("fulfillment_status", "pending_payment"),
+        "stripe_payment_intent_id": order.get("stripe_payment_intent_id"),
+        "printify_order_id": order.get("printify_order_id"),
+        "tracking_number": order.get("tracking_number"),
+        "carrier": order.get("carrier"),
+        "tracking_url": order.get("tracking_url"),
+        "shipped_at": order.get("shipped_at"),
+        "delivered_at": order.get("delivered_at"),
+        "shipped_email_sent": bool(order.get("shipped_email_sent", False)),
+        "items": order.get("items", []),
+        "notes": order.get("notes"),
+        "user_id": order.get("user_id"),
+        "created_at": order.get("created_at", now_iso),
+        "updated_at": now_iso,
+    }
+    # Optional columns from migration 007
+    if order.get("shipping_method"):
+        order_table_payload["shipping_method"] = order.get("shipping_method")
+    if order.get("shipping_method_label"):
+        order_table_payload["shipping_method_label"] = order.get("shipping_method_label")
+
     try:
         db = get_db()
-        db.table("orders").upsert({
-            "id": order_id,
-            "customer_email": order.get("customer_email", ""),
-            "customer_name": order.get("customer_name", ""),
-            "shipping_address": order.get("shipping_address", {}),
-            "currency": order.get("currency", "EUR"),
-            "subtotal_cents": order.get("subtotal_cents", 0),
-            "shipping_cents": order.get("shipping_cents", 0),
-            "vat_cents": order.get("vat_cents", 0),
-            "total_cents": order.get("total_cents", 0),
-            "payment_status": order.get("payment_status", "pending"),
-            "fulfillment_status": order.get("fulfillment_status", "pending_payment"),
-            "stripe_payment_intent_id": order.get("stripe_payment_intent_id"),
-            "printify_order_id": order.get("printify_order_id"),
-            "tracking_number": order.get("tracking_number"),
-            "carrier": order.get("carrier"),
-            "tracking_url": order.get("tracking_url"),
-            "shipped_at": order.get("shipped_at"),
-            "delivered_at": order.get("delivered_at"),
-            "shipped_email_sent": bool(order.get("shipped_email_sent", False)),
-            "items": order.get("items", []),
-            "notes": order.get("notes"),
-            "user_id": order.get("user_id"),
-            "created_at": order.get("created_at", now_iso),
-            "updated_at": now_iso,
-        }, on_conflict="id").execute()
+        try:
+            db.table("orders").upsert(order_table_payload, on_conflict="id").execute()
+        except Exception:
+            # Fallback without migration 007 columns if not yet applied in PostgREST
+            order_table_payload.pop("shipping_method", None)
+            order_table_payload.pop("shipping_method_label", None)
+            db.table("orders").upsert(order_table_payload, on_conflict="id").execute()
     except Exception as exc:
-        logger.info(f"Orders table write notice (table may not be created yet): {exc}")
+        logger.info(f"Orders table write notice: {exc}")
 
     # 2. Always persist into site_config.storeOrders for storefront & admin compatibility
     try:
@@ -252,7 +284,8 @@ def _save_order_record(order: dict[str, Any]) -> None:
                 "subtotal": round(order.get("subtotal_cents", 0) / 100.0, 2),
                 "shipping": round(order.get("shipping_cents", 0) / 100.0, 2),
                 "paymentMethod": "Stripe",
-                "deliveryMethod": order.get("delivery_method", "Standard Courier"),
+                "deliveryMethod": order.get("shipping_method_label") or order.get("delivery_method") or "Standard Delivery",
+                "shippingMethod": order.get("shipping_method", "standard"),
                 "customer": order.get("shipping_address", {}),
                 "items": [
                     {
@@ -383,6 +416,128 @@ def _record_webhook_event(event_id: str, event_type: str, status: str = "process
 # API ENDPOINTS
 # =====================================================================
 
+@router.post("/api/shipping/calculate")
+async def calculate_shipping_rates(body: CalculateShippingRequest):
+    """Calculate available shipping options using Printify API or configured fallback.
+    
+    CRITICAL SAFETY RULES:
+    - READ/CALCULATION ONLY.
+    - NEVER creates a Printify order.
+    - NEVER calls POST /orders.json or POST /send_to_production.json.
+    - NEVER creates a payment.
+    - NEVER modifies fulfillment state.
+    - Only queries Shop ID 29215191.
+    """
+    from ..suppliers.printify import (
+        to_iso_country_code,
+        normalize_shipping_options,
+        get_fallback_shipping_options,
+    )
+
+    # 1. Address Validation
+    country_input = (body.address.country or "Netherlands").strip()
+    iso_country = to_iso_country_code(country_input)
+
+    supported_countries_lower = [c.lower() for c in config.COUNTRIES]
+    is_supported = (
+        country_input.lower() in supported_countries_lower
+        or iso_country in [to_iso_country_code(c) for c in config.COUNTRIES]
+    )
+    if not is_supported:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Shipping to '{country_input}' is currently not supported. We ship across European destinations.",
+        )
+
+    # 2. Validate Items & calculate subtotal from trusted catalog
+    validated_items, subtotal_cents = _resolve_and_validate_items(body.items)
+
+    # 3. Build line items for Printify shipping calculation
+    printify_line_items = []
+    for vi in validated_items:
+        p_id = str(vi.get("supplier_product_id") or vi.get("product_id") or "")
+        if p_id.startswith("printify-"):
+            p_id = p_id[len("printify-"):]
+
+        var_id = vi.get("variant_id")
+        try:
+            var_id_int = int(var_id) if var_id else 0
+        except (ValueError, TypeError):
+            var_id_int = 0
+
+        qty = max(1, vi.get("quantity", 1))
+
+        if p_id and var_id_int:
+            printify_line_items.append({
+                "product_id": p_id,
+                "variant_id": var_id_int,
+                "quantity": qty,
+            })
+
+    # 4. Build address payload
+    clean_address = {
+        "first_name": (body.address.first_name or "Guest").strip(),
+        "last_name": (body.address.last_name or "Customer").strip(),
+        "address1": (body.address.street or "Default Address").strip(),
+        "city": (body.address.city or "Amsterdam").strip(),
+        "zip": (body.address.postal_code or "1000 AA").strip(),
+        "country": iso_country,
+    }
+    if body.address.email:
+        clean_address["email"] = str(body.address.email)
+    if body.address.phone:
+        clean_address["phone"] = body.address.phone.strip()
+
+    # 5. Retrieve free shipping threshold from site_config or backend config
+    free_shipping_threshold_cents = config.FREE_SHIPPING_OVER
+    try:
+        from ..suppliers.printify import _read_site_config
+        cfg = _read_site_config()
+        if "freeShippingThreshold" in cfg:
+            free_shipping_threshold_cents = int(round(float(cfg["freeShippingThreshold"]) * 100))
+    except Exception:
+        pass
+
+    # 6. Execute Printify shipping calculation (read-only)
+    shipping_options = []
+    try:
+        if printify_line_items and config.PRINTIFY_API_TOKEN:
+            client = PrintifyClient()
+            raw_response = client.calculate_shipping(
+                line_items=printify_line_items,
+                address_to=clean_address,
+                shop_id="29215191",
+            )
+            shipping_options = normalize_shipping_options(
+                raw_response=raw_response,
+                subtotal_cents=subtotal_cents,
+                free_shipping_threshold_cents=free_shipping_threshold_cents,
+            )
+    except ValueError as val_err:
+        logger.warning(f"Printify shipping calculation warning: {val_err}")
+        if "Unsupported supplier shipping currency" in str(val_err):
+            raise HTTPException(status_code=502, detail=str(val_err))
+    except Exception as exc:
+        logger.warning(f"Printify shipping calculation call unfulfilled: {exc}")
+
+    # NEVER invent fallback shipping prices: return safe error when Printify API is unavailable
+    if not shipping_options:
+        raise HTTPException(
+            status_code=503,
+            detail="Server temporarily unavailable. Please try again.",
+        )
+
+    return {
+        "success": True,
+        "currency": "EUR",
+        "subtotal_cents": subtotal_cents,
+        "free_shipping_threshold_cents": free_shipping_threshold_cents,
+        "is_free_shipping_eligible": subtotal_cents >= free_shipping_threshold_cents,
+        "country": iso_country,
+        "options": shipping_options,
+    }
+
+
 @router.post("/api/checkout/create-intent")
 async def create_checkout_intent(body: CreateIntentRequest, user=Depends(optional_user)):
     """Create or reuse a verified Stripe PaymentIntent and record/update a pending order.
@@ -412,8 +567,19 @@ async def create_checkout_intent(body: CreateIntentRequest, user=Depends(optiona
     validated_items, subtotal_cents = _resolve_and_validate_items(body.items)
 
     # 3. Shipping calculation (Free over 10000 cents for standard)
-    free_shipping = body.delivery == "standard" and subtotal_cents >= config.FREE_SHIPPING_OVER
-    shipping_cents = 0 if free_shipping else config.DELIVERY.get(body.delivery, 495)
+    shipping_label = body.delivery_label or (
+        "Express Delivery" if body.delivery == "express" else
+        "Economy Delivery" if body.delivery == "economy" else
+        "Priority Delivery" if body.delivery == "priority" else
+        "Standard Delivery"
+    )
+
+    if body.shipping_cents is not None and body.shipping_cents >= 0:
+        shipping_cents = body.shipping_cents
+    else:
+        free_shipping = body.delivery == "standard" and subtotal_cents >= config.FREE_SHIPPING_OVER
+        shipping_cents = 0 if free_shipping else config.DELIVERY.get(body.delivery, 495)
+
     total_cents = subtotal_cents + shipping_cents
     vat_cents = round(total_cents - total_cents / (1 + config.VAT_RATE))
 
@@ -468,7 +634,9 @@ async def create_checkout_intent(body: CreateIntentRequest, user=Depends(optiona
         "shipping_cents": shipping_cents,
         "vat_cents": vat_cents,
         "total_cents": total_cents,
-        "delivery_method": "Express Courier" if body.delivery == "express" else "Standard Courier",
+        "shipping_method": body.delivery,
+        "shipping_method_label": shipping_label,
+        "delivery_method": shipping_label,
         "payment_status": "pending",
         "fulfillment_status": "pending_payment",
         "stripe_payment_intent_id": payment_intent_id,

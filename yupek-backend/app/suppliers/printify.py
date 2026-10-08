@@ -482,6 +482,257 @@ class PrintifyClient:
         logger.info(f"Sending Printify order {order_id} to production in shop {target_shop}")
         return self._safe_request("POST", url)
 
+    def calculate_shipping(
+        self,
+        line_items: list[dict[str, Any]],
+        address_to: dict[str, Any],
+        shop_id: str | int | None = None,
+    ) -> dict[str, Any]:
+        """Calculate shipping cost via Printify API (POST /v1/shops/{shop_id}/orders/shipping.json).
+        
+        Strictly READ/CALCULATION ONLY.
+        NEVER creates an order.
+        NEVER sends anything to production.
+        """
+        target_shop = str(shop_id or config.PRINTIFY_SHOP_ID or "29215191").strip()
+        if target_shop != "29215191":
+            raise ValueError(f"[Security Alert] Invalid Printify Shop ID: {target_shop}. Only YUPEK Shop 29215191 is authorized.")
+
+        url = f"{self.base_url}/shops/{target_shop}/orders/shipping.json"
+        payload = {
+            "line_items": line_items,
+            "address_to": address_to,
+        }
+        logger.info(f"Calculating shipping for {len(line_items)} items to {address_to.get('country')} via Printify shop {target_shop}")
+        return self._safe_request("POST", url, json_data=payload)
+
+
+# Normalized Country ISO mapping (European focus for YUPEK)
+ISO_COUNTRY_MAP: dict[str, str] = {
+    "netherlands": "NL",
+    "the netherlands": "NL",
+    "nederland": "NL",
+    "belgium": "BE",
+    "belgië": "BE",
+    "belgique": "BE",
+    "germany": "DE",
+    "deutschland": "DE",
+    "france": "FR",
+    "italy": "IT",
+    "italia": "IT",
+    "spain": "ES",
+    "españa": "ES",
+    "austria": "AT",
+    "österreich": "AT",
+    "denmark": "DK",
+    "danmark": "DK",
+    "sweden": "SE",
+    "sverige": "SE",
+    "finland": "FI",
+    "suomi": "FI",
+    "ireland": "IE",
+    "portugal": "PT",
+    "poland": "PL",
+    "polska": "PL",
+    "united kingdom": "GB",
+    "uk": "GB",
+    "great britain": "GB",
+    "united states": "US",
+    "usa": "US",
+}
+
+SHIPPING_METHOD_METADATA: dict[str, dict[str, Any]] = {
+    "standard": {
+        "label": "Standard Delivery",
+        "description": "Estimated delivery: 3–5 business days",
+        "estimated_days_min": 3,
+        "estimated_days_max": 5,
+    },
+    "economy": {
+        "label": "Economy Delivery",
+        "description": "Estimated delivery: 5–8 business days",
+        "estimated_days_min": 5,
+        "estimated_days_max": 8,
+    },
+    "express": {
+        "label": "Express Delivery",
+        "description": "Estimated delivery: 1–2 business days",
+        "estimated_days_min": 1,
+        "estimated_days_max": 2,
+    },
+    "priority": {
+        "label": "Priority Delivery",
+        "description": "Estimated delivery: 2–3 business days",
+        "estimated_days_min": 2,
+        "estimated_days_max": 3,
+    },
+}
+
+
+def to_iso_country_code(country: str | None) -> str:
+    """Normalize country name or code to ISO 3166-1 alpha-2 code."""
+    if not country:
+        return "NL"
+    cleaned = country.strip()
+    if len(cleaned) == 2 and cleaned.isalpha():
+        return cleaned.upper()
+    return ISO_COUNTRY_MAP.get(cleaned.lower(), cleaned.upper()[:2])
+
+
+def normalize_shipping_options(
+    raw_response: Any,
+    subtotal_cents: int = 0,
+    free_shipping_threshold_cents: int = 10000,
+) -> list[dict[str, Any]]:
+    """Normalize Printify shipping API response into clean customer-facing delivery options.
+    
+    Protections:
+    - Never shows Printify internal IDs, blueprint IDs, provider IDs, variant IDs, SKU.
+    - Operates strictly in EUR; rejects mismatched currency if conversion is unavailable.
+    - Applies free shipping threshold to standard delivery if subtotal qualifies.
+    """
+    options: list[dict[str, Any]] = []
+
+    # Printify can return:
+    # 1. Dict of method -> cost, e.g. {"standard": 450, "express": 950}
+    # 2. Dict with currency, e.g. {"currency": "USD", "standard": 450} or {"standard": {"cost": 450, "currency": "EUR"}}
+    # 3. List of dicts, e.g. [{"id": "standard", "cost": 450, "currency": "EUR"}]
+    # 4. Dict with "options": [...]
+
+    global_currency = "EUR"
+    extracted_rates: dict[str, dict[str, Any]] = {}
+
+    if isinstance(raw_response, dict):
+        if "currency" in raw_response and isinstance(raw_response["currency"], str):
+            global_currency = raw_response["currency"].upper()
+
+        if "options" in raw_response and isinstance(raw_response["options"], list):
+            items_list = raw_response["options"]
+        else:
+            items_list = None
+
+        if items_list is not None:
+            for item in items_list:
+                if isinstance(item, dict):
+                    m_id = str(item.get("id") or item.get("name") or item.get("type") or "standard").lower()
+                    cost = item.get("cost") if item.get("cost") is not None else item.get("price")
+                    curr = item.get("currency", global_currency)
+                    extracted_rates[m_id] = {"cost": cost, "currency": str(curr).upper()}
+        else:
+            for key, val in raw_response.items():
+                if key.lower() in ("currency", "status", "message"):
+                    continue
+                m_id = key.lower()
+                if isinstance(val, dict):
+                    cost = val.get("cost") if val.get("cost") is not None else val.get("price")
+                    curr = val.get("currency", global_currency)
+                    extracted_rates[m_id] = {"cost": cost, "currency": str(curr).upper()}
+                elif isinstance(val, (int, float)):
+                    extracted_rates[m_id] = {"cost": val, "currency": global_currency}
+
+    elif isinstance(raw_response, list):
+        for item in raw_response:
+            if isinstance(item, dict):
+                m_id = str(item.get("id") or item.get("name") or item.get("type") or "standard").lower()
+                cost = item.get("cost") if item.get("cost") is not None else item.get("price")
+                curr = item.get("currency", "EUR")
+                extracted_rates[m_id] = {"cost": cost, "currency": str(curr).upper()}
+
+    # Verify and normalize each extracted rate
+    for raw_method, rate_info in extracted_rates.items():
+        cost_val = rate_info.get("cost")
+        currency = rate_info.get("currency", "EUR")
+
+        if cost_val is None:
+            continue
+
+        # Strict currency check: storefront is EUR
+        if currency != "EUR":
+            raise ValueError(
+                f"Unsupported supplier shipping currency: '{currency}'. "
+                "YUPEK storefront operates strictly in EUR and no currency exchange converter is configured."
+            )
+
+        # Normalize method key to standard/economy/express/priority
+        method_key = "standard"
+        for candidate in ("standard", "economy", "express", "priority"):
+            if candidate in raw_method:
+                method_key = candidate
+                break
+
+        meta = SHIPPING_METHOD_METADATA.get(
+            method_key,
+            {
+                "label": f"{method_key.capitalize()} Delivery",
+                "description": "Courier delivery",
+                "estimated_days_min": 3,
+                "estimated_days_max": 5,
+            },
+        )
+
+        amount_cents = int(round(float(cost_val)))
+        is_free = False
+
+        # Apply free shipping rule if threshold met and method is standard
+        if method_key == "standard" and free_shipping_threshold_cents > 0 and subtotal_cents >= free_shipping_threshold_cents:
+            amount_cents = 0
+            is_free = True
+
+        amount_formatted = f"€{amount_cents / 100:.2f}"
+
+        options.append({
+            "id": method_key,
+            "label": meta["label"],
+            "description": meta["description"],
+            "amount_cents": amount_cents,
+            "amount_formatted": amount_formatted,
+            "currency": "EUR",
+            "is_free": is_free,
+            "estimated_days_min": meta["estimated_days_min"],
+            "estimated_days_max": meta["estimated_days_max"],
+        })
+
+    # Sort options: Standard first, Economy second, Express third, Priority fourth
+    order_map = {"standard": 0, "economy": 1, "express": 2, "priority": 3}
+    options.sort(key=lambda o: order_map.get(o["id"], 99))
+    return options
+
+
+def get_fallback_shipping_options(
+    subtotal_cents: int = 0,
+    free_shipping_threshold_cents: int = 10000,
+) -> list[dict[str, Any]]:
+    """Safe fallback delivery options using configured rates when live calculation is unavailable."""
+    is_standard_free = free_shipping_threshold_cents > 0 and subtotal_cents >= free_shipping_threshold_cents
+    standard_cents = 0 if is_standard_free else config.DELIVERY.get("standard", 495)
+    express_cents = config.DELIVERY.get("express", 995)
+
+    return [
+        {
+            "id": "standard",
+            "label": "Standard Delivery",
+            "description": "Estimated delivery: 3–5 business days",
+            "amount_cents": standard_cents,
+            "amount_formatted": f"€{standard_cents / 100:.2f}",
+            "currency": "EUR",
+            "is_free": is_standard_free,
+            "estimated_days_min": 3,
+            "estimated_days_max": 5,
+        },
+        {
+            "id": "express",
+            "label": "Express Delivery",
+            "description": "Estimated delivery: 1–2 business days",
+            "amount_cents": express_cents,
+            "amount_formatted": f"€{express_cents / 100:.2f}",
+            "currency": "EUR",
+            "is_free": False,
+            "estimated_days_min": 1,
+            "estimated_days_max": 2,
+        },
+    ]
+
+
 
 # Idempotency and Sync Persistence
 _WORKSPACE_ROOT = os.path.dirname(
