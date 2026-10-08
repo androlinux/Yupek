@@ -9,6 +9,13 @@ import { useLanguage } from "@/components/LanguageContext";
 import { supabase } from "@/lib/supabase";
 import { eur } from "@/lib/catalog";
 import Icon from "@/components/ui/Icon";
+import {
+  mapFulfillmentStatus,
+  mapPaymentStatus,
+  getPaymentBadgeClass,
+  getFulfillmentBadgeClass,
+  formatOrderDate,
+} from "@/lib/orderStatus";
 
 interface OrderSummary {
   id: string;
@@ -18,8 +25,6 @@ interface OrderSummary {
   total_cents: number;
   payment_status: "pending" | "paid" | "failed" | "refunded";
   fulfillment_status: string;
-  stripe_payment_intent_id?: string;
-  printify_order_id?: string;
   items: Array<{
     title?: string;
     name?: string;
@@ -74,28 +79,6 @@ function OrdersListContent() {
     fetchOrders();
   }, [fetchOrders]);
 
-  const formatFulfillmentLabel = (status: string) => {
-    switch (status) {
-      case "printify_order_created":
-        return "PRINTIFY ORDER CREATED";
-      case "sent_to_production":
-      case "in_production":
-        return "IN PRODUCTION";
-      case "shipped":
-        return "SHIPPED";
-      case "delivered":
-        return "DELIVERED";
-      case "pending_payment":
-        return "PENDING PAYMENT";
-      case "paid":
-        return "PAID";
-      case "cancelled":
-        return "CANCELLED";
-      default:
-        return status.replace(/_/g, " ").toUpperCase();
-    }
-  };
-
   return (
     <div className="wrap py-10 md:py-16">
       <AccountNav />
@@ -147,14 +130,7 @@ function OrdersListContent() {
           <div className="mt-6 space-y-4">
             {orders.map((order) => {
               const totalEuro = order.total_cents / 100;
-              const dateFormatted = new Date(order.created_at).toLocaleDateString(
-                locale === "nl" ? "nl-NL" : "en-GB",
-                {
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                }
-              );
+              const dateFormatted = formatOrderDate(order.created_at, locale);
 
               return (
                 <div
@@ -168,18 +144,18 @@ function OrdersListContent() {
                           #{order.id}
                         </span>
                         <span
-                          className={`rounded-full px-2.5 py-0.5 text-[9px] uppercase tracking-wider font-semibold border ${
-                            order.payment_status === "paid"
-                              ? "bg-green-100 text-green-800 border-green-200"
-                              : order.payment_status === "failed"
-                              ? "bg-red-100 text-red-800 border-red-200"
-                              : "bg-gold/20 text-brown border-gold/40"
-                          }`}
+                          className={`rounded-full px-2.5 py-0.5 text-[9px] uppercase tracking-wider font-semibold border ${getPaymentBadgeClass(
+                            order.payment_status
+                          )}`}
                         >
-                          {order.payment_status.toUpperCase()}
+                          {mapPaymentStatus(order.payment_status, locale)}
                         </span>
-                        <span className="rounded-full bg-sand/40 border border-brown/15 px-2.5 py-0.5 text-[9px] uppercase tracking-wider text-brown font-semibold">
-                          {formatFulfillmentLabel(order.fulfillment_status)}
+                        <span
+                          className={`rounded-full px-2.5 py-0.5 text-[9px] uppercase tracking-wider font-semibold border ${getFulfillmentBadgeClass(
+                            order.fulfillment_status
+                          )}`}
+                        >
+                          {mapFulfillmentStatus(order.fulfillment_status, locale)}
                         </span>
                       </div>
                       <p className="mt-1 text-xs text-brown/60">

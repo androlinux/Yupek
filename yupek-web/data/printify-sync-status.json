@@ -1,8 +1,415 @@
 {
-  "processed_event_ids": [],
-  "last_webhook_received": null,
+  "processed_event_ids": [
+    "evt_prod_01",
+    "evt_ship_02",
+    "evt_deliv_03",
+    "evt_dup_09",
+    "evt_audit_pfy_dup_19"
+  ],
+  "last_webhook_received": "2026-10-08T10:39:44.891312+00:00",
   "last_sync": "2026-10-06T19:32:35.491Z",
   "products_synced": 2,
   "sync_errors": 0,
-  "events": []
+  "events": [
+    {
+      "event_id": "evt_dup_09",
+      "event_type": "order:sent-to-production",
+      "shop_id": "29215191",
+      "resource_id": "YPK-TEST-TRACK-09",
+      "status": "processed",
+      "time": "2026-10-07T23:46:16.029614+00:00"
+    },
+    {
+      "event_id": "evt_audit_pfy_dup_19",
+      "event_type": "order:sent-to-production",
+      "shop_id": "29215191",
+      "resource_id": "YPK-AUDIT-19",
+      "status": "processed",
+      "time": "2026-10-07T23:46:36.005889+00:00"
+    },
+    {
+      "event_id": "evt_prod_01",
+      "event_type": "order:sent-to-production",
+      "shop_id": "29215191",
+      "resource_id": "YPK-TEST-TRACK-01",
+      "status": "processed",
+      "time": "2026-10-07T23:46:36.341115+00:00"
+    },
+    {
+      "event_id": "evt_ship_02",
+      "event_type": "order:shipment:created",
+      "shop_id": "29215191",
+      "resource_id": "YPK-TEST-TRACK-02",
+      "status": "processed",
+      "time": "2026-10-07T23:46:36.436208+00:00"
+    },
+    {
+      "event_id": "evt_deliv_03",
+      "event_type": "order:shipment:delivered",
+      "shop_id": "29215191",
+      "resource_id": "YPK-TEST-TRACK-03",
+      "status": "processed",
+      "time": "2026-10-07T23:46:36.519276+00:00"
+    },
+    {
+      "event_id": "evt_dup_09",
+      "event_type": "order:sent-to-production",
+      "shop_id": "29215191",
+      "resource_id": "YPK-TEST-TRACK-09",
+      "status": "processed",
+      "time": "2026-10-07T23:46:36.633077+00:00"
+    },
+    {
+      "event_id": "evt_audit_pfy_dup_19",
+      "event_type": "order:sent-to-production",
+      "shop_id": "29215191",
+      "resource_id": "YPK-AUDIT-19",
+      "status": "processed",
+      "time": "2026-10-07T23:47:18.563232+00:00"
+    },
+    {
+      "event_id": "evt_prod_01",
+      "event_type": "order:sent-to-production",
+      "shop_id": "29215191",
+      "resource_id": "YPK-TEST-TRACK-01",
+      "status": "processed",
+      "time": "2026-10-07T23:47:18.928016+00:00"
+    },
+    {
+      "event_id": "evt_ship_02",
+      "event_type": "order:shipment:created",
+      "shop_id": "29215191",
+      "resource_id": "YPK-TEST-TRACK-02",
+      "status": "processed",
+      "time": "2026-10-07T23:47:19.005530+00:00"
+    },
+    {
+      "event_id": "evt_deliv_03",
+      "event_type": "order:shipment:delivered",
+      "shop_id": "29215191",
+      "resource_id": "YPK-TEST-TRACK-03",
+      "status": "processed",
+      "time": "2026-10-07T23:47:19.083380+00:00"
+    },
+    {
+      "event_id": "evt_dup_09",
+      "event_type": "order:sent-to-production",
+      "shop_id": "29215191",
+      "resource_id": "YPK-TEST-TRACK-09",
+      "status": "processed",
+      "time": "2026-10-07T23:47:19.184016+00:00"
+    },
+    {
+      "event_id": "evt_audit_pfy_dup_19",
+      "event_type": "order:sent-to-production",
+      "shop_id": "29215191",
+      "resource_id": "YPK-AUDIT-19",
+      "status": "processed",
+      "time": "2026-10-07T23:47:50.295694+00:00"
+    },
+    {
+      "event_id": "evt_prod_01",
+      "event_type": "order:sent-to-production",
+      "shop_id": "29215191",
+      "resource_id": "YPK-TEST-TRACK-01",
+      "status": "processed",
+      "time": "2026-10-07T23:47:50.543325+00:00"
+    },
+    {
+      "event_id": "evt_ship_02",
+      "event_type": "order:shipment:created",
+      "shop_id": "29215191",
+      "resource_id": "YPK-TEST-TRACK-02",
+      "status": "processed",
+      "time": "2026-10-07T23:47:50.631410+00:00"
+    },
+    {
+      "event_id": "evt_deliv_03",
+      "event_type": "order:shipment:delivered",
+      "shop_id": "29215191",
+      "resource_id": "YPK-TEST-TRACK-03",
+      "status": "processed",
+      "time": "2026-10-07T23:47:50.741468+00:00"
+    },
+    {
+      "event_id": "evt_dup_09",
+      "event_type": "order:sent-to-production",
+      "shop_id": "29215191",
+      "resource_id": "YPK-TEST-TRACK-09",
+      "status": "processed",
+      "time": "2026-10-07T23:47:50.855119+00:00"
+    },
+    {
+      "event_id": "evt_audit_pfy_dup_19",
+      "event_type": "order:sent-to-production",
+      "shop_id": "29215191",
+      "resource_id": "YPK-AUDIT-19",
+      "status": "processed",
+      "time": "2026-10-07T23:58:06.993246+00:00"
+    },
+    {
+      "event_id": "evt_prod_01",
+      "event_type": "order:sent-to-production",
+      "shop_id": "29215191",
+      "resource_id": "YPK-TEST-TRACK-01",
+      "status": "processed",
+      "time": "2026-10-07T23:58:07.553188+00:00"
+    },
+    {
+      "event_id": "evt_ship_02",
+      "event_type": "order:shipment:created",
+      "shop_id": "29215191",
+      "resource_id": "YPK-TEST-TRACK-02",
+      "status": "processed",
+      "time": "2026-10-07T23:58:07.671914+00:00"
+    },
+    {
+      "event_id": "evt_deliv_03",
+      "event_type": "order:shipment:delivered",
+      "shop_id": "29215191",
+      "resource_id": "YPK-TEST-TRACK-03",
+      "status": "processed",
+      "time": "2026-10-07T23:58:07.749604+00:00"
+    },
+    {
+      "event_id": "evt_dup_09",
+      "event_type": "order:sent-to-production",
+      "shop_id": "29215191",
+      "resource_id": "YPK-TEST-TRACK-09",
+      "status": "processed",
+      "time": "2026-10-07T23:58:07.852723+00:00"
+    },
+    {
+      "event_id": "evt_audit_pfy_dup_19",
+      "event_type": "order:sent-to-production",
+      "shop_id": "29215191",
+      "resource_id": "YPK-AUDIT-19",
+      "status": "processed",
+      "time": "2026-10-07T23:59:02.091692+00:00"
+    },
+    {
+      "event_id": "evt_prod_01",
+      "event_type": "order:sent-to-production",
+      "shop_id": "29215191",
+      "resource_id": "YPK-TEST-TRACK-01",
+      "status": "processed",
+      "time": "2026-10-07T23:59:02.611235+00:00"
+    },
+    {
+      "event_id": "evt_ship_02",
+      "event_type": "order:shipment:created",
+      "shop_id": "29215191",
+      "resource_id": "YPK-TEST-TRACK-02",
+      "status": "processed",
+      "time": "2026-10-07T23:59:02.708678+00:00"
+    },
+    {
+      "event_id": "evt_deliv_03",
+      "event_type": "order:shipment:delivered",
+      "shop_id": "29215191",
+      "resource_id": "YPK-TEST-TRACK-03",
+      "status": "processed",
+      "time": "2026-10-07T23:59:02.800461+00:00"
+    },
+    {
+      "event_id": "evt_dup_09",
+      "event_type": "order:sent-to-production",
+      "shop_id": "29215191",
+      "resource_id": "YPK-TEST-TRACK-09",
+      "status": "processed",
+      "time": "2026-10-07T23:59:02.919724+00:00"
+    },
+    {
+      "event_id": "evt_audit_pfy_dup_19",
+      "event_type": "order:sent-to-production",
+      "shop_id": "29215191",
+      "resource_id": "YPK-AUDIT-19",
+      "status": "processed",
+      "time": "2026-10-08T00:00:11.447057+00:00"
+    },
+    {
+      "event_id": "evt_prod_01",
+      "event_type": "order:sent-to-production",
+      "shop_id": "29215191",
+      "resource_id": "YPK-TEST-TRACK-01",
+      "status": "processed",
+      "time": "2026-10-08T00:00:11.773407+00:00"
+    },
+    {
+      "event_id": "evt_ship_02",
+      "event_type": "order:shipment:created",
+      "shop_id": "29215191",
+      "resource_id": "YPK-TEST-TRACK-02",
+      "status": "processed",
+      "time": "2026-10-08T00:00:11.896695+00:00"
+    },
+    {
+      "event_id": "evt_deliv_03",
+      "event_type": "order:shipment:delivered",
+      "shop_id": "29215191",
+      "resource_id": "YPK-TEST-TRACK-03",
+      "status": "processed",
+      "time": "2026-10-08T00:00:11.990735+00:00"
+    },
+    {
+      "event_id": "evt_dup_09",
+      "event_type": "order:sent-to-production",
+      "shop_id": "29215191",
+      "resource_id": "YPK-TEST-TRACK-09",
+      "status": "processed",
+      "time": "2026-10-08T00:00:12.100707+00:00"
+    },
+    {
+      "event_id": "evt_audit_pfy_dup_19",
+      "event_type": "order:sent-to-production",
+      "shop_id": "29215191",
+      "resource_id": "YPK-AUDIT-19",
+      "status": "processed",
+      "time": "2026-10-08T08:07:55.146771+00:00"
+    },
+    {
+      "event_id": "evt_prod_01",
+      "event_type": "order:sent-to-production",
+      "shop_id": "29215191",
+      "resource_id": "YPK-TEST-TRACK-01",
+      "status": "processed",
+      "time": "2026-10-08T08:07:55.924031+00:00"
+    },
+    {
+      "event_id": "evt_ship_02",
+      "event_type": "order:shipment:created",
+      "shop_id": "29215191",
+      "resource_id": "YPK-TEST-TRACK-02",
+      "status": "processed",
+      "time": "2026-10-08T08:07:56.015337+00:00"
+    },
+    {
+      "event_id": "evt_deliv_03",
+      "event_type": "order:shipment:delivered",
+      "shop_id": "29215191",
+      "resource_id": "YPK-TEST-TRACK-03",
+      "status": "processed",
+      "time": "2026-10-08T08:07:56.156768+00:00"
+    },
+    {
+      "event_id": "evt_dup_09",
+      "event_type": "order:sent-to-production",
+      "shop_id": "29215191",
+      "resource_id": "YPK-TEST-TRACK-09",
+      "status": "processed",
+      "time": "2026-10-08T08:07:56.273187+00:00"
+    },
+    {
+      "event_id": "evt_audit_pfy_dup_19",
+      "event_type": "order:sent-to-production",
+      "shop_id": "29215191",
+      "resource_id": "YPK-AUDIT-19",
+      "status": "processed",
+      "time": "2026-10-08T08:13:27.258823+00:00"
+    },
+    {
+      "event_id": "evt_prod_01",
+      "event_type": "order:sent-to-production",
+      "shop_id": "29215191",
+      "resource_id": "YPK-TEST-TRACK-01",
+      "status": "processed",
+      "time": "2026-10-08T08:13:27.977926+00:00"
+    },
+    {
+      "event_id": "evt_ship_02",
+      "event_type": "order:shipment:created",
+      "shop_id": "29215191",
+      "resource_id": "YPK-TEST-TRACK-02",
+      "status": "processed",
+      "time": "2026-10-08T08:13:28.107984+00:00"
+    },
+    {
+      "event_id": "evt_deliv_03",
+      "event_type": "order:shipment:delivered",
+      "shop_id": "29215191",
+      "resource_id": "YPK-TEST-TRACK-03",
+      "status": "processed",
+      "time": "2026-10-08T08:13:28.222944+00:00"
+    },
+    {
+      "event_id": "evt_dup_09",
+      "event_type": "order:sent-to-production",
+      "shop_id": "29215191",
+      "resource_id": "YPK-TEST-TRACK-09",
+      "status": "processed",
+      "time": "2026-10-08T08:13:28.379492+00:00"
+    },
+    {
+      "event_id": "evt_audit_pfy_dup_19",
+      "event_type": "order:sent-to-production",
+      "shop_id": "29215191",
+      "resource_id": "YPK-AUDIT-19",
+      "status": "processed",
+      "time": "2026-10-08T09:01:12.183896+00:00"
+    },
+    {
+      "event_id": "evt_prod_01",
+      "event_type": "order:sent-to-production",
+      "shop_id": "29215191",
+      "resource_id": "YPK-TEST-TRACK-01",
+      "status": "processed",
+      "time": "2026-10-08T09:01:13.052749+00:00"
+    },
+    {
+      "event_id": "evt_ship_02",
+      "event_type": "order:shipment:created",
+      "shop_id": "29215191",
+      "resource_id": "YPK-TEST-TRACK-02",
+      "status": "processed",
+      "time": "2026-10-08T09:01:13.164016+00:00"
+    },
+    {
+      "event_id": "evt_deliv_03",
+      "event_type": "order:shipment:delivered",
+      "shop_id": "29215191",
+      "resource_id": "YPK-TEST-TRACK-03",
+      "status": "processed",
+      "time": "2026-10-08T09:01:13.273154+00:00"
+    },
+    {
+      "event_id": "evt_dup_09",
+      "event_type": "order:sent-to-production",
+      "shop_id": "29215191",
+      "resource_id": "YPK-TEST-TRACK-09",
+      "status": "processed",
+      "time": "2026-10-08T09:01:13.482410+00:00"
+    },
+    {
+      "event_id": "evt_prod_01",
+      "event_type": "order:sent-to-production",
+      "shop_id": "29215191",
+      "resource_id": "YPK-TEST-TRACK-01",
+      "status": "processed",
+      "time": "2026-10-08T10:39:44.819541+00:00"
+    },
+    {
+      "event_id": "evt_ship_02",
+      "event_type": "order:shipment:created",
+      "shop_id": "29215191",
+      "resource_id": "YPK-TEST-TRACK-02",
+      "status": "processed",
+      "time": "2026-10-08T10:39:44.835481+00:00"
+    },
+    {
+      "event_id": "evt_deliv_03",
+      "event_type": "order:shipment:delivered",
+      "shop_id": "29215191",
+      "resource_id": "YPK-TEST-TRACK-03",
+      "status": "processed",
+      "time": "2026-10-08T10:39:44.850981+00:00"
+    },
+    {
+      "event_id": "evt_dup_09",
+      "event_type": "order:sent-to-production",
+      "shop_id": "29215191",
+      "resource_id": "YPK-TEST-TRACK-09",
+      "status": "processed",
+      "time": "2026-10-08T10:39:44.891312+00:00"
+    }
+  ]
 }

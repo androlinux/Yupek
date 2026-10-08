@@ -63,7 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [authModalTab, setAuthModalTab] = useState<"signin" | "signup">("signin");
 
   // Sync profile details from public.profiles table or user metadata
-  const loadProfile = useCallback(async (userId: string, email: string, metadata: any, provider: "google" | "email", createdAt?: string) => {
+  const loadProfile = useCallback(async (userId: string, email: string, metadata: any, provider: "google" | "email", createdAt?: string, appMetadata?: any) => {
     let firstName = metadata?.first_name || "";
     let lastName = metadata?.last_name || "";
     let phone = metadata?.phone || "";
@@ -134,7 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       lastName,
       name: fullName,
       phone,
-      role: metadata?.role === "admin" ? "admin" : "customer",
+      role: appMetadata?.role === "admin" ? "admin" : "customer",
       provider,
       address: defaultAddress || {
         fullName,
@@ -174,7 +174,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (session?.user) {
           const supa = session.user;
           const provider = (supa.app_metadata?.provider || "email") as "google" | "email";
-          await loadProfile(supa.id, supa.email || "", supa.user_metadata, provider, supa.created_at);
+          await loadProfile(supa.id, supa.email || "", supa.user_metadata, provider, supa.created_at, supa.app_metadata);
         } else {
           setUser(null);
           localStorage.removeItem(USER_STORAGE_KEY);
@@ -193,7 +193,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (session?.user) {
         const supa = session.user;
         const provider = (supa.app_metadata?.provider || "email") as "google" | "email";
-        await loadProfile(supa.id, supa.email || "", supa.user_metadata, provider, supa.created_at);
+        await loadProfile(supa.id, supa.email || "", supa.user_metadata, provider, supa.created_at, supa.app_metadata);
       } else if (event === "SIGNED_OUT") {
         setUser(null);
         localStorage.removeItem(USER_STORAGE_KEY);
@@ -211,7 +211,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (session?.user) {
       const supa = session.user;
       const provider = (supa.app_metadata?.provider || "email") as "google" | "email";
-      await loadProfile(supa.id, supa.email || "", supa.user_metadata, provider, supa.created_at);
+      await loadProfile(supa.id, supa.email || "", supa.user_metadata, provider, supa.created_at, supa.app_metadata);
     }
   }, [loadProfile]);
 
@@ -364,6 +364,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     try {
       localStorage.removeItem(USER_STORAGE_KEY);
+      localStorage.removeItem("yupek-wishlist");
     } catch {}
   }, []);
 

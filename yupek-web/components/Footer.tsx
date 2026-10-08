@@ -143,7 +143,7 @@ export default function Footer() {
       {/* Sub-footer legal bar */}
       <div className="border-t border-cream/15">
         <div className="wrap flex flex-col justify-between gap-4 py-6 text-[10px] uppercase tracking-[.2em] text-cream/60 md:flex-row items-center">
-          <p>© 2026 YUPEK B.V. {t.common.allRightsReserved}.</p>
+          <p>© 2026 YUPEK. {t.common.allRightsReserved}.</p>
           <div className="flex flex-wrap gap-6 items-center">
             <Link href="/privacy" className="hover:text-cream transition-colors">
               {t.footer.privacyPolicy}

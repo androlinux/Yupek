@@ -18,6 +18,7 @@ interface ConfigContextType {
   addStoreOrder: (order: StoreOrder) => void;
   updateOrderStatus: (orderId: string, status: StoreOrder["status"]) => void;
   deleteStoreOrder: (orderId: string) => Promise<{ success: boolean; error?: string }>;
+  retryPrintifyFulfillment: (orderId: string) => Promise<{ success: boolean; printify_order_id?: string; fulfillment_status?: string; error?: string }>;
   allProducts: Product[];
   catalogProducts: (Product & { isDeleted?: boolean })[];
   getProduct: (slug: string) => Product | undefined;
@@ -29,6 +30,10 @@ function getAdminHeaders(): Record<string, string> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (typeof window !== "undefined") {
     try {
+      const adminKey = sessionStorage.getItem("yupek_admin_key");
+      if (adminKey) {
+        headers["x-yupek-admin-key"] = adminKey;
+      }
       if (sessionStorage.getItem("yupek_admin_auth") === "true") {
         headers["x-yupek-admin-auth"] = "true";
       }
@@ -387,6 +392,48 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const retryPrintifyFulfillment = useCallback(
+    async (orderId: string): Promise<{ success: boolean; printify_order_id?: string; fulfillment_status?: string; error?: string }> => {
+      try {
+        const res = await fetch(`/api/orders/${encodeURIComponent(orderId)}/printify/retry`, {
+          method: "POST",
+          headers: getAdminHeaders(),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          return {
+            success: false,
+            error: data.error || data.details || "Printify fulfillment could not be created.",
+          };
+        }
+
+        const current = getLocalSiteConfig();
+        const updated = (current.storeOrders || []).map((o) =>
+          o.id === orderId || o.orderNumber === orderId
+            ? {
+                ...o,
+                printify_order_id: data.printify_order_id,
+                fulfillment_status: (data.fulfillment_status || "printify_order_created") as StoreOrder["fulfillment_status"],
+                status: "Processing" as const,
+              }
+            : o
+        );
+        const next = { ...current, storeOrders: updated };
+        setConfig(next);
+        saveLocalSiteConfig(next);
+
+        return {
+          success: true,
+          printify_order_id: data.printify_order_id,
+          fulfillment_status: data.fulfillment_status,
+        };
+      } catch (err: any) {
+        return { success: false, error: err.message || "Failed to retry Printify fulfillment" };
+      }
+    },
+    []
+  );
+
   return (
     <ConfigContext.Provider
       value={{
@@ -403,6 +450,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
         addStoreOrder,
         updateOrderStatus,
         deleteStoreOrder,
+        retryPrintifyFulfillment,
         allProducts,
         catalogProducts,
         getProduct,

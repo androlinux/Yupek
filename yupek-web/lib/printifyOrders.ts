@@ -34,7 +34,12 @@ export interface CreatePrintifyOrderParams {
 
 export async function createPrintifyOrder(params: CreatePrintifyOrderParams): Promise<{ id: string; status: string; raw: any }> {
   const token = process.env.PRINTIFY_API_TOKEN;
-  const shopId = process.env.PRINTIFY_SHOP_ID || "29215191";
+  const shopId = (process.env.PRINTIFY_SHOP_ID || "29215191").trim();
+
+  // Safety: NEVER send orders to Etsy Shop 29193770 or unexpected shops
+  if (shopId !== "29215191") {
+    throw new Error(`[Security Alert] Invalid Printify Shop ID: ${shopId}. Only YUPEK Shop 29215191 is authorized.`);
+  }
 
   if (!token) {
     throw new Error("PRINTIFY_API_TOKEN is not configured.");
@@ -64,20 +69,36 @@ export async function createPrintifyOrder(params: CreatePrintifyOrderParams): Pr
     },
   };
 
-  const res = await fetch(`https://api.printify.com/v1/shops/${shopId}/orders.json`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-      "User-Agent": "Yupek/1.0 (https://www.yupek.shop; orders@yupek.shop)",
-    },
-    body: JSON.stringify(payload),
-    cache: "no-store",
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 seconds timeout
+
+  let res: Response;
+  try {
+    res = await fetch(`https://api.printify.com/v1/shops/${shopId}/orders.json`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        "User-Agent": "Yupek/1.0 (https://www.yupek.shop; orders@yupek.shop)",
+      },
+      body: JSON.stringify(payload),
+      cache: "no-store",
+      signal: controller.signal,
+    });
+  } catch (fetchErr: any) {
+    if (fetchErr.name === "AbortError") {
+      throw new Error("Printify API request timed out after 10s. Order kept safe as paid.");
+    }
+    throw new Error(`Printify API network error: ${fetchErr.message}`);
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Printify API Error (HTTP ${res.status}): ${errorText}`);
+    const errorText = await res.text().catch(() => "");
+    // Sanitize response to prevent any credential reflection
+    const sanitizedMsg = errorText.substring(0, 300).replace(/Bearer\s+[A-Za-z0-9._-]+/gi, "[REDACTED]");
+    throw new Error(`Printify API Error (HTTP ${res.status}): ${sanitizedMsg}`);
   }
 
   const data = await res.json();

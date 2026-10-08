@@ -44,7 +44,7 @@ function buildProductJsonLd(p: Product, baseUrl: string) {
     url: productUrl,
     seller: {
       "@type": "Organization",
-      name: "YUPEK B.V.",
+      name: "YUPEK",
     },
     hasMerchantReturnPolicy: {
       "@type": "MerchantReturnPolicy",

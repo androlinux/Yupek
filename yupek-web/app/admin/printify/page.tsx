@@ -82,6 +82,7 @@ export default function AdminPrintifyPage() {
 
     if (isUserValid && isPassValid) {
       sessionStorage.setItem("yupek_admin_auth", "true");
+      sessionStorage.setItem("yupek_admin_key", enteredPass);
       setAuthorized(true);
       setIsLoggingIn(false);
     } else {

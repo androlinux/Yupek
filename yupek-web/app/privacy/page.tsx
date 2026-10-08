@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useLanguage } from "@/components/LanguageContext";
 import { useSiteConfig } from "@/components/ConfigContext";
+import { useCookieConsent } from "@/components/CookieConsentContext";
 import ScrollReveal from "@/components/ScrollReveal";
 import { Divider } from "@/components/ui/Pattern";
 import Icon from "@/components/ui/Icon";
@@ -10,6 +11,7 @@ import Icon from "@/components/ui/Icon";
 export default function PrivacyPage() {
   const { locale } = useLanguage();
   const { config } = useSiteConfig();
+  const { openSettings } = useCookieConsent();
 
   const isNl = locale === "nl";
   const contactEmail = config.contactEmail || "daniyarov16@gmail.com";
@@ -60,6 +62,26 @@ export default function PrivacyPage() {
                 {contactEmail}
               </a>.
             </p>
+
+            {/* Legal Entity & Statutory Placeholders Notice */}
+            <div className="bg-sand/20 border border-brown/10 p-5 text-xs space-y-2 mt-4 font-mono">
+              <div className="font-semibold text-brown uppercase tracking-wider text-[11px]">
+                {isNl ? "Statutaire Bedrijfsgegevens (In Oprichting / Pre-Registration)" : "Legal Entity Details (Pre-Registration Technical Status)"}
+              </div>
+              <ul className="space-y-1 text-brown/75">
+                <li><strong>{isNl ? "Handelsnaam:" : "Trade Name:"}</strong> YUPEK</li>
+                <li><strong>{isNl ? "Juridische Entiteit:" : "Legal Entity:"}</strong> [LEGAL COMPANY NAME — TO BE REGISTERED UPON KVK FILING]</li>
+                <li><strong>{isNl ? "Vestigingsadres:" : "Registered Address:"}</strong> [REGISTERED BUSINESS ADDRESS — TO BE COMPLETED UPON KVK FILING]</li>
+                <li><strong>{isNl ? "KVK-nummer:" : "Chamber of Commerce (KVK):"}</strong> [KVK NUMBER — NOT YET REGISTERED / PENDING KVK REGISTRATION]</li>
+                <li><strong>{isNl ? "Btw-identificatienummer:" : "VAT / BTW Number:"}</strong> [VAT / BTW NUMBER — NOT YET ISSUED / PENDING TAX REGISTRATION]</li>
+                <li><strong>{isNl ? "Privacy Contactpersoon:" : "Privacy Concierge Contact:"}</strong> [PRIVACY CONTACT EMAIL — currently {contactEmail}]</li>
+              </ul>
+              <p className="text-[10px] text-brown/60 italic pt-1">
+                {isNl
+                  ? "Opmerking: Deze webshop bevindt zich in technische auditstatus. Officiële handelsregistratie en btw-nummer worden na voltooiing van het registratieproces gepubliceerd."
+                  : "Note: This storefront is in technical audit status. Official Chamber of Commerce registration and VAT number will be published upon formal registration completion."}
+              </p>
+            </div>
           </div>
         </ScrollReveal>
 
@@ -139,43 +161,100 @@ export default function PrivacyPage() {
         <ScrollReveal>
           <div className="border border-brown/15 bg-white p-8 md:p-10 shadow-sm space-y-4">
             <span className="label text-[10px] tracking-[.25em] uppercase text-gold font-semibold block">
-              04 • {isNl ? "COOKIES & OPSLAG" : "COOKIES & STORAGE"}
+              04 • {isNl ? "COOKIES & TOESTEMMING" : "COOKIES & CONSENT"}
             </span>
             <h2 className="font-serif text-2xl md:text-3xl text-brown tracking-wide">
-              {isNl ? "Functionele Cookies & Sessies" : "Functional Cookies & Sessions"}
+              {isNl ? "Cookiebeleid & Voorkeurenbeheer" : "Cookie Categories & Preference Control"}
             </h2>
             <p className="text-xs md:text-sm leading-relaxed text-brown/80 font-light">
               {isNl
-                ? "YUPEK maakt uitsluitend gebruik van functionele en technisch noodzakelijke cookies en lokale browseropslag. Deze zijn essentieel om:"
-                : "YUPEK uses strictly essential functional cookies and local storage necessary to:"}
+                ? "YUPEK hanteert een strikt privacy-first cookiebeleid conform de Europese e-Privacyrichtlijn en AVG. Niet-essentiële cookies worden standaard geblokkeerd totdat u hiervoor expliciet toestemming geeft:"
+                : "YUPEK enforces a privacy-first consent model under the EU ePrivacy Directive and GDPR. Non-essential trackers are blocked by default until explicit affirmative consent is provided:"}
             </p>
-            <ul className="space-y-2 text-xs text-brown/75 font-light">
-              <li className="flex items-start gap-2">
-                <span className="text-gold">•</span>
-                <span>{isNl ? "Uw inlogsessie veilig te beheren via Supabase Auth." : "Securely manage your authenticated client session via Supabase Auth."}</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-gold">•</span>
-                <span>{isNl ? "Geselecteerde artikelen in uw winkelmand en verlanglijst te bewaren." : "Retain your shopping bag contents and saved wishlist."}</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-gold">•</span>
-                <span>{isNl ? "Uw taalvoorkeur (Nederlands / Engels) te onthouden." : "Remember your chosen interface language (English / Dutch)."}</span>
-              </li>
-            </ul>
-            <p className="text-xs text-brown/65 italic pt-2">
-              {isNl
-                ? "Wij maken geen gebruik van advertentietrackers of commerciële trackingnetwerken van derden. U kunt het gebruik van cookies te allen tijde beheren of uitschakelen via de instellingen van uw internetbrowser."
-                : "We do not deploy third-party advertising or commercial tracking networks. You may control or delete cookies at any time via your browser settings."}
-            </p>
+            <div className="space-y-3 pt-2 text-xs text-brown/85 font-light">
+              <div className="border border-brown/10 p-3 bg-sand/10">
+                <strong className="text-brown font-semibold uppercase tracking-wider text-[11px] block mb-1">
+                  1. {isNl ? "Essentiële Cookies (Altijd Actief)" : "Essential Cookies (Always Active)"}
+                </strong>
+                <p>
+                  {isNl
+                    ? "Noodzakelijk voor basisfuncties van de webshop: beveiligde authenticatiesessies (Supabase Auth), winkelmand (`yupek-cart`), verlanglijst (`yupek-wishlist`), cookievoorkeuren (`yupek_cookie_consent`) en taalinstellingen."
+                    : "Strictly necessary for storefront operation: authenticated client sessions (Supabase Auth), shopping bag (`yupek-cart`), saved items (`yupek-wishlist`), cookie consent state (`yupek_cookie_consent`), and language selection."}
+                </p>
+              </div>
+              <div className="border border-brown/10 p-3 bg-sand/10">
+                <strong className="text-brown font-semibold uppercase tracking-wider text-[11px] block mb-1">
+                  2. {isNl ? "Analytische Cookies (Opt-in Vereist)" : "Analytics Cookies (Opt-in Required)"}
+                </strong>
+                <p>
+                  {isNl
+                    ? "Standaard uitgeschakeld. Met uw toestemming kunnen geanonimiseerde performancemetingen (bijv. Vercel Web Analytics) worden geladen om websiteprestaties te analyseren. Er worden geen commerciële volgprofielen opgebouwd."
+                    : "Disabled by default. With your explicit consent, anonymous performance metrics (e.g., Vercel Web Analytics) may monitor site speed and navigation patterns. No behavioral advertising profiles are built."}
+                </p>
+              </div>
+              <div className="border border-brown/10 p-3 bg-sand/10">
+                <strong className="text-brown font-semibold uppercase tracking-wider text-[11px] block mb-1">
+                  3. {isNl ? "Marketingcookies (Opt-in Vereist)" : "Marketing Cookies (Opt-in Required)"}
+                </strong>
+                <p>
+                  {isNl
+                    ? "Standaard uitgeschakeld. YUPEK maakt op dit moment geen gebruik van externe commerciële advertentienetwerken (zoals Meta Pixel of Google Ads remarketing). Eventuele toekomstige marketingcookies vereisen altijd voorafgaande toestemming."
+                    : "Disabled by default. YUPEK does not currently deploy third-party advertising or retargeting networks (such as Meta Pixel or Google Ads). Any future marketing integrations strictly require prior affirmative consent."}
+                </p>
+              </div>
+            </div>
+            <div className="pt-3">
+              <button
+                type="button"
+                onClick={openSettings}
+                className="btn border border-brown text-brown hover:bg-brown hover:text-cream transition-colors text-[10px] tracking-[.2em] font-semibold py-2.5 px-5 uppercase"
+              >
+                {isNl ? "BEHEER COOKIEVOORKEUREN" : "MANAGE COOKIE PREFERENCES"}
+              </button>
+            </div>
           </div>
         </ScrollReveal>
 
-        {/* Section 5: Your Rights under European Law (GDPR) */}
+        {/* Section 5: Data Retention & Limits */}
         <ScrollReveal>
           <div className="border border-brown/15 bg-white p-8 md:p-10 shadow-sm space-y-4">
             <span className="label text-[10px] tracking-[.25em] uppercase text-gold font-semibold block">
-              05 • {isNl ? "UW RECHTEN" : "YOUR STATUTORY RIGHTS"}
+              05 • {isNl ? "BEWAARTERMIJNEN" : "DATA RETENTION"}
+            </span>
+            <h2 className="font-serif text-2xl md:text-3xl text-brown tracking-wide">
+              {isNl ? "Bewaartermijnen van Persoonsgegevens" : "Data Retention Principles"}
+            </h2>
+            <p className="text-xs md:text-sm leading-relaxed text-brown/80 font-light">
+              {isNl
+                ? "YUPEK bewaart uw persoonsgegevens uitsluitend zolang dit noodzakelijk is voor de doelen waarvoor ze zijn verkregen:"
+                : "YUPEK retains personal data strictly for the duration necessary to satisfy processing and legal obligations:"}
+            </p>
+            <ul className="space-y-2 text-xs text-brown/75 font-light">
+              <li className="flex items-start gap-2">
+                <span className="text-gold font-bold">•</span>
+                <span><strong>{isNl ? "Klantaccount:" : "Customer Account Data:"}</strong> {isNl ? "Bewaard zolang uw account actief is of totdat u verzoekt om accountverwijdering." : "Retained while your account is active or until an erasure request is executed."}</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-gold font-bold">•</span>
+                <span><strong>{isNl ? "Fiscale Bestel- & Betaaladministratie:" : "Fiscal Transaction & Invoice Records:"}</strong> {isNl ? "Wettelijk verplichte fiscale bewaartermijn van 7 jaar conform de Nederlandse Belastingdienst en het Burgerlijk Wetboek (Boek 7 BW). Overige niet-fiscale ordergegevens: [DATA RETENTION PERIOD TO CONFIRM]." : "Preserved for 7 years under statutory Dutch fiscal and accounting record retention regulations. Non-fiscal customer order details follow: [DATA RETENTION PERIOD TO CONFIRM]."}</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-gold font-bold">•</span>
+                <span><strong>{isNl ? "Klantenservice Berichten:" : "Customer Inquiries & Support:"}</strong> {isNl ? "Bewaard voor de duur van de afhandeling, gevolgd door een bewaartermijn van [CUSTOMER CARE RETENTION PERIOD TO CONFIRM]." : "Preserved during inquiry resolution, followed by [CUSTOMER CARE RETENTION PERIOD TO CONFIRM]."}</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-gold font-bold">•</span>
+                <span><strong>{isNl ? "Cookiekeuzes:" : "Cookie Consent State:"}</strong> {isNl ? "Bewaard voor maximaal 12 maanden in uw browser, waarna de toestemmingsvraag opnieuw wordt getoond." : "Retained for up to 12 months in first-party browser storage, after which renewed consent is solicited."}</span>
+              </li>
+            </ul>
+          </div>
+        </ScrollReveal>
+
+        {/* Section 6: Your Rights under European Law (GDPR) */}
+        <ScrollReveal>
+          <div className="border border-brown/15 bg-white p-8 md:p-10 shadow-sm space-y-4">
+            <span className="label text-[10px] tracking-[.25em] uppercase text-gold font-semibold block">
+              06 • {isNl ? "UW RECHTEN" : "YOUR STATUTORY RIGHTS"}
             </span>
             <h2 className="font-serif text-2xl md:text-3xl text-brown tracking-wide">
               {isNl ? "Rechten van Betrokkenen (AVG / GDPR)" : "Data Subject Rights (GDPR)"}
@@ -196,13 +275,18 @@ export default function PrivacyPage() {
               </div>
               <div className="border border-brown/10 p-3 bg-sand/10">
                 <strong>{isNl ? "Gegevenswissing ('Vergetelheid')" : "Erasure ('Right to be Forgotten')"}</strong>
-                <p className="text-brown/70 mt-1">{isNl ? "Verzoek om verwijdering van uw account en gegevens." : "Request deletion of your profile and data."}</p>
+                <p className="text-brown/70 mt-1">{isNl ? "Verzoek om verwijdering van uw account en gegevens (behoudens fiscale bewaarplichten)." : "Request deletion of your profile and personal data (except statutory fiscal records)."}</p>
               </div>
               <div className="border border-brown/10 p-3 bg-sand/10">
                 <strong>{isNl ? "Bezwaar & Beperking" : "Restriction & Objection"}</strong>
                 <p className="text-brown/70 mt-1">{isNl ? "Bezwaar maken tegen specifieke verwerkingen." : "Object to processing where legally applicable."}</p>
               </div>
             </div>
+            <p className="text-xs text-brown/65 pt-2 font-light">
+              {isNl
+                ? "U heeft tevens te allen tijde het recht om een klacht in te dienen bij de bevoegde toezichthouder voor gegevensbescherming (in Nederland: Autoriteit Persoonsgegevens, https://autoriteitpersoonsgegevens.nl)."
+                : "You also retain the right at any time to lodge a complaint with the competent supervisory authority (in the Netherlands: Autoriteit Persoonsgegevens, https://autoriteitpersoonsgegevens.nl)."}
+            </p>
           </div>
         </ScrollReveal>
 

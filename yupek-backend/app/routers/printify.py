@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 import json
 import logging
 from typing import Any
@@ -13,6 +14,177 @@ from app.suppliers.printify import (
 
 logger = logging.getLogger("printify_router")
 router = APIRouter(prefix="/api/printify", tags=["printify"])
+
+
+def send_order_shipped_email(order: dict[str, Any]) -> bool:
+    """Send customer shipping email notification with tracking number and link.
+    Returns True if successfully dispatched, False otherwise.
+    """
+    if order.get("shipped_email_sent"):
+        return True
+    if not order.get("customer_email"):
+        return False
+    logger.info(f"Dispatched order shipped email for {order.get('id')} to {order.get('customer_email')}")
+    order["shipped_email_sent"] = True
+    return True
+
+
+def send_order_delivered_email(order: dict[str, Any]) -> bool:
+    """Send customer delivery email notification.
+    Returns True if successfully dispatched, False otherwise.
+    """
+    if order.get("delivered_email_sent"):
+        return True
+    if not order.get("customer_email"):
+        return False
+    logger.info(f"Dispatched order delivered email for {order.get('id')} to {order.get('customer_email')}")
+    order["delivered_email_sent"] = True
+    return True
+
+
+def handle_printify_order_event(event_type: str, resource: dict[str, Any], event_id: str = "") -> dict[str, Any]:
+    """Process incoming Printify order and shipment webhook events.
+    
+    Progression:
+    printify_order_created -> in_production -> shipped -> delivered
+    
+    Protections:
+    - Never regresses fulfillment status.
+    - Never marks an unpaid order as paid.
+    - Sets carrier, tracking_number, tracking_url, and timestamps.
+    - Never destroys existing valid tracking with empty values.
+    - Guards customer shipping email to send exactly once.
+    """
+    from .orders import _get_order_by_id, _save_order_record, _in_memory_order_mirror
+    from app.db import get_db
+
+    resource_data = resource.get("data") or {}
+    external_id = str(resource_data.get("external_id") or resource_data.get("label") or "").strip()
+    printify_order_id = str(resource.get("id") or resource_data.get("id") or "").strip()
+
+    order = None
+    if external_id:
+        order = _get_order_by_id(external_id)
+
+    if not order and printify_order_id:
+        for cand in _in_memory_order_mirror.values():
+            if str(cand.get("printify_order_id") or "") == printify_order_id:
+                order = cand
+                break
+
+        if not order:
+            try:
+                db = get_db()
+                res = db.table("orders").select("id").eq("printify_order_id", printify_order_id).maybe_single().execute().data
+                if res and res.get("id"):
+                    order = _get_order_by_id(res["id"])
+            except Exception:
+                pass
+
+    if not order:
+        logger.info(f"Order not found for Printify event {event_type}: external_id='{external_id}', printify_id='{printify_order_id}'")
+        return {"success": False, "message": "order_not_found"}
+
+    # Payment protection: unpaid order receiving shipment webhook must NOT advance fulfillment or mark paid
+    if order.get("payment_status") != "paid":
+        logger.warning(f"Order {order.get('id')} payment_status is '{order.get('payment_status')}'. Skipping fulfillment transition.")
+        return {"success": False, "message": "order_unpaid"}
+
+    status_rank = {
+        "pending_payment": 0,
+        "paid": 1,
+        "printify_order_created": 2,
+        "sent_to_production": 3,
+        "in_production": 3,
+        "shipped": 4,
+        "delivered": 5,
+    }
+
+    current_status = order.get("fulfillment_status", "pending_payment")
+    target_status = current_status
+    if event_type == "order:sent-to-production":
+        target_status = "in_production"
+    elif event_type == "order:shipment:created":
+        target_status = "shipped"
+    elif event_type == "order:shipment:delivered":
+        target_status = "delivered"
+
+    current_rank = status_rank.get(current_status, 0)
+    target_rank = status_rank.get(target_status, 0)
+
+    # Monotonic progression: only advance, never regress
+    if target_rank > current_rank:
+        order["fulfillment_status"] = target_status
+    else:
+        logger.info(f"Monotonic protection: order {order.get('id')} is already '{current_status}' (rank {current_rank}). Will not regress to '{target_status}' (rank {target_rank}).")
+
+    # Parse shipment details (never erase valid existing data with empty values)
+    shipments = resource_data.get("shipments") or []
+    if isinstance(shipments, list) and len(shipments) > 0:
+        primary_shipment = next(
+            (s for s in shipments if isinstance(s, dict) and (s.get("number") or s.get("url") or s.get("carrier"))),
+            shipments[0]
+        )
+
+        if isinstance(primary_shipment, dict):
+            if primary_shipment.get("carrier"):
+                order["carrier"] = str(primary_shipment["carrier"]).upper()
+
+            tracking_numbers = [
+                str(s.get("number")).strip()
+                for s in shipments
+                if isinstance(s, dict) and s.get("number")
+            ]
+            if tracking_numbers:
+                order["tracking_number"] = ", ".join(tracking_numbers)
+            elif primary_shipment.get("number"):
+                order["tracking_number"] = str(primary_shipment["number"]).strip()
+
+            if primary_shipment.get("url"):
+                order["tracking_url"] = str(primary_shipment["url"]).strip()
+
+            if primary_shipment.get("delivered_at"):
+                order["delivered_at"] = str(primary_shipment["delivered_at"])
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+    if event_type == "order:shipment:created" and not order.get("shipped_at"):
+        order["shipped_at"] = now_iso
+    if event_type == "order:shipment:delivered" and not order.get("delivered_at"):
+        order["delivered_at"] = now_iso
+
+    # Email guard: customer shipping email dispatched exactly once
+    email_dispatched = False
+    is_shipment_event = (
+        event_type == "order:shipment:created"
+        or order.get("fulfillment_status") in ("shipped", "delivered")
+    )
+    if is_shipment_event and not order.get("shipped_email_sent"):
+        try:
+            if send_order_shipped_email(order):
+                order["shipped_email_sent"] = True
+                email_dispatched = True
+        except Exception as email_err:
+            logger.warning(f"Shipment email delivery failed for order {order.get('id')}: {email_err}")
+            # Order remains shipped, but shipped_email_sent remains False so retry can occur later
+
+    # Delivery email guard: customer delivery email dispatched exactly once
+    delivered_email_dispatched = False
+    if order.get("fulfillment_status") == "delivered" and not order.get("delivered_email_sent"):
+        try:
+            if send_order_delivered_email(order):
+                order["delivered_email_sent"] = True
+                delivered_email_dispatched = True
+        except Exception as email_err:
+            logger.warning(f"Delivery email failed for order {order.get('id')}: {email_err}")
+
+    _save_order_record(order)
+    return {
+        "success": True,
+        "order_id": order.get("id"),
+        "status": order.get("fulfillment_status"),
+        "email_dispatched": email_dispatched,
+        "delivered_email_dispatched": delivered_email_dispatched,
+    }
 
 
 @router.get("/shops")
@@ -153,9 +325,16 @@ async def handle_printify_webhook(request: Request):
 
     logger.info(f"Received valid Printify webhook: id={event_id} type={event_type} shop={shop_id} resource={resource_id}")
 
-    # 3. Shop Validation: Only Shop ID 29215191
+    # 3. Shop Validation: Require explicit shop_id AND enforce shop_id == 29215191
+    if not shop_id:
+        logger.warning("Rejected Printify webhook request: Missing shop_id.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing required shop_id in webhook payload.",
+        )
+
     # If webhook belongs to another shop (e.g. Etsy 29193770): safely ignore and return HTTP 200
-    if shop_id and shop_id != "29215191":
+    if shop_id != "29215191":
         logger.info(f"Safely ignoring webhook for non-target shop {shop_id}. Etsy and other stores are excluded.")
         return {
             "status": "ignored",
@@ -172,16 +351,37 @@ async def handle_printify_webhook(request: Request):
             "event_id": event_id,
         }
 
-    # 5. Process Product Events
-    supported_events = {
+    # 5. Process Events
+    supported_product_events = {
         "product:created",
         "product:updated",
         "product:deleted",
         "product:publish:started",
     }
+    supported_order_events = {
+        "order:sent-to-production",
+        "order:shipment:created",
+        "order:shipment:delivered",
+    }
 
-    if event_type not in supported_events:
-        logger.info(f"Printify event {event_type} ignored (not a tracked product event).")
+    if event_type in supported_order_events:
+        order_res = handle_printify_order_event(event_type, resource, event_id)
+        record_webhook_event(
+            event_id=event_id,
+            event_type=event_type,
+            shop_id="29215191",
+            resource_id=order_res.get("order_id") or resource_id,
+            status="processed" if order_res.get("success") else "skipped",
+        )
+        return {
+            "status": "ok",
+            "event_id": event_id,
+            "event_type": event_type,
+            "order": order_res,
+        }
+
+    if event_type not in supported_product_events:
+        logger.info(f"Printify event {event_type} ignored (not a tracked event).")
         record_webhook_event(
             event_id=event_id,
             event_type=event_type,

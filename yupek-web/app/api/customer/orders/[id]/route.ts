@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { getOrderRecordById } from "@/lib/orderPersistence";
+import { sanitizeCustomerOrder } from "@/lib/orderStatus";
 
 export const dynamic = "force-dynamic";
 
@@ -61,9 +62,11 @@ export async function GET(
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
+    const sanitizedOrder = sanitizeCustomerOrder(order);
+
     return NextResponse.json({
       success: true,
-      order,
+      order: sanitizedOrder,
     });
   } catch (err: any) {
     console.error("[Customer Order Detail GET Error]", err);

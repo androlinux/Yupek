@@ -2,8 +2,39 @@ import { NextRequest, NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
 import crypto from "crypto";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 export const dynamic = "force-dynamic";
+
+async function getAuthenticatedUser(req: NextRequest) {
+  const cookieStore = cookies();
+  const ssrClient = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL || "https://umopnncjoswyilibslep.supabase.co",
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "sb_publishable_xGCmb036JS-dQiAi0KxWVw_LKUjQyfB",
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll() {},
+      },
+    }
+  );
+
+  let { data: { user } } = await ssrClient.auth.getUser();
+
+  if (!user) {
+    const authHeader = req.headers.get("authorization");
+    if (authHeader?.startsWith("Bearer ")) {
+      const token = authHeader.substring(7);
+      const res = await ssrClient.auth.getUser(token);
+      user = res.data.user;
+    }
+  }
+
+  return user;
+}
 
 const CLIENTS_FILE_PATH = path.join(process.cwd(), "data", "clients.json");
 const SITE_CONFIG_PATH = path.join(process.cwd(), "data", "site-config.json");
@@ -104,6 +135,11 @@ function sanitizeClient(client: StoredClient) {
 // GET: Fetch client details and matching orders by email
 export async function GET(req: NextRequest) {
   try {
+    const authUser = await getAuthenticatedUser(req);
+    if (!authUser) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(req.url);
     const email = searchParams.get("email");
 
@@ -112,6 +148,13 @@ export async function GET(req: NextRequest) {
     }
 
     const normalized = email.trim().toLowerCase();
+    const isOwner = authUser.email && authUser.email.toLowerCase() === normalized;
+    const isAdmin = authUser.app_metadata?.role === "admin";
+
+    if (!isOwner && !isAdmin) {
+      return NextResponse.json({ error: "Client not found" }, { status: 404 });
+    }
+
     const clients = await readClients();
     const client = clients.find((c) => c.email.toLowerCase() === normalized);
 
@@ -319,12 +362,27 @@ export async function POST(req: NextRequest) {
 
     // 3. UPDATE PROFILE / ADDRESS
     if (action === "update_profile") {
+      const authUser = await getAuthenticatedUser(req);
+      if (!authUser) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+
       const { id, email, name, phone, address } = body;
       const clients = await readClients();
       const idx = clients.findIndex((c) => c.id === id || (email && c.email.toLowerCase() === email.toLowerCase()));
 
       if (idx === -1) {
         return NextResponse.json({ error: "Client account not found." }, { status: 404 });
+      }
+
+      const targetClient = clients[idx];
+      const isOwner =
+        (authUser.email && targetClient.email.toLowerCase() === authUser.email.toLowerCase()) ||
+        (targetClient.id === authUser.id);
+      const isAdmin = authUser.app_metadata?.role === "admin";
+
+      if (!isOwner && !isAdmin) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       }
 
       if (name) clients[idx].name = name.trim();

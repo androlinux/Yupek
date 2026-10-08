@@ -60,6 +60,26 @@ export default function TermsPage() {
                 {contactEmail}
               </a>.
             </p>
+
+            {/* Legal Entity & Statutory Placeholders Notice */}
+            <div className="bg-sand/20 border border-brown/10 p-5 text-xs space-y-2 mt-4 font-mono">
+              <div className="font-semibold text-brown uppercase tracking-wider text-[11px]">
+                {isNl ? "Wettelijke Verkopersidentiteit (Pre-Registratie Status)" : "Merchant Identification (Pre-Registration Status)"}
+              </div>
+              <ul className="space-y-1 text-brown/75">
+                <li><strong>{isNl ? "Handelsnaam:" : "Trade Name:"}</strong> YUPEK</li>
+                <li><strong>{isNl ? "Handelsentiteit:" : "Legal Entity:"}</strong> [LEGAL COMPANY NAME — TO BE REGISTERED UPON KVK FILING]</li>
+                <li><strong>{isNl ? "Vestigingsadres:" : "Registered Address:"}</strong> [REGISTERED BUSINESS ADDRESS — TO BE COMPLETED UPON KVK FILING]</li>
+                <li><strong>{isNl ? "Kamer van Koophandel:" : "Chamber of Commerce (KVK):"}</strong> [KVK NUMBER — NOT YET REGISTERED / PENDING KVK REGISTRATION]</li>
+                <li><strong>{isNl ? "Btw-identificatienummer:" : "VAT / BTW Number:"}</strong> [VAT / BTW NUMBER — NOT YET ISSUED / PENDING TAX REGISTRATION]</li>
+                <li><strong>{isNl ? "Officiële Klantenservice:" : "Customer Care Email:"}</strong> [BUSINESS CONTACT EMAIL — currently {contactEmail}]</li>
+              </ul>
+              <p className="text-[10px] text-brown/60 italic pt-1">
+                {isNl
+                  ? "Opmerking: Deze winkel bevindt zich in technische controlefase. Volledige handelsregistratie (KVK) en btw-specificaties treden in werking bij commerciële livegang."
+                  : "Note: Storefront operates under technical pre-launch verification. Full trade registration (KVK) and VAT regime will be finalized upon formal business filing."}
+              </p>
+            </div>
           </div>
         </ScrollReveal>
 
@@ -133,6 +153,11 @@ export default function TermsPage() {
               {isNl
                 ? "Alle prijzen worden vermeld in euro (€, EUR) inclusief toepasselijke btw, tenzij uitdrukkelijk anders aangegeven. Betaling geschiedt direct tijdens het afrekenen via Stripe Payments. Bestellingen worden pas in productie genomen nadat de betalingsautorisatie succesvol is bevestigd."
                 : "All prices are stated in Euro (€, EUR) inclusive of applicable value-added tax (VAT) unless explicitly stated otherwise. Payment is completed securely at checkout via Stripe Payments. Production commences only upon authoritative verification of successful payment."}
+            </p>
+            <p className="text-[11px] text-brown/60 italic font-mono pt-1">
+              {isNl
+                ? "Btw-toepassing & belastingregime: [VAT APPLICABILITY / SMALL BUSINESS SCHEME STATUS TO CONFIRM UPON KVK REGISTRATION]."
+                : "Tax status note: [VAT APPLICABILITY / TAX REGISTRATION STATUS TO CONFIRM UPON FORMAL BUSINESS FILING]."}
             </p>
           </div>
         </ScrollReveal>

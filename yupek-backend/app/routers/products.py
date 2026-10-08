@@ -76,6 +76,8 @@ def get_product(slug: str, response: Response):
     p = res[0]
     for k in ("supplier_id", "supplier_product_id", "supplier_price_cents"):
         p.pop(k, None)  # never leak supplier data
+    for v in p.get("product_variants", []):
+        v.pop("supplier_variant_id", None)
     p["product_images"].sort(key=lambda i: i["position"])
     related = db.table("product_cards").select("*").eq("category", p["category"]).neq("id", p["id"]).limit(4).execute().data
     response.headers["Cache-Control"] = "public, s-maxage=60, stale-while-revalidate=300"

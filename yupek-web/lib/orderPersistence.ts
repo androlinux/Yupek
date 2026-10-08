@@ -36,6 +36,16 @@ export interface OrderRecord {
     | "failed";
   stripe_payment_intent_id?: string | null;
   printify_order_id?: string | null;
+  tracking_number?: string | null;
+  carrier?: string | null;
+  tracking_url?: string | null;
+  shipped_at?: string | null;
+  delivered_at?: string | null;
+  confirmation_email_sent?: boolean;
+  shipped_email_sent?: boolean;
+  delivered_email_sent?: boolean;
+  failed_email_sent?: boolean;
+  refund_email_sent?: boolean;
   items: Array<{
     product_id?: string;
     supplier_product_id?: string;
@@ -86,6 +96,12 @@ export async function persistOrderRecord(order: OrderRecord): Promise<void> {
       fulfillment_status: order.fulfillment_status,
       stripe_payment_intent_id: order.stripe_payment_intent_id || null,
       printify_order_id: order.printify_order_id || null,
+      tracking_number: order.tracking_number ?? null,
+      carrier: order.carrier ?? null,
+      tracking_url: order.tracking_url ?? null,
+      shipped_at: order.shipped_at ?? null,
+      delivered_at: order.delivered_at ?? null,
+      shipped_email_sent: Boolean(order.shipped_email_sent),
       items: order.items,
       notes: order.notes || null,
       user_id: order.user_id || null,
@@ -149,6 +165,12 @@ export async function persistOrderRecord(order: OrderRecord): Promise<void> {
         fulfillment_status: order.fulfillment_status,
         stripe_payment_intent_id: order.stripe_payment_intent_id,
         printify_order_id: order.printify_order_id,
+        tracking_number: order.tracking_number ?? null,
+        carrier: order.carrier ?? null,
+        tracking_url: order.tracking_url ?? null,
+        shipped_at: order.shipped_at ?? null,
+        delivered_at: order.delivered_at ?? null,
+        shipped_email_sent: Boolean(order.shipped_email_sent),
       };
 
       const updated = [
@@ -231,6 +253,12 @@ export async function getOrderRecordById(orderId: string): Promise<OrderRecord |
           fulfillment_status: match.fulfillment_status || "pending_payment",
           stripe_payment_intent_id: match.stripe_payment_intent_id || null,
           printify_order_id: match.printify_order_id || null,
+          tracking_number: match.tracking_number ?? null,
+          carrier: match.carrier ?? null,
+          tracking_url: match.tracking_url ?? null,
+          shipped_at: match.shipped_at ?? null,
+          delivered_at: match.delivered_at ?? null,
+          shipped_email_sent: Boolean(match.shipped_email_sent),
           items: (match.items || []).map((i: any) => ({
             product_id: i.productId,
             supplier_product_id: i.supplierProductId,
@@ -328,6 +356,12 @@ export async function getUserOrders(userId: string, customerEmail?: string): Pro
             fulfillment_status: match.fulfillment_status || "pending_payment",
             stripe_payment_intent_id: match.stripe_payment_intent_id || null,
             printify_order_id: match.printify_order_id || null,
+            tracking_number: match.tracking_number ?? null,
+            carrier: match.carrier ?? null,
+            tracking_url: match.tracking_url ?? null,
+            shipped_at: match.shipped_at ?? null,
+            delivered_at: match.delivered_at ?? null,
+            shipped_email_sent: Boolean(match.shipped_email_sent),
             items: (match.items || []).map((i: any) => ({
               product_id: i.productId,
               supplier_product_id: i.supplierProductId,

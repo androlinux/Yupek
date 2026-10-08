@@ -1,9 +1,17 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getBackendApiUrl } from "@/lib/apiConfig";
+import { verifyAdminAuth } from "@/lib/adminAuth";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const authRes = await verifyAdminAuth(req);
+  if (!authRes.authorized) {
+    return NextResponse.json(
+      { error: authRes.errorMessage || "Unauthorized: Administrator authentication required." },
+      { status: authRes.errorStatus || 401 }
+    );
+  }
   const backendUrl = getBackendApiUrl();
 
   // 1. Try FastAPI backend if configured
@@ -56,7 +64,14 @@ export async function GET() {
   }
 }
 
-export async function POST() {
+export async function POST(req: NextRequest) {
+  const authRes = await verifyAdminAuth(req);
+  if (!authRes.authorized) {
+    return NextResponse.json(
+      { error: authRes.errorMessage || "Unauthorized: Administrator authentication required." },
+      { status: authRes.errorStatus || 401 }
+    );
+  }
   const backendUrl = getBackendApiUrl();
 
   // 1. Try FastAPI backend if configured
@@ -94,6 +109,9 @@ export async function POST() {
     "product:updated",
     "product:deleted",
     "product:publish:started",
+    "order:sent-to-production",
+    "order:shipment:created",
+    "order:shipment:delivered",
   ];
   const targetUrl = "https://www.yupek.shop/api/printify/webhook";
 

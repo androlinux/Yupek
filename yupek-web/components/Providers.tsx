@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ConfigProvider } from "./ConfigContext";
 import { AuthProvider, useAuth } from "./AuthContext";
 import { supabase } from "@/lib/supabase";
@@ -42,6 +42,7 @@ function StoreProviderInner({ children }: { children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const { user } = useAuth();
+  const previousUserIdRef = useRef<string | null | undefined>(undefined);
 
   useEffect(() => {
     try {
@@ -52,6 +53,24 @@ function StoreProviderInner({ children }: { children: ReactNode }) {
   }, []);
   useEffect(() => { if (ready) localStorage.setItem("yupek-cart", JSON.stringify(lines)); }, [lines, ready]);
   useEffect(() => { if (ready) localStorage.setItem("yupek-wishlist", JSON.stringify(wishlist)); }, [wishlist, ready]);
+
+  // Clear wishlist from client cache on logout or switching accounts to prevent data leakage
+  useEffect(() => {
+    if (!ready) return;
+    if (previousUserIdRef.current === undefined) {
+      previousUserIdRef.current = user?.id || null;
+      return;
+    }
+
+    if (previousUserIdRef.current && (!user?.id || user.id !== previousUserIdRef.current)) {
+      setWishlist([]);
+      try {
+        localStorage.removeItem("yupek-wishlist");
+      } catch {}
+    }
+
+    previousUserIdRef.current = user?.id || null;
+  }, [user?.id, ready]);
 
   // Wishlist sync with Supabase when authenticated
   useEffect(() => {

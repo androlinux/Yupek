@@ -91,6 +91,17 @@ export async function saveSyncMetadata(meta: PrintifySyncMetadata): Promise<void
 
 export async function isEventProcessed(eventId: string): Promise<boolean> {
   if (!eventId) return false;
+  try {
+    const supabase = getSupabaseServerClient();
+    const { data } = await supabase
+      .from("webhook_events")
+      .select("id")
+      .eq("event_id", eventId)
+      .limit(1);
+    if (data && data.length > 0) {
+      return true;
+    }
+  } catch {}
   const meta = await readSyncMetadata();
   return meta.processed_event_ids.includes(eventId);
 }
