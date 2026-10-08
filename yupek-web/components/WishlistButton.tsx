@@ -12,7 +12,17 @@ export default function WishlistButton({ slug, className = "" }: { slug: string;
     : locale === "nl" ? "Toevoegen aan verlanglijst" : "Add to wishlist";
 
   return (
-    <button aria-label={label} aria-pressed={on} onClick={() => toggleWish(slug)} className={`flex h-9 w-9 items-center justify-center bg-cream/90 text-brown transition hover:bg-cream ${className}`}>
+    <button
+      type="button"
+      aria-label={label}
+      aria-pressed={on}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleWish(slug);
+      }}
+      className={`flex h-9 w-9 min-h-[36px] min-w-[36px] touch-manipulation items-center justify-center bg-cream/90 text-brown transition hover:bg-cream ${className}`}
+    >
       <Icon name="heart" className="h-4 w-4" fill={on} />
     </button>
   );

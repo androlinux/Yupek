@@ -116,6 +116,8 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
 
   const [color, setColor] = useState<string>(() => defaultColor);
   const [size, setSize] = useState<string>(() => defaultSize);
+  const [quantity, setQuantity] = useState<number>(1);
+  const [addedFeedback, setAddedFeedback] = useState<boolean>(false);
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
   const [err, setErr] = useState(false);
   const [guide, setGuide] = useState(false);
@@ -182,6 +184,16 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
     return p.price;
   }, [selectedVariant, activeVariants, color, p.price]);
 
+  // 6b. Availability State
+  const isOutOfStock = useMemo(() => {
+    if (p.inventory !== undefined && p.inventory <= 0) return true;
+    if (p.variants && p.variants.length > 0) {
+      if (activeVariants.length === 0) return true;
+      if (selectedVariant && selectedVariant.is_available === false) return true;
+    }
+    return false;
+  }, [p.inventory, p.variants, activeVariants.length, selectedVariant]);
+
   // 7. Handlers for Color and Size changes
   const handleColorChange = (newColor: string) => {
     setColor(newColor);
@@ -243,6 +255,7 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
 
   // 8. Add to Bag with exact selected variant details
   const pick = (): boolean => {
+    if (isOutOfStock) return false;
     const validSizes = getValidSizesForColor(color);
     if (!size && validSizes.length > 0) {
       setErr(true);
@@ -253,6 +266,7 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
       slug: p.slug,
       size,
       color,
+      qty: quantity,
       productId: p.id,
       printifyProductId: p.supplierProductId,
       printifyVariantId: selectedVariant?.variant_id != null ? String(selectedVariant.variant_id) : "",
@@ -261,10 +275,13 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
       price_cents: selectedVariant?.price_cents ?? Math.round(displayPrice * 100),
       image: galleryImages[0] || p.images[0] || "/images/look-1.jpg",
     });
+    setAddedFeedback(true);
+    setTimeout(() => setAddedFeedback(false), 2000);
     return true;
   };
 
   const pickQuiet = (): boolean => {
+    if (isOutOfStock) return false;
     const validSizes = getValidSizesForColor(color);
     if (!size && validSizes.length > 0) {
       setErr(true);
@@ -276,6 +293,7 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
         slug: p.slug,
         size,
         color,
+        qty: quantity,
         productId: p.id,
         printifyProductId: p.supplierProductId,
         printifyVariantId: selectedVariant?.variant_id != null ? String(selectedVariant.variant_id) : "",
@@ -542,20 +560,88 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
           )}
         </div>
 
+        {/* Quantity Selector & Real-Time Stock Status */}
+        <div className="mb-6">
+          <label htmlFor="product-quantity-stepper" className="label mb-3 block text-xs">
+            {locale === "nl" ? "AANTAL" : "QUANTITY"}
+          </label>
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="inline-flex items-center border border-brown/30 bg-cream/50 shadow-2xs">
+              <button
+                type="button"
+                disabled={quantity <= 1 || isOutOfStock}
+                onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                aria-label={locale === "nl" ? "Aantal verlagen" : "Decrease quantity"}
+                className="h-11 w-11 flex items-center justify-center hover:bg-brown/5 text-brown transition-colors disabled:opacity-30 disabled:cursor-not-allowed focus:outline-none focus-visible:bg-brown/10 touch-manipulation"
+              >
+                <Icon name="minus" className="h-3 w-3" />
+              </button>
+              <span
+                id="product-quantity-stepper"
+                aria-live="polite"
+                className="w-10 text-center font-mono text-xs font-semibold text-brown select-none"
+              >
+                {quantity}
+              </span>
+              <button
+                type="button"
+                disabled={quantity >= 10 || isOutOfStock}
+                onClick={() => setQuantity((q) => Math.min(10, q + 1))}
+                aria-label={locale === "nl" ? "Aantal verhogen" : "Increase quantity"}
+                className="h-11 w-11 flex items-center justify-center hover:bg-brown/5 text-brown transition-colors disabled:opacity-30 disabled:cursor-not-allowed focus:outline-none focus-visible:bg-brown/10 touch-manipulation"
+              >
+                <Icon name="plus" className="h-3 w-3" />
+              </button>
+            </div>
+            <div className="flex items-center gap-2 text-xs">
+              <span className={`inline-block h-2 w-2 rounded-full ${isOutOfStock ? "bg-burgundy" : "bg-green-700"}`} />
+              <span className="text-brown/75 text-[11px] font-medium tracking-wide">
+                {isOutOfStock
+                  ? (locale === "nl" ? "Tijdelijk uitverkocht" : "Currently out of stock")
+                  : (locale === "nl" ? "Op voorraad • Verzonden binnen 1-3 werkdagen" : "In stock • Dispatched in 1-3 business days")}
+              </span>
+            </div>
+          </div>
+        </div>
+
         {/* Action Buttons */}
         <div className="mt-8 grid gap-3">
-          <button type="button" className="btn btn-dark w-full py-4 text-xs tracking-[.22em]" onClick={pick}>
-            {addToBagText}
+          <button
+            type="button"
+            disabled={isOutOfStock}
+            className={`btn w-full py-4 text-xs tracking-[.22em] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+              addedFeedback ? "bg-green-900 text-cream" : "btn-dark"
+            }`}
+            onClick={pick}
+          >
+            {addedFeedback
+              ? (locale === "nl" ? "✓ TOEGEVOEGD AAN WINKELMAND" : "✓ ADDED TO BAG")
+              : isOutOfStock
+              ? (locale === "nl" ? "UITVERKOCHT" : "OUT OF STOCK")
+              : addToBagText}
           </button>
           <Link
             href="/checkout"
             onClick={(e) => {
-              if (!pickQuiet()) e.preventDefault();
+              if (isOutOfStock || !pickQuiet()) e.preventDefault();
             }}
-            className="btn btn-line w-full py-3.5 text-xs tracking-[.22em]"
+            aria-disabled={isOutOfStock}
+            className={`btn btn-line w-full py-3.5 text-xs tracking-[.22em] text-center ${
+              isOutOfStock ? "opacity-40 pointer-events-none" : ""
+            }`}
           >
             {t.product.buyNow}
           </Link>
+        </div>
+
+        {/* Shipping Reassurance */}
+        <div className="mt-5 flex items-center gap-2 text-[11px] text-brown/70 border-y border-brown/10 py-3">
+          <span className="text-gold font-serif text-sm">✦</span>
+          <span>
+            {locale === "nl"
+              ? "Gratis verzending in Europa vanaf €100 • 30 dagen kosteloos retourneren"
+              : "Complimentary shipping in Europe on orders over €100 • 30-day free returns"}
+          </span>
         </div>
 
         {/* Formatted Product Story & Features */}

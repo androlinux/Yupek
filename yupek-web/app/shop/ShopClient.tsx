@@ -174,14 +174,15 @@ export default function ShopClient({ initial }: { initial: Filters }) {
       {/* Control bar */}
       <div className="mb-8 flex items-center justify-between">
         <button
-          className="label flex items-center gap-2 lg:hidden"
+          type="button"
+          className="label inline-flex min-h-[44px] items-center gap-2 lg:hidden touch-manipulation"
           onClick={() => setOpen(!open)}
           aria-expanded={open}
           aria-label={open
             ? (locale === "nl" ? "Filters sluiten" : "Close filters")
             : (locale === "nl" ? "Filters openen" : "Open filters")}
         >
-          <Icon name="plus" className="h-3 w-3" />
+          <Icon name={open ? "close" : "plus"} className="h-3.5 w-3.5" />
           {t.shop.filter}
         </button>
         <p className="label hidden text-brown/60 lg:block">
