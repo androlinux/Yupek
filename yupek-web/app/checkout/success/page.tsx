@@ -15,7 +15,6 @@ interface OrderStatusData {
   shipping_cents: number;
   payment_status: "pending" | "paid" | "failed" | "refunded";
   fulfillment_status: string;
-  printify_order_id?: string | null;
   items?: Array<{
     title?: string;
     size?: string;
@@ -129,69 +128,96 @@ function CheckoutSuccessContent() {
               </div>
             )}
 
-            {/* Authoritative Banner */}
-            <div className="mb-2">
-              {order.payment_status === "paid" ? (
-                <span className="inline-block bg-green-800 text-white text-[10px] font-bold tracking-[0.25em] uppercase px-3 py-1 rounded-full">
-                  Payment Confirmed
+            {/* Authoritative Banner & Header */}
+            {order.payment_status === "paid" ? (
+              <div className="mb-6">
+                <span className="inline-block bg-green-800 text-white text-[10px] font-bold tracking-[0.25em] uppercase px-3.5 py-1.5 rounded-full mb-3">
+                  ORDER CONFIRMED
                 </span>
-              ) : order.payment_status === "failed" ? (
-                <span className="inline-block bg-red-800 text-white text-[10px] font-bold tracking-[0.25em] uppercase px-3 py-1 rounded-full">
+                <p className="text-[11px] uppercase tracking-widest text-brown/60 font-medium">Order number:</p>
+                <p className="font-mono text-xl sm:text-2xl font-bold text-brown mt-0.5 tracking-wider">
+                  #{order.order_id.replace(/^#/, "")}
+                </p>
+                <h1 className="font-serif text-3xl sm:text-4xl text-brown mt-3">
+                  Thank you for your order.
+                </h1>
+                {order.customer_email && (
+                  <p className="mt-2.5 text-xs text-brown/75 max-w-md mx-auto leading-relaxed">
+                    A confirmation receipt and order summary have been dispatched to <strong>{order.customer_email}</strong>.
+                  </p>
+                )}
+              </div>
+            ) : order.payment_status === "failed" ? (
+              <div className="mb-6">
+                <span className="inline-block bg-red-800 text-white text-[10px] font-bold tracking-[0.25em] uppercase px-3.5 py-1.5 rounded-full mb-3">
                   Payment Failed
                 </span>
-              ) : (
-                <span className="inline-block bg-amber-700 text-white text-[10px] font-bold tracking-[0.25em] uppercase px-3 py-1 rounded-full animate-pulse">
+                <p className="text-[11px] uppercase tracking-widest text-brown/60 font-medium">Order number:</p>
+                <p className="font-mono text-lg font-bold text-brown mt-0.5">#{order.order_id.replace(/^#/, "")}</p>
+                <h1 className="font-serif text-3xl text-brown mt-2">Payment Not Completed</h1>
+                <p className="mt-2 text-xs text-brown/75 max-w-md mx-auto leading-relaxed">
+                  Your card was not charged. Please try another payment method.
+                </p>
+              </div>
+            ) : (
+              <div className="mb-6">
+                <span className="inline-block bg-amber-700 text-white text-[10px] font-bold tracking-[0.25em] uppercase px-3.5 py-1.5 rounded-full mb-3 animate-pulse">
                   Payment Processing with Stripe...
                 </span>
-              )}
-            </div>
-
-            <h1 className="font-serif text-3xl md:text-4xl text-brown mt-2">
-              {order.payment_status === "paid" ? "Thank You for Your Order" : order.payment_status === "failed" ? "Payment Not Completed" : "Finalizing Order..."}
-            </h1>
-
-            <p className="mt-3 text-xs text-brown/80 max-w-md mx-auto leading-relaxed">
-              {order.payment_status === "paid"
-                ? `A confirmation receipt and order summary have been dispatched to ${order.customer_email}.`
-                : order.payment_status === "failed"
-                ? "Your card was not charged. Please try another payment method."
-                : "Your payment authorization is being confirmed. The status will automatically refresh."}
-            </p>
-
-            {/* Authoritative Order Details Card */}
-            <div className="mt-8 border-t border-b border-brown/20 py-6 text-left space-y-3 text-xs">
-              <div className="flex justify-between items-center">
-                <span className="font-semibold text-brown/70 tracking-wider uppercase text-[11px]">YUPEK Order Reference:</span>
-                <span className="font-mono font-bold text-brown text-sm">{order.order_id}</span>
+                <p className="text-[11px] uppercase tracking-widest text-brown/60 font-medium">Order number:</p>
+                <p className="font-mono text-lg font-bold text-brown mt-0.5">#{order.order_id.replace(/^#/, "")}</p>
+                <h1 className="font-serif text-3xl text-brown mt-2">Finalizing Order...</h1>
+                <p className="mt-2 text-xs text-brown/75 max-w-md mx-auto leading-relaxed">
+                  Your payment authorization is being confirmed. The status will automatically refresh.
+                </p>
               </div>
+            )}
 
-              {order.printify_order_id && (
-                <div className="flex justify-between items-center text-green-900 bg-green-50 p-2 rounded">
-                  <span className="font-semibold tracking-wider uppercase text-[10px]">Fulfillment Status:</span>
-                  <span className="font-mono text-[11px] font-bold">
-                    Queued for Production
+            {/* Order Summary: Products, Subtotal, Shipping, Total */}
+            <div className="mt-6 border-t border-b border-brown/20 py-6 text-left space-y-4 text-xs">
+              {/* Products List */}
+              {order.items && order.items.length > 0 && (
+                <div>
+                  <p className="font-serif text-sm text-brown border-b border-brown/10 pb-2 mb-3">
+                    Products ({order.items.length})
+                  </p>
+                  <div className="divide-y divide-brown/10">
+                    {order.items.map((item, idx) => (
+                      <div key={idx} className="py-2.5 flex justify-between items-center text-xs text-brown">
+                        <div className="min-w-0 pr-3">
+                          <p className="font-medium truncate">{item.title || "YUPEK Garment"}</p>
+                          <p className="text-[11px] text-brown/60">
+                            {item.color ? `${item.color}` : ""}{item.color && item.size ? " / " : ""}{item.size ? `${item.size}` : ""} &times; {item.quantity}
+                          </p>
+                        </div>
+                        <span className="font-mono font-medium shrink-0">
+                          {formatEur(item.unit_price_cents * item.quantity)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Price Breakdown */}
+              <div className="pt-3 border-t border-brown/15 space-y-2 text-xs font-mono">
+                <div className="flex justify-between text-brown/80">
+                  <span>Subtotal</span>
+                  <span>
+                    {formatEur(order.subtotal_cents !== undefined ? order.subtotal_cents : (order.total_cents - (order.shipping_cents || 0)))}
                   </span>
                 </div>
-              )}
-
-              <div className="flex justify-between items-center">
-                <span className="font-semibold text-brown/70 tracking-wider uppercase text-[11px]">Authoritative Total:</span>
-                <span className="font-bold text-burgundy text-base">{formatEur(order.total_cents)}</span>
-              </div>
-
-              {order.items && order.items.length > 0 && (
-                <div className="mt-4 pt-3 border-t border-brown/10 space-y-2">
-                  <p className="font-semibold text-[11px] uppercase tracking-wider text-brown/60">Items Ordered:</p>
-                  {order.items.map((item, idx) => (
-                    <div key={idx} className="flex justify-between text-xs text-brown/90">
-                      <span>
-                        {item.title} &bull; <span className="text-brown/60">{item.color} / {item.size} &times; {item.quantity}</span>
-                      </span>
-                      <span className="font-semibold">{formatEur(item.unit_price_cents * item.quantity)}</span>
-                    </div>
-                  ))}
+                <div className="flex justify-between text-brown/80">
+                  <span>Shipping</span>
+                  <span>
+                    {(order.shipping_cents || 0) === 0 ? "Complimentary" : formatEur(order.shipping_cents)}
+                  </span>
                 </div>
-              )}
+                <div className="border-t border-brown/20 pt-2.5 flex justify-between text-sm font-bold text-brown">
+                  <span className="font-serif">Total</span>
+                  <span className="font-mono text-base text-burgundy">{formatEur(order.total_cents)}</span>
+                </div>
+              </div>
             </div>
 
             {/* Actions */}

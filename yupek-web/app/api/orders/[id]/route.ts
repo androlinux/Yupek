@@ -23,6 +23,13 @@ export async function GET(
   const authResult = await verifyAdminAuth(req);
   const isAdmin = authResult.authorized;
 
+  // Strictly validate tracking URL (must be valid http/https)
+  const rawTrackingUrl = order.tracking_url;
+  const trackingUrl =
+    typeof rawTrackingUrl === "string" && /^https?:\/\//i.test(rawTrackingUrl.trim())
+      ? rawTrackingUrl.trim()
+      : null;
+
   const baseResponse: Record<string, any> = {
     order_id: order.id,
     id: order.id,
@@ -32,12 +39,11 @@ export async function GET(
     total_cents: order.total_cents,
     subtotal_cents: order.subtotal_cents,
     shipping_cents: order.shipping_cents,
-    vat_cents: order.vat_cents,
     payment_status: order.payment_status,
     fulfillment_status: order.fulfillment_status,
     carrier: order.carrier || null,
     tracking_number: order.tracking_number || null,
-    tracking_url: order.tracking_url || null,
+    tracking_url: trackingUrl,
     shipped_at: order.shipped_at || null,
     delivered_at: order.delivered_at || null,
     items: order.items,
@@ -46,6 +52,7 @@ export async function GET(
   };
 
   if (isAdmin) {
+    baseResponse.vat_cents = order.vat_cents;
     baseResponse.stripe_payment_intent_id = order.stripe_payment_intent_id;
     baseResponse.printify_order_id = order.printify_order_id;
   }

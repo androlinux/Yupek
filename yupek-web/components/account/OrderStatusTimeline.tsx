@@ -110,7 +110,7 @@ export default function OrderStatusTimeline({ order }: OrderStatusTimelineProps)
       {/* Responsive timeline */}
       <div className="mt-6">
         {/* Desktop / Tablet Horizontal Timeline */}
-        <div className="hidden lg:grid grid-cols-6 gap-2 relative">
+        <div className="hidden md:grid grid-cols-5 gap-2 relative">
           {timeline.steps.map((step, idx) => {
             const isCompleted = step.status === "completed";
             const isCurrent = step.status === "current";
@@ -126,7 +126,7 @@ export default function OrderStatusTimeline({ order }: OrderStatusTimelineProps)
                   />
                 )}
 
-                {/* Step indicator node */}
+                {/* Step indicator node: ✓, ●, ○ */}
                 <div
                   className={`relative z-10 flex h-8 w-8 items-center justify-center rounded-full border-2 transition-all ${
                     isCompleted
@@ -139,9 +139,9 @@ export default function OrderStatusTimeline({ order }: OrderStatusTimelineProps)
                   {isCompleted ? (
                     <Icon name="check" className="h-4 w-4 stroke-[2.5]" />
                   ) : isCurrent ? (
-                    <div className="h-2.5 w-2.5 rounded-full bg-brown animate-pulse" />
+                    <div className="h-2.5 w-2.5 rounded-full bg-brown" />
                   ) : (
-                    <span className="text-[10px] font-mono">{idx + 1}</span>
+                    <span className="h-2 w-2 rounded-full border border-brown/40" />
                   )}
                 </div>
 
@@ -169,9 +169,9 @@ export default function OrderStatusTimeline({ order }: OrderStatusTimelineProps)
           })}
         </div>
 
-        {/* Mobile / Tablet Vertical Timeline (360px - 1024px) */}
-        <div className="lg:hidden space-y-6 relative pl-6 before:absolute before:left-2.5 before:top-3 before:bottom-3 before:w-[2px] before:bg-brown/15">
-          {timeline.steps.map((step, idx) => {
+        {/* Mobile Vertical Timeline */}
+        <div className="md:hidden space-y-6 relative pl-6 before:absolute before:left-2.5 before:top-3 before:bottom-3 before:w-[2px] before:bg-brown/15">
+          {timeline.steps.map((step) => {
             const isCompleted = step.status === "completed";
             const isCurrent = step.status === "current";
 
@@ -190,9 +190,9 @@ export default function OrderStatusTimeline({ order }: OrderStatusTimelineProps)
                   {isCompleted ? (
                     <Icon name="check" className="h-3 w-3 stroke-[2.5]" />
                   ) : isCurrent ? (
-                    <div className="h-2 w-2 rounded-full bg-brown animate-pulse" />
+                    <div className="h-2 w-2 rounded-full bg-brown" />
                   ) : (
-                    <span className="text-[9px] font-mono">{idx + 1}</span>
+                    <span className="h-1.5 w-1.5 rounded-full border border-brown/40" />
                   )}
                 </div>
 

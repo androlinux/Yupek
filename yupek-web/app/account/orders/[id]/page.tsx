@@ -38,7 +38,7 @@ interface OrderDetail {
   currency: string;
   subtotal_cents: number;
   shipping_cents: number;
-  vat_cents: number;
+  vat_cents?: number;
   total_cents: number;
   payment_status: "pending" | "paid" | "failed" | "refunded";
   fulfillment_status: string;
@@ -162,26 +162,39 @@ function OrderDetailContent() {
         {/* 1. Header Banner */}
         <div className="border border-brown/15 bg-cream p-6 sm:p-8 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-3">
               <span className="font-serif text-2xl sm:text-3xl text-brown font-semibold">
                 #{order.id}
               </span>
-              <span
-                className={`rounded-full px-3 py-1 text-[10px] uppercase tracking-wider font-semibold border ${getPaymentBadgeClass(
-                  order.payment_status
-                )}`}
-              >
-                {mapPaymentStatus(order.payment_status, locale)}
-              </span>
-              <span
-                className={`rounded-full px-3 py-1 text-[10px] uppercase tracking-wider font-semibold border ${getFulfillmentBadgeClass(
-                  order.fulfillment_status
-                )}`}
-              >
-                {mapFulfillmentStatus(order.fulfillment_status, locale)}
-              </span>
             </div>
-            <p className="mt-1.5 text-xs text-brown/65">
+            <div className="mt-2.5 flex flex-wrap items-center gap-4 sm:gap-6">
+              <div>
+                <span className="text-[10px] uppercase tracking-widest text-brown/50 block font-semibold">
+                  {isNl ? "BETALING" : "PAYMENT"}
+                </span>
+                <span
+                  className={`inline-block mt-0.5 rounded-full px-3 py-0.5 text-[10px] uppercase tracking-wider font-semibold border ${getPaymentBadgeClass(
+                    order.payment_status
+                  )}`}
+                >
+                  {mapPaymentStatus(order.payment_status, locale)}
+                </span>
+              </div>
+              <div className="h-6 w-px bg-brown/15 hidden sm:block" />
+              <div>
+                <span className="text-[10px] uppercase tracking-widest text-brown/50 block font-semibold">
+                  {isNl ? "VERWERKING" : "FULFILLMENT"}
+                </span>
+                <span
+                  className={`inline-block mt-0.5 rounded-full px-3 py-0.5 text-[10px] uppercase tracking-wider font-semibold border ${getFulfillmentBadgeClass(
+                    order.fulfillment_status
+                  )}`}
+                >
+                  {mapFulfillmentStatus(order.fulfillment_status, locale)}
+                </span>
+              </div>
+            </div>
+            <p className="mt-2 text-xs text-brown/65">
               {t.account.placedOn} {placedDate}
             </p>
           </div>
