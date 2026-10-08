@@ -36,14 +36,20 @@ export const metadata: Metadata = {
 export default function Shop({
   searchParams,
 }: {
-  searchParams: { category?: string; gender?: string; new?: string };
+  searchParams: { category?: string; gender?: string; new?: string; isNew?: string };
 }) {
+  const isNew =
+    searchParams.new === "1" ||
+    searchParams.new === "true" ||
+    searchParams.isNew === "true" ||
+    searchParams.isNew === "1";
+
   return (
     <ShopClient
       initial={{
         category: searchParams.category,
         gender: searchParams.gender,
-        isNew: searchParams.new === "1",
+        isNew,
       }}
     />
   );
