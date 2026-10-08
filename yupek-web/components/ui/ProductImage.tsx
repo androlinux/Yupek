@@ -1,7 +1,9 @@
+"use client";
+import { useState } from "react";
 import Image from "next/image";
 import { Pattern } from "./Pattern";
 
-// Renders a placeholder until a real file is listed in data/products.ts. Parent must be `relative`.
+// Renders a placeholder until a real file is loaded or if loading fails. Parent must be `relative`.
 export default function ProductImage({
   src,
   alt,
@@ -19,10 +21,16 @@ export default function ProductImage({
   width?: number;
   height?: number;
 }) {
-  if (!src) {
+  const [hasError, setHasError] = useState(false);
+
+  if (!src || hasError) {
     return (
-      <div role="img" aria-label={alt} className={`absolute inset-0 flex items-center justify-center bg-sand/40 ${className}`}>
-        <Pattern className="h-12 w-12 text-brown/25" />
+      <div
+        role="img"
+        aria-label={alt}
+        className={`absolute inset-0 flex items-center justify-center bg-sand/30 ${className}`}
+      >
+        <Pattern className="h-10 w-10 text-brown/20" />
       </div>
     );
   }
@@ -37,6 +45,7 @@ export default function ProductImage({
         sizes={sizes}
         priority={priority}
         loading={priority ? undefined : "lazy"}
+        onError={() => setHasError(true)}
         className={`${fitClass} ${className}`.trim()}
       />
     );
@@ -49,6 +58,7 @@ export default function ProductImage({
       sizes={sizes}
       priority={priority}
       loading={priority ? undefined : "lazy"}
+      onError={() => setHasError(true)}
       className={`${fitClass} ${className}`.trim()}
     />
   );

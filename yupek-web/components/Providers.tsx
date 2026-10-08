@@ -20,7 +20,7 @@ export type CartLine = {
 };
 type Ctx = {
   lines: CartLine[]; count: number; wishlist: string[];
-  add: (l: Omit<CartLine, "qty">, openDrawer?: boolean) => void; remove: (l: Omit<CartLine, "qty">) => void; setQty: (l: Omit<CartLine, "qty">, qty: number) => void;
+  add: (l: Omit<CartLine, "qty"> & { qty?: number }, openDrawer?: boolean) => void; remove: (l: Omit<CartLine, "qty">) => void; setQty: (l: Omit<CartLine, "qty">, qty: number) => void;
   clearCart: () => void;
   toggleWish: (slug: string) => void;
   cartOpen: boolean; setCartOpen: (v: boolean) => void; searchOpen: boolean; setSearchOpen: (v: boolean) => void; menuOpen: boolean; setMenuOpen: (v: boolean) => void;
@@ -108,8 +108,13 @@ function StoreProviderInner({ children }: { children: ReactNode }) {
     syncWishlist();
   }, [user?.id, ready]);
 
-  const add = useCallback((l: Omit<CartLine, "qty">, openDrawer = true) => {
-    setLines((p) => (p.some((x) => same(x, l)) ? p.map((x) => (same(x, l) ? { ...x, qty: Math.min(10, x.qty + 1) } : x)) : [...p, { ...l, qty: 1 }]));
+  const add = useCallback((l: Omit<CartLine, "qty"> & { qty?: number }, openDrawer = true) => {
+    const quantity = Math.max(1, Math.min(10, l.qty ?? 1));
+    setLines((p) =>
+      p.some((x) => same(x, l))
+        ? p.map((x) => (same(x, l) ? { ...x, qty: Math.min(10, x.qty + quantity) } : x))
+        : [...p, { ...l, qty: quantity }]
+    );
     if (openDrawer) { setCartOpen(true); setMenuOpen(false); }
   }, []);
   const remove = useCallback((l: Omit<CartLine, "qty">) => setLines((p) => p.filter((x) => !same(x, l))), []);
