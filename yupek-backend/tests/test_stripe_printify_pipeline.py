@@ -4789,6 +4789,432 @@ class TestShippingAndTrackingPipeline(unittest.TestCase):
         self.assertEqual(resp.json()["detail"], "Server temporarily unavailable. Please try again.")
 
 
+class TestTask017OrderExperiencePolish(unittest.TestCase):
+    """TASK 017: Order Experience + Customer Notifications Polish Tests.
+    
+    Verifies:
+    1. Order confirmation data (products, subtotal, shipping, total, no VAT)
+    2. Customer order status mapping & separation from payment status
+    3. Shipment tracking details & safe tracking URL
+    4. Shipment email dispatch
+    5. Delivery email dispatch
+    6. Duplicate shipment webhook idempotency
+    7. Duplicate delivery webhook idempotency
+    8. Email idempotency (sent flags guard against duplicate dispatches)
+    9. Guest order confirmation (user_id is None, email preserved, cannot be claimed by other accounts)
+    10. Customer A cannot access Customer B order (404 isolation)
+    11. No Printify data in customer API (_sanitize_customer_order)
+    12. No supplier data in customer email payload
+    13. Tracking URL only when valid http/https
+    14. No VAT customer display (vat_cents completely removed from customer serialized order)
+    15. Order total = subtotal + shipping arithmetic
+    16. €100 free shipping remains intact
+    17. Printify shipping failure remains safe 503
+    """
+
+    def setUp(self):
+        _in_memory_processed_events.clear()
+        _in_memory_printify_events.clear()
+        _in_memory_order_mirror.clear()
+        self.client = TestClient(app)
+
+        self.db_patcher = patch("app.routers.orders.get_db")
+        self.mock_db = self.db_patcher.start()
+        mock_table = MagicMock()
+        self.mock_db.return_value.table.return_value = mock_table
+        mock_table.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value.data = None
+
+        self.mock_catalog = [
+            {
+                "id": "prod_tee_1",
+                "slug": "yupek-logo-white-cotton-shirt",
+                "supplierProductId": "6ac53807209b79f0950c038f",
+                "name": "Yupek Logo | White Cotton Shirt",
+                "price": 26.99,
+                "variants": [
+                    {
+                        "variant_id": 11963,
+                        "title": "White / M",
+                        "size": "M",
+                        "color": "White",
+                        "price_cents": 2699,
+                        "is_enabled": True,
+                        "is_available": True,
+                    }
+                ],
+            }
+        ]
+
+    def tearDown(self):
+        self.db_patcher.stop()
+
+    # 1. Order confirmation data
+    def test_01_order_confirmation_data(self):
+        order_id = "YPK-CONFIRM-01"
+        order = {
+            "id": order_id,
+            "order_number": order_id,
+            "customer_name": "Leyla Alieva",
+            "customer_email": "leyla@example.com",
+            "currency": "EUR",
+            "subtotal_cents": 2699,
+            "shipping_cents": 495,
+            "total_cents": 3194,
+            "payment_status": "paid",
+            "fulfillment_status": "paid",
+            "items": [
+                {
+                    "title": "Yupek Logo | White Cotton Shirt",
+                    "size": "M",
+                    "color": "White",
+                    "quantity": 1,
+                    "unit_price_cents": 2699,
+                }
+            ],
+            "shipping_address": {
+                "first_name": "Leyla",
+                "last_name": "Alieva",
+                "street": "Keizersgracht 400",
+                "city": "Amsterdam",
+                "postal_code": "1016EK",
+                "country": "Netherlands",
+            },
+        }
+        _in_memory_order_mirror[order_id] = order
+
+        sanitized = _sanitize_customer_order(order)
+        self.assertEqual(sanitized["id"], order_id)
+        self.assertEqual(sanitized["subtotal_cents"], 2699)
+        self.assertEqual(sanitized["shipping_cents"], 495)
+        self.assertEqual(sanitized["total_cents"], 3194)
+        self.assertEqual(sanitized["total_cents"], sanitized["subtotal_cents"] + sanitized["shipping_cents"])
+        self.assertEqual(len(sanitized["items"]), 1)
+        self.assertEqual(sanitized["items"][0]["title"], "Yupek Logo | White Cotton Shirt")
+        self.assertEqual(sanitized["items"][0]["quantity"], 1)
+        self.assertEqual(sanitized["items"][0]["unit_price_cents"], 2699)
+        self.assertNotIn("vat_cents", sanitized)
+        self.assertNotIn("printify_order_id", sanitized)
+        self.assertNotIn("supplier_order_id", sanitized)
+        self.assertNotIn("blueprint_id", sanitized)
+
+    # 2. Customer order status
+    def test_02_customer_order_status(self):
+        order = {
+            "id": "YPK-STATUS-02",
+            "payment_status": "paid",
+            "fulfillment_status": "in_production",
+            "customer_email": "status@example.com",
+        }
+        sanitized = _sanitize_customer_order(order)
+        # Payment status remains separate from fulfillment status
+        self.assertEqual(sanitized["payment_status"], "paid")
+        self.assertEqual(sanitized["fulfillment_status"], "in_production")
+        self.assertNotIn("printify_order_id", sanitized)
+
+    # 3. Shipment tracking
+    def test_03_shipment_tracking(self):
+        order = {
+            "id": "YPK-TRACK-03",
+            "carrier": "PostNL",
+            "tracking_number": "3STEST987654321",
+            "tracking_url": "https://postnl.nl/track/3STEST987654321",
+            "shipped_at": "2026-10-08T14:00:00Z",
+        }
+        sanitized = _sanitize_customer_order(order)
+        self.assertEqual(sanitized["carrier"], "PostNL")
+        self.assertEqual(sanitized["tracking_number"], "3STEST987654321")
+        self.assertEqual(sanitized["tracking_url"], "https://postnl.nl/track/3STEST987654321")
+        self.assertEqual(sanitized["shipped_at"], "2026-10-08T14:00:00Z")
+
+    # 4. Shipment email
+    def test_04_shipment_email(self):
+        order = {
+            "id": "YPK-EMAIL-04",
+            "customer_email": "client04@example.com",
+            "carrier": "DHL",
+            "tracking_number": "DHL-12345",
+            "tracking_url": "https://dhl.com/track/DHL-12345",
+            "shipped_email_sent": False,
+        }
+        success = send_order_shipped_email(order)
+        self.assertTrue(success)
+        self.assertTrue(order["shipped_email_sent"])
+
+    # 5. Delivery email
+    def test_05_delivery_email(self):
+        order = {
+            "id": "YPK-EMAIL-05",
+            "customer_email": "client05@example.com",
+            "delivered_email_sent": False,
+        }
+        success = send_order_delivered_email(order)
+        self.assertTrue(success)
+        self.assertTrue(order["delivered_email_sent"])
+
+    # 6. Duplicate shipment webhook
+    def test_06_duplicate_shipment_webhook(self):
+        order_id = "YPK-WEBHOOK-06"
+        order = {
+            "id": order_id,
+            "customer_email": "client06@example.com",
+            "payment_status": "paid",
+            "fulfillment_status": "in_production",
+            "shipped_email_sent": False,
+        }
+        _in_memory_order_mirror[order_id] = order
+
+        resource = {
+            "data": {
+                "external_id": order_id,
+                "shop_id": "29215191",
+                "shipments": [
+                    {
+                        "carrier": "PostNL",
+                        "number": "3S000000001",
+                        "url": "https://postnl.nl/track/3S000000001",
+                        "delivered_at": None,
+                    }
+                ],
+            }
+        }
+
+        # First webhook dispatch
+        res1 = handle_printify_order_event("order:shipment:created", resource, "evt_shp_06_a")
+        self.assertTrue(res1["success"])
+        self.assertTrue(res1["email_dispatched"])
+        self.assertTrue(order["shipped_email_sent"])
+
+        # Duplicate webhook dispatch
+        res2 = handle_printify_order_event("order:shipment:created", resource, "evt_shp_06_b")
+        self.assertTrue(res2["success"])
+        self.assertFalse(res2["email_dispatched"])
+        self.assertTrue(order["shipped_email_sent"])
+
+    # 7. Duplicate delivery webhook
+    def test_07_duplicate_delivery_webhook(self):
+        order_id = "YPK-WEBHOOK-07"
+        order = {
+            "id": order_id,
+            "customer_email": "client07@example.com",
+            "payment_status": "paid",
+            "fulfillment_status": "shipped",
+            "shipped_email_sent": True,
+            "delivered_email_sent": False,
+        }
+        _in_memory_order_mirror[order_id] = order
+
+        resource = {
+            "data": {
+                "external_id": order_id,
+                "shop_id": "29215191",
+                "shipments": [
+                    {
+                        "carrier": "PostNL",
+                        "number": "3S000000001",
+                        "url": "https://postnl.nl/track/3S000000001",
+                        "delivered_at": "2026-10-08T16:00:00Z",
+                    }
+                ],
+            }
+        }
+
+        # First delivery webhook
+        res1 = handle_printify_order_event("order:shipment:delivered", resource, "evt_del_07_a")
+        self.assertTrue(res1["success"])
+        self.assertTrue(res1["delivered_email_dispatched"])
+        self.assertTrue(order["delivered_email_sent"])
+
+        # Duplicate delivery webhook
+        res2 = handle_printify_order_event("order:shipment:delivered", resource, "evt_del_07_b")
+        self.assertTrue(res2["success"])
+        self.assertFalse(res2["delivered_email_dispatched"])
+        self.assertTrue(order["delivered_email_sent"])
+
+    # 8. Email idempotency
+    def test_08_email_idempotency(self):
+        order = {
+            "id": "YPK-IDEM-08",
+            "customer_email": "idem@example.com",
+            "confirmation_email_sent": True,
+            "shipped_email_sent": True,
+            "delivered_email_sent": True,
+        }
+        # Calling send functions when flags are True returns True immediately without sending duplicate
+        self.assertTrue(send_order_confirmation_email(order))
+        self.assertTrue(send_order_shipped_email(order))
+        self.assertTrue(send_order_delivered_email(order))
+
+    # 9. Guest order confirmation
+    def test_09_guest_order_confirmation(self):
+        order_id = "YPK-GUEST-09"
+        order = {
+            "id": order_id,
+            "user_id": None,
+            "customer_email": "guest@example.com",
+            "customer_name": "Guest Customer",
+            "payment_status": "paid",
+            "fulfillment_status": "paid",
+            "confirmation_email_sent": False,
+        }
+        _in_memory_order_mirror[order_id] = order
+
+        success = send_order_confirmation_email(order)
+        self.assertTrue(success)
+        self.assertTrue(order["confirmation_email_sent"])
+
+        # Other account cannot view this guest order through user-filtered API
+        other_user = {"sub": "user_another_99", "email": "other@example.com", "role": "authenticated"}
+        with self.assertRaises(HTTPException) as cm:
+            get_customer_order_by_id(order_id, user=other_user)
+        self.assertEqual(cm.exception.status_code, 404)
+
+    # 10. Customer A cannot access Customer B order
+    def test_10_customer_a_cannot_access_customer_b_order(self):
+        order_id = "YPK-ISOLATION-10"
+        order = {
+            "id": order_id,
+            "user_id": "user_alice",
+            "customer_email": "alice@example.com",
+            "payment_status": "paid",
+            "fulfillment_status": "shipped",
+        }
+        _in_memory_order_mirror[order_id] = order
+
+        user_bob = {"sub": "user_bob", "email": "bob@example.com", "role": "authenticated"}
+        with self.assertRaises(HTTPException) as cm:
+            get_customer_order_by_id(order_id, user=user_bob)
+        self.assertEqual(cm.exception.status_code, 404)
+
+    # 11. No Printify data in customer API
+    def test_11_no_printify_data_in_customer_api(self):
+        order = {
+            "id": "YPK-LEAK-11",
+            "customer_email": "customer@example.com",
+            "printify_order_id": "pfy_internal_secret_999",
+            "stripe_payment_intent_id": "pi_internal_secret_888",
+            "supplier_cost": 1250,
+            "blueprint_id": 145,
+            "print_provider_id": 39,
+            "sku": "INTERNAL-SKU-99",
+        }
+        sanitized = _sanitize_customer_order(order)
+        self.assertNotIn("printify_order_id", sanitized)
+        self.assertNotIn("stripe_payment_intent_id", sanitized)
+        self.assertNotIn("supplier_cost", sanitized)
+        self.assertNotIn("blueprint_id", sanitized)
+        self.assertNotIn("print_provider_id", sanitized)
+        self.assertNotIn("sku", sanitized)
+
+    # 12. No supplier data in customer email
+    def test_12_no_supplier_data_in_customer_email(self):
+        order = {
+            "id": "YPK-EMAIL-12",
+            "customer_email": "client@example.com",
+            "printify_order_id": "pfy_secret_order_12",
+            "items": [
+                {
+                    "title": "Yupek Logo Silk Shirt",
+                    "quantity": 1,
+                    "unit_price_cents": 5893,
+                }
+            ],
+        }
+        sanitized = _sanitize_customer_order(order)
+        serialized = json.dumps(sanitized)
+        self.assertNotIn("Printify", serialized)
+        self.assertNotIn("printify_order_id", serialized)
+        self.assertNotIn("pfy_", serialized)
+
+    # 13. Tracking URL only when valid
+    def test_13_tracking_url_only_when_valid(self):
+        # Valid https
+        valid_order = {"id": "YPK-URL-13A", "tracking_url": "https://postnl.nl/track/123"}
+        self.assertEqual(_sanitize_customer_order(valid_order)["tracking_url"], "https://postnl.nl/track/123")
+
+        # Invalid scheme / malicious javascript
+        invalid_order = {"id": "YPK-URL-13B", "tracking_url": "javascript:alert(1)"}
+        self.assertIsNone(_sanitize_customer_order(invalid_order)["tracking_url"])
+
+        # Relative or invented fake link
+        fake_order = {"id": "YPK-URL-13C", "tracking_url": "/fake/tracking/123"}
+        self.assertIsNone(_sanitize_customer_order(fake_order)["tracking_url"])
+
+    # 14. No VAT customer display
+    def test_14_no_vat_customer_display(self):
+        order = {
+            "id": "YPK-VAT-14",
+            "customer_email": "novat@example.com",
+            "subtotal_cents": 2699,
+            "shipping_cents": 495,
+            "vat_cents": 554,
+            "total_cents": 3194,
+        }
+        sanitized = _sanitize_customer_order(order)
+        self.assertNotIn("vat_cents", sanitized)
+        self.assertNotIn("vat", sanitized)
+
+    # 15. Order total = subtotal + shipping
+    def test_15_order_total_equals_subtotal_plus_shipping(self):
+        test_cases = [
+            (2699, 495, 3194),
+            (5000, 495, 5495),
+            (10000, 0, 10000),
+            (15000, 0, 15000),
+        ]
+        for subtotal, shipping, expected_total in test_cases:
+            order = {
+                "id": f"YPK-MATH-{subtotal}",
+                "subtotal_cents": subtotal,
+                "shipping_cents": shipping,
+                "total_cents": subtotal + shipping,
+            }
+            sanitized = _sanitize_customer_order(order)
+            self.assertEqual(sanitized["total_cents"], expected_total)
+            self.assertEqual(sanitized["total_cents"], sanitized["subtotal_cents"] + sanitized["shipping_cents"])
+
+    # 16. €100 free shipping remains intact
+    @patch("app.routers.orders._load_trusted_products")
+    @patch("app.suppliers.printify.PrintifyClient.calculate_shipping")
+    def test_16_100_euro_free_shipping_remains(self, mock_calc, mock_cat):
+        # 4 items * 26.99 = 107.96 >= 100.00 EUR -> complimentary shipping
+        mock_cat.return_value = self.mock_catalog
+        mock_calc.return_value = {
+            "standard": 495,
+            "express": 995,
+            "calculated_cents": 495,
+        }
+
+        payload = {
+            "items": [{"slug": "yupek-logo-white-cotton-shirt", "size": "M", "color": "White", "quantity": 4}],
+            "address": {"country": "Netherlands"},
+        }
+        with patch.object(config, "PRINTIFY_API_TOKEN", "valid_token"):
+            resp = self.client.post("/api/shipping/calculate", json=payload)
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertTrue(data["is_free_shipping_eligible"])
+        standard_opt = next(o for o in data["options"] if o["id"] == "standard")
+        self.assertEqual(standard_opt["amount_cents"], 0)
+        self.assertTrue(standard_opt["is_free"])
+
+    # 17. Printify shipping failure remains 503
+    @patch("app.routers.orders._load_trusted_products")
+    @patch("app.suppliers.printify.PrintifyClient.calculate_shipping")
+    def test_17_printify_shipping_failure_remains_503(self, mock_calc, mock_cat):
+        mock_cat.return_value = self.mock_catalog
+        mock_calc.side_effect = Exception("Printify API 503 Service Unavailable")
+
+        payload = {
+            "items": [{"slug": "yupek-logo-white-cotton-shirt", "size": "M", "color": "White", "quantity": 1}],
+            "address": {"country": "Netherlands"},
+        }
+        with patch.object(config, "PRINTIFY_API_TOKEN", "valid_token"):
+            resp = self.client.post("/api/shipping/calculate", json=payload)
+
+        self.assertEqual(resp.status_code, 503)
+        self.assertEqual(resp.json()["detail"], "Server temporarily unavailable. Please try again.")
+
+
 class AsyncMock(MagicMock):
     async def __call__(self, *args, **kwargs):
         return super(AsyncMock, self).__call__(*args, **kwargs)

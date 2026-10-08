@@ -943,7 +943,6 @@ def _sanitize_customer_order(order: dict[str, Any]) -> dict[str, Any]:
         "total_cents": order.get("total_cents", 0),
         "subtotal_cents": order.get("subtotal_cents", 0),
         "shipping_cents": order.get("shipping_cents", 0),
-        "vat_cents": order.get("vat_cents", 0),
         "payment_status": order.get("payment_status", "pending"),
         "fulfillment_status": order.get("fulfillment_status", "pending_payment"),
         "tracking_number": order.get("tracking_number"),

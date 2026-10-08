@@ -111,9 +111,10 @@ export default function TrackingCard({
           href={validUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="bg-brown text-cream px-5 py-2.5 text-xs uppercase tracking-wider font-medium hover:bg-black transition-colors self-start sm:self-auto shrink-0 inline-flex items-center gap-1.5 shadow-sm"
+          title={isNl ? "Zending volgen" : "Track shipment"}
+          className="bg-brown text-cream px-5 py-2.5 text-xs uppercase tracking-wider font-semibold hover:bg-black transition-colors self-start sm:self-auto shrink-0 inline-flex items-center gap-1.5 shadow-sm"
         >
-          <span>{isNl ? "Pakket Volgen" : "Track Package"}</span>
+          <span>{isNl ? "ZENDING VOLGEN" : "TRACK SHIPMENT"}</span>
           <span>&rarr;</span>
         </a>
       )}

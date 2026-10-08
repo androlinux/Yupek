@@ -144,6 +144,13 @@ export function generateOrderConfirmationHtml(order: OrderRecord): string {
                       ${order.shipping_address?.street || ""}<br/>
                       ${order.shipping_address?.postalCode || ""} ${order.shipping_address?.city || ""}<br/>
                       <strong>${order.shipping_address?.country || "Netherlands"}</strong>
+                      ${
+                        order.estimated_delivery_min && order.estimated_delivery_max
+                          ? `<br/><span style="font-size: 11px; color: #7A695C;">Estimated Delivery: <strong>${order.estimated_delivery_min}–${order.estimated_delivery_max} business days</strong></span>`
+                          : order.shipping_method_label
+                          ? `<br/><span style="font-size: 11px; color: #7A695C;">Delivery: <strong>${order.shipping_method_label}</strong></span>`
+                          : ""
+                      }
                     </p>
                   </td>
                 </tr>
@@ -225,7 +232,13 @@ Total: ${formatEur(order.total_cents)}
 SHIPPING DESTINATION:
 ${order.shipping_address?.street || ""}
 ${order.shipping_address?.postalCode || ""} ${order.shipping_address?.city || ""}
-${order.shipping_address?.country || "Netherlands"}
+${order.shipping_address?.country || "Netherlands"}${
+  order.estimated_delivery_min && order.estimated_delivery_max
+    ? `\nEstimated Delivery: ${order.estimated_delivery_min}–${order.estimated_delivery_max} business days`
+    : order.shipping_method_label
+    ? `\nDelivery: ${order.shipping_method_label}`
+    : ""
+}
 
 View your order:
 ${orderUrl}
@@ -902,3 +915,190 @@ export async function sendRefundConfirmationEmail(order: OrderRecord): Promise<b
     return false;
   }
 }
+
+// =====================================================================
+// 6. PASSWORD RESET
+// =====================================================================
+
+export function generatePasswordResetHtml(email: string, resetUrl: string): string {
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reset Your YUPEK Password</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #F6F1E7; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #F6F1E7; padding: 30px 15px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" style="max-width: 620px; background-color: #FFFFFF; border: 1px solid #D9CBB0; box-shadow: 0 4px 20px rgba(43,29,20,0.08); border-radius: 4px; overflow: hidden;" cellspacing="0" cellpadding="0">
+          <tr>
+            <td style="background-color: #2B1D14; padding: 32px 30px; text-align: center; border-bottom: 3px solid #C49A45;">
+              <span style="font-size: 10px; letter-spacing: 0.35em; color: #C49A45; text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 6px;">YUPEK ACCOUNT SECURITY</span>
+              <h1 style="color: #F6F1E7; font-family: Georgia, 'Times New Roman', serif; font-size: 26px; margin: 0; font-weight: normal; letter-spacing: 0.08em;">PASSWORD RESET REQUEST</h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 28px 30px 20px;">
+              <p style="margin: 0 0 16px; font-size: 14px; color: #2B1D14; line-height: 1.6;">
+                Hello,
+              </p>
+              <p style="margin: 0 0 20px; font-size: 13px; color: #4A3A2C; line-height: 1.6;">
+                We received a request to reset the password for your YUPEK account associated with <strong>${email}</strong>.
+              </p>
+              <p style="margin: 0 0 24px; font-size: 13px; color: #4A3A2C; line-height: 1.6;">
+                Click the button below to choose a new secure password. For security reasons, this link is valid for a limited time.
+              </p>
+              <div style="text-align: center; margin: 28px 0;">
+                <a href="${resetUrl}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: #2B1D14; color: #F6F1E7; font-size: 11px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; text-decoration: none; padding: 12px 28px; border-radius: 2px;">
+                  RESET PASSWORD &rarr;
+                </a>
+              </div>
+              <p style="margin: 20px 0 0; font-size: 11px; color: #7A695C; line-height: 1.6;">
+                If you did not make this request, you can safely ignore this email. Your existing password will remain unchanged.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color: #FAF7F2; padding: 20px 30px; text-align: center; border-top: 1px solid #E8DFD5; font-size: 11px; color: #7A695C;">
+              YUPEK &bull; Eastern Heritage, European Style &bull; Amsterdam<br/>
+              Security Questions? <a href="mailto:support@yupek.shop" style="color: #6E1F2B; text-decoration: underline;">support@yupek.shop</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+export function generatePasswordResetText(email: string, resetUrl: string): string {
+  return `YUPEK — PASSWORD RESET REQUEST
+
+We received a request to reset the password for your YUPEK account (${email}).
+
+Reset your password using the link below:
+${resetUrl}
+
+If you did not request this, you can safely ignore this message.
+
+YUPEK — Eastern Heritage, European Style — Amsterdam
+Customer Support: support@yupek.shop
+`;
+}
+
+export async function sendPasswordResetEmail(email: string, resetUrl: string): Promise<boolean> {
+  const transport = getEmailTransporter();
+  if (!transport || !email) {
+    return false;
+  }
+
+  try {
+    const html = generatePasswordResetHtml(email, resetUrl);
+    const text = generatePasswordResetText(email, resetUrl);
+
+    await transport.transporter.sendMail({
+      from: transport.sender,
+      to: email,
+      subject: "YUPEK — Password Reset Request",
+      html,
+      text,
+    });
+    return true;
+  } catch (err: any) {
+    console.warn(`[Email Notice] Password reset email error for ${email}:`, err.message);
+    return false;
+  }
+}
+
+// =====================================================================
+// 7. ACCOUNT EMAIL CONFIRMATION
+// =====================================================================
+
+export function generateAccountConfirmationHtml(email: string, confirmUrl: string): string {
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confirm Your YUPEK Account</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #F6F1E7; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #F6F1E7; padding: 30px 15px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" style="max-width: 620px; background-color: #FFFFFF; border: 1px solid #D9CBB0; box-shadow: 0 4px 20px rgba(43,29,20,0.08); border-radius: 4px; overflow: hidden;" cellspacing="0" cellpadding="0">
+          <tr>
+            <td style="background-color: #2B1D14; padding: 32px 30px; text-align: center; border-bottom: 3px solid #C49A45;">
+              <span style="font-size: 10px; letter-spacing: 0.35em; color: #C49A45; text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 6px;">WELCOME TO YUPEK</span>
+              <h1 style="color: #F6F1E7; font-family: Georgia, 'Times New Roman', serif; font-size: 26px; margin: 0; font-weight: normal; letter-spacing: 0.08em;">CONFIRM YOUR ACCOUNT</h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 28px 30px 20px;">
+              <p style="margin: 0 0 16px; font-size: 14px; color: #2B1D14; line-height: 1.6;">
+                Welcome,
+              </p>
+              <p style="margin: 0 0 20px; font-size: 13px; color: #4A3A2C; line-height: 1.6;">
+                Thank you for creating an account with YUPEK. Please verify your email address (<strong>${email}</strong>) to activate your account and access private styling services.
+              </p>
+              <div style="text-align: center; margin: 28px 0;">
+                <a href="${confirmUrl}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: #2B1D14; color: #F6F1E7; font-size: 11px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; text-decoration: none; padding: 12px 28px; border-radius: 2px;">
+                  CONFIRM EMAIL ADDRESS &rarr;
+                </a>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color: #FAF7F2; padding: 20px 30px; text-align: center; border-top: 1px solid #E8DFD5; font-size: 11px; color: #7A695C;">
+              YUPEK &bull; Eastern Heritage, European Style &bull; Amsterdam<br/>
+              Questions? <a href="mailto:support@yupek.shop" style="color: #6E1F2B; text-decoration: underline;">support@yupek.shop</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+export function generateAccountConfirmationText(email: string, confirmUrl: string): string {
+  return `WELCOME TO YUPEK — CONFIRM YOUR ACCOUNT
+
+Thank you for creating an account with YUPEK (${email}).
+
+Please confirm your email address by following the link below:
+${confirmUrl}
+
+YUPEK — Eastern Heritage, European Style — Amsterdam
+Customer Support: support@yupek.shop
+`;
+}
+
+export async function sendAccountConfirmationEmail(email: string, confirmUrl: string): Promise<boolean> {
+  const transport = getEmailTransporter();
+  if (!transport || !email) {
+    return false;
+  }
+
+  try {
+    const html = generateAccountConfirmationHtml(email, confirmUrl);
+    const text = generateAccountConfirmationText(email, confirmUrl);
+
+    await transport.transporter.sendMail({
+      from: transport.sender,
+      to: email,
+      subject: "YUPEK — Confirm Your Account",
+      html,
+      text,
+    });
+    return true;
+  } catch (err: any) {
+    console.warn(`[Email Notice] Account confirmation email error for ${email}:`, err.message);
+    return false;
+  }
+}
+

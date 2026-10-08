@@ -36,9 +36,8 @@ export function mapFulfillmentStatus(status: InternalFulfillmentStatus, locale: 
   const isNl = locale === "nl";
   switch (status) {
     case "pending_payment":
-      return isNl ? "Betaling in behandeling" : "Payment pending";
+      return isNl ? "Bestelling ontvangen" : "Order received";
     case "paid":
-      return isNl ? "Bestelling bevestigd" : "Order confirmed";
     case "printify_order_created":
     case "sent_to_production":
       return isNl ? "Bestelling in voorbereiding" : "Preparing your order";
@@ -46,15 +45,16 @@ export function mapFulfillmentStatus(status: InternalFulfillmentStatus, locale: 
       return isNl ? "In productie" : "In production";
     case "shipped":
       return isNl ? "Verzonden" : "Shipped";
+    case "out_for_delivery":
+      return isNl ? "Onderweg voor bezorging" : "Out for delivery";
     case "delivered":
       return isNl ? "Bezorgd" : "Delivered";
     case "cancelled":
       return isNl ? "Geannuleerd" : "Cancelled";
     case "failed":
-      return isNl ? "Betaling mislukt" : "Payment failed";
+      return isNl ? "Geannuleerd" : "Cancelled";
     default:
-      // Fallback: replace underscores and capitalize
-      return isNl ? "In verwerking" : "Processing";
+      return isNl ? "Bestelling ontvangen" : "Order received";
   }
 }
 
@@ -65,11 +65,11 @@ export function mapPaymentStatus(status: InternalPaymentStatus, locale: string =
   const isNl = locale === "nl";
   switch (status) {
     case "pending":
-      return isNl ? "Betaling in behandeling" : "Payment pending";
+      return isNl ? "In afwachting" : "Pending";
     case "paid":
-      return isNl ? "Betaling bevestigd" : "Payment confirmed";
+      return isNl ? "Betaald" : "Paid";
     case "failed":
-      return isNl ? "Betaling mislukt" : "Payment failed";
+      return isNl ? "Mislukt" : "Failed";
     case "refunded":
       return isNl ? "Terugbetaald" : "Refunded";
     default:
@@ -95,6 +95,7 @@ export function getFulfillmentBadgeClass(status: InternalFulfillmentStatus): str
     case "delivered":
       return "bg-green-100 text-green-800 border-green-200";
     case "shipped":
+    case "out_for_delivery":
       return "bg-blue-100 text-blue-800 border-blue-200";
     case "in_production":
       return "bg-amber-100 text-amber-800 border-amber-200";
@@ -107,7 +108,7 @@ export function getFulfillmentBadgeClass(status: InternalFulfillmentStatus): str
 }
 
 export interface TimelineStep {
-  key: "order_placed" | "payment_confirmed" | "order_preparing" | "in_production" | "shipped" | "delivered";
+  key: "order_received" | "order_preparing" | "in_production" | "shipped" | "delivered";
   label: string;
   description: string;
   status: "completed" | "current" | "upcoming";
@@ -115,7 +116,12 @@ export interface TimelineStep {
 }
 
 /**
- * Build the 6-step customer order timeline from authoritative order state.
+ * Build the 5-step customer order timeline from authoritative order state:
+ * 1. Order received
+ * 2. Preparing your order
+ * 3. In production
+ * 4. Shipped
+ * 5. Delivered
  */
 export function getOrderTimelineSteps(
   order: {
@@ -134,7 +140,7 @@ export function getOrderTimelineSteps(
   steps: TimelineStep[];
 } {
   const isNl = locale === "nl";
-  const { payment_status, fulfillment_status, created_at, paid_at, shipped_at, delivered_at } = order;
+  const { payment_status, fulfillment_status, created_at, shipped_at, delivered_at } = order;
 
   // 1. Check for special terminal/exception states
   if (fulfillment_status === "cancelled") {
@@ -171,107 +177,86 @@ export function getOrderTimelineSteps(
   }
 
   // 2. Compute state progression for active orders
-  const isPaymentPaid = payment_status === "paid";
   const isDelivered = fulfillment_status === "delivered";
-  const isShipped = isDelivered || fulfillment_status === "shipped";
+  const isShipped = isDelivered || fulfillment_status === "shipped" || fulfillment_status === "out_for_delivery";
   const isInProduction = isShipped || fulfillment_status === "in_production";
   const isPreparing =
     isInProduction ||
     fulfillment_status === "printify_order_created" ||
     fulfillment_status === "sent_to_production" ||
-    fulfillment_status === "paid";
+    fulfillment_status === "paid" ||
+    payment_status === "paid";
 
-  // Step 1: Order placed (Always completed)
+  // Step 1: Order received (Always completed once placed)
   const step1: TimelineStep = {
-    key: "order_placed",
-    label: isNl ? "Bestelling geplaatst" : "Order placed",
+    key: "order_received",
+    label: isNl ? "Bestelling ontvangen" : "Order received",
     description: isNl ? "Uw bestelling is ontvangen" : "Your order has been received",
     status: "completed",
     timestamp: created_at ? formatOrderDate(created_at, locale) : null,
   };
 
-  // Step 2: Payment confirmed
+  // Step 2: Preparing your order
   let step2Status: "completed" | "current" | "upcoming" = "upcoming";
-  let step2Label = isNl ? "Betaling bevestigd" : "Payment confirmed";
-  let step2Desc = isNl ? "Betaling succesvol geverifieerd" : "Payment successfully verified";
-
-  if (isPaymentPaid || isPreparing) {
+  if (isInProduction) {
     step2Status = "completed";
-  } else {
+  } else if (isPreparing) {
     step2Status = "current";
-    step2Label = isNl ? "Betaling in behandeling" : "Payment pending";
-    step2Desc = isNl ? "Wachten op bevestiging van betaling" : "Awaiting payment confirmation";
   }
 
   const step2: TimelineStep = {
-    key: "payment_confirmed",
-    label: step2Label,
-    description: step2Desc,
+    key: "order_preparing",
+    label: isNl ? "Bestelling in voorbereiding" : "Preparing your order",
+    description: isNl ? "Artikelen worden klaargezet voor productie" : "Garments queued for production",
     status: step2Status,
-    timestamp: paid_at ? formatOrderDate(paid_at, locale) : null,
+    timestamp: null,
   };
 
-  // Step 3: Preparing your order
+  // Step 3: In production
   let step3Status: "completed" | "current" | "upcoming" = "upcoming";
-  if (isInProduction) {
+  if (isShipped) {
     step3Status = "completed";
-  } else if (isPreparing && isPaymentPaid) {
+  } else if (fulfillment_status === "in_production") {
     step3Status = "current";
   }
 
   const step3: TimelineStep = {
-    key: "order_preparing",
-    label: isNl ? "Bestelling in voorbereiding" : "Preparing your order",
-    description: isNl ? "Artikelen worden klaargezet voor productie" : "Garments queued for production",
+    key: "in_production",
+    label: isNl ? "In productie" : "In production",
+    description: isNl ? "Vervaardigd met kwaliteitscontrole" : "Crafted with quality control",
     status: step3Status,
     timestamp: null,
   };
 
-  // Step 4: In production
+  // Step 4: Shipped
   let step4Status: "completed" | "current" | "upcoming" = "upcoming";
-  if (isShipped) {
+  if (isDelivered) {
     step4Status = "completed";
-  } else if (fulfillment_status === "in_production") {
+  } else if (fulfillment_status === "shipped" || fulfillment_status === "out_for_delivery") {
     step4Status = "current";
   }
 
   const step4: TimelineStep = {
-    key: "in_production",
-    label: isNl ? "In productie" : "In production",
-    description: isNl ? "Vervaardigd met kwaliteitscontrole" : "Crafted with quality control",
-    status: step4Status,
-    timestamp: null,
-  };
-
-  // Step 5: Shipped
-  let step5Status: "completed" | "current" | "upcoming" = "upcoming";
-  if (isDelivered) {
-    step5Status = "completed";
-  } else if (fulfillment_status === "shipped") {
-    step5Status = "current";
-  }
-
-  const step5: TimelineStep = {
     key: "shipped",
     label: isNl ? "Verzonden" : "Shipped",
     description: isNl ? "Pakket overhandigd aan koerier" : "Package handed over to courier",
-    status: step5Status,
+    status: step4Status,
     timestamp: shipped_at ? formatOrderDate(shipped_at, locale) : null,
   };
 
-  // Step 6: Delivered (MUST never show completed or current unless actually delivered)
-  const step6Status: "completed" | "current" | "upcoming" = isDelivered ? "completed" : "upcoming";
-  const step6: TimelineStep = {
+  // Step 5: Delivered (Never completed or current unless actually delivered)
+  const step5Status: "completed" | "current" | "upcoming" = isDelivered ? "completed" : "upcoming";
+  const step5: TimelineStep = {
     key: "delivered",
     label: isNl ? "Bezorgd" : "Delivered",
     description: isNl ? "Pakket bezorgd op uw adres" : "Package delivered to destination",
-    status: step6Status,
+    status: step5Status,
     timestamp: delivered_at ? formatOrderDate(delivered_at, locale) : null,
   };
 
   return {
     isSpecialState: false,
-    steps: [step1, step2, step3, step4, step5, step6],
+    steps: [step1, step2, step3, step4, step5],
   };
 }
 
@@ -355,7 +340,6 @@ export function sanitizeCustomerOrder(order: any): any {
     currency: order.currency || "EUR",
     subtotal_cents: order.subtotal_cents || 0,
     shipping_cents: order.shipping_cents || 0,
-    vat_cents: order.vat_cents || 0,
     total_cents: order.total_cents || 0,
     payment_status: order.payment_status || "pending",
     fulfillment_status: order.fulfillment_status || "pending_payment",
