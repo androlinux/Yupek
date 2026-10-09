@@ -1,9 +1,16 @@
 "use client";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import dynamic from "next/dynamic";
 import { ConfigProvider } from "./ConfigContext";
 import { AuthProvider, useAuth } from "./AuthContext";
 import { supabase } from "@/lib/supabase";
-import AuthModal from "./AuthModal";
+
+const CartDrawer = dynamic(() => import("./CartDrawer"), { ssr: false });
+const SearchOverlay = dynamic(() => import("./SearchOverlay"), { ssr: false });
+const AuthModal = dynamic(() => import("./AuthModal"), { ssr: false });
+const AccessibilityWidgets = dynamic(() => import("./AccessibilityWidgets"), { ssr: false });
+const AdminHotkey = dynamic(() => import("./AdminHotkey"), { ssr: false });
+const CookieSettingsModal = dynamic(() => import("./CookieSettingsModal"), { ssr: false });
 
 export type CartLine = { 
   slug: string; 
@@ -157,6 +164,8 @@ function StoreProviderInner({ children }: { children: ReactNode }) {
   return (
     <StoreCtx.Provider value={value}>
       {children}
+      <CartDrawer />
+      <SearchOverlay />
       <AuthModal />
       <AccessibilityWidgets />
       <AdminHotkey />
@@ -166,13 +175,10 @@ function StoreProviderInner({ children }: { children: ReactNode }) {
   );
 }
 
-import AdminHotkey from "./AdminHotkey";
 import { LanguageProvider } from "./LanguageContext";
 import { AccessibilityProvider } from "./AccessibilityContext";
-import AccessibilityWidgets from "./AccessibilityWidgets";
 import { CookieConsentProvider } from "./CookieConsentContext";
 import CookieBanner from "./CookieBanner";
-import CookieSettingsModal from "./CookieSettingsModal";
 
 export default function Providers({ children }: { children: ReactNode }) {
   return (

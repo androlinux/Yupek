@@ -3,7 +3,6 @@ const nextConfig = {
   compress: true,
   poweredByHeader: false,
   images: {
-    unoptimized: true,
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 2592000, // 30 days cache for optimized images
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
@@ -13,7 +12,18 @@ const nextConfig = {
         protocol: "https",
         hostname: "**.printify.com",
       },
+      {
+        protocol: "https",
+        hostname: "images-api.printify.com",
+      },
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
     ],
+  },
+  compiler: {
+    removeConsole: process.env.NODE_ENV === "production" ? { exclude: ["error", "warn"] } : false,
   },
   async redirects() {
     return [

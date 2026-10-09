@@ -5,8 +5,6 @@ import Providers from "@/components/Providers";
 import AnnouncementBar from "@/components/AnnouncementBar";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import CartDrawer from "@/components/CartDrawer";
-import SearchOverlay from "@/components/SearchOverlay";
 import AnalyticsConsentWrapper from "@/components/AnalyticsConsentWrapper";
 
 const serif = Cormorant_Garamond({
@@ -142,6 +140,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="preload"
           as="image"
           type="image/avif"
+          media="(max-width: 767px)"
+          href="/images/hero/hero_mobile.avif"
+          fetchPriority="high"
+        />
+        <link
+          rel="preload"
+          as="image"
+          type="image/avif"
           media="(min-width: 768px)"
           href="/images/hero/hero_desktop.avif"
           fetchPriority="high"
@@ -163,8 +169,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Header />
           <main id="main" className="w-full max-w-full overflow-x-clip">{children}</main>
           <Footer />
-          <CartDrawer />
-          <SearchOverlay />
           <AnalyticsConsentWrapper />
         </Providers>
       </body>
