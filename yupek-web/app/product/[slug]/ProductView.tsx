@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import type { Product } from "@/data/products";
-import { eur, isExcludedSize } from "@/lib/catalog";
+import { eur, isExcludedSize, getVerifiedPrice, getVerifiedPriceCents } from "@/lib/catalog";
 import { useStore } from "@/components/Providers";
 import { useSiteConfig } from "@/components/ConfigContext";
 import { useLanguage } from "@/components/LanguageContext";
@@ -151,11 +151,15 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
         (img) => img.variant_ids && img.variant_ids.some((vid) => colorVariantIds.has(String(vid)))
       );
       if (matched.length > 0) {
-        return matched.map((img) => img.src);
+        return matched.map((img) => img.src).filter(Boolean);
       }
     }
-    return p.images.length > 0 ? p.images : ["/images/look-1.jpg"];
+    const valid = (p.images || []).filter(Boolean);
+    return valid.length > 0 ? valid : ["/images/look-1.jpg"];
   }, [p.detailedImages, p.images, colorVariantIds]);
+
+  const safeActiveIndex = Math.min(Math.max(0, activeImageIndex), Math.max(0, galleryImages.length - 1));
+  const currentMainImage = galleryImages[safeActiveIndex] || galleryImages[0] || p.images[0] || "/images/look-1.jpg";
 
   // Clamp activeImageIndex if galleryImages length shrinks
   useEffect(() => {
@@ -170,19 +174,10 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
     return activeVariants.find((v) => v.color === color && v.size === size) || null;
   }, [activeVariants, color, size]);
 
-  // 6. Exact Price Calculation (No "From" when variant is selected)
+  // 6. Authoritative Verified Price (prevents fractional sub-unit conversion bugs)
   const displayPrice = useMemo(() => {
-    if (selectedVariant && selectedVariant.price_cents) {
-      return selectedVariant.price_cents / 100;
-    }
-    if (activeVariants.length > 0) {
-      const firstActive = activeVariants.find((v) => v.color === color) || activeVariants[0];
-      if (firstActive?.price_cents) {
-        return firstActive.price_cents / 100;
-      }
-    }
-    return p.price;
-  }, [selectedVariant, activeVariants, color, p.price]);
+    return getVerifiedPrice(p, selectedVariant);
+  }, [p, selectedVariant]);
 
   // 6b. Availability State
   const isOutOfStock = useMemo(() => {
@@ -272,8 +267,8 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
       printifyVariantId: selectedVariant?.variant_id != null ? String(selectedVariant.variant_id) : "",
       title: p.name,
       price: displayPrice,
-      price_cents: selectedVariant?.price_cents ?? Math.round(displayPrice * 100),
-      image: galleryImages[0] || p.images[0] || "/images/look-1.jpg",
+      price_cents: getVerifiedPriceCents(p, selectedVariant),
+      image: currentMainImage,
     });
     setAddedFeedback(true);
     setTimeout(() => setAddedFeedback(false), 2000);
@@ -299,8 +294,8 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
         printifyVariantId: selectedVariant?.variant_id != null ? String(selectedVariant.variant_id) : "",
         title: p.name,
         price: displayPrice,
-        price_cents: selectedVariant?.price_cents ?? Math.round(displayPrice * 100),
-        image: galleryImages[0] || p.images[0] || "/images/look-1.jpg",
+        price_cents: getVerifiedPriceCents(p, selectedVariant),
+        image: currentMainImage,
       },
       false
     );
@@ -323,33 +318,26 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
   }, [activeVariants, p.sizes]);
 
   return (
-    <div className="wrap grid gap-10 py-6 lg:grid-cols-[58%_42%] lg:gap-16 lg:py-12 items-start">
+    <div className="wrap w-full max-w-full min-w-0 overflow-x-hidden grid gap-8 sm:gap-10 py-6 lg:grid-cols-[58%_42%] lg:gap-16 lg:py-12 items-start">
       {/* ============================================================ */}
       {/* 1. PRODUCT GALLERY (LEFT COLUMN: DESKTOP & MOBILE CAROUSEL)  */}
       {/* ============================================================ */}
-      <div ref={galleryRef} className="w-full select-none" aria-label="Product image gallery">
+      <div ref={galleryRef} className="w-full min-w-0 select-none overflow-hidden" aria-label="Product image gallery">
         {/* Main Display Image Frame */}
         <div
-          className="relative aspect-[3/4] md:aspect-[4/5] w-full bg-sand/20 overflow-hidden group border border-brown/10"
+          className="relative aspect-[3/4] md:aspect-[4/5] w-full min-h-[320px] sm:min-h-[420px] bg-sand/20 overflow-hidden group border border-brown/10"
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
-          {galleryImages.map((src, i) => (
-            <div
-              key={src + i}
-              className={`absolute inset-0 transition-opacity duration-300 ${
-                i === activeImageIndex ? "opacity-100 z-10" : "opacity-0 pointer-events-none z-0"
-              }`}
-            >
-              <ProductImage
-                src={src}
-                alt={`${p.name} - ${color} - view ${i + 1}`}
-                priority={i === 0}
-                sizes="(min-width: 1024px) 58vw, 100vw"
-                className="object-contain w-full h-full p-2 md:p-6"
-              />
-            </div>
-          ))}
+          <ProductImage
+            key={currentMainImage}
+            src={currentMainImage}
+            alt={`${p.name} - ${color} - view ${safeActiveIndex + 1}`}
+            priority={true}
+            sizes="(min-width: 1024px) 58vw, 100vw"
+            className="object-contain w-full h-full p-2 md:p-6 transition-opacity duration-200"
+            fallbackSrc={p.images[0] || "/images/look-1.jpg"}
+          />
 
           {/* Navigation Arrows (Subtle & Luxury) */}
           {galleryImages.length > 1 && (
@@ -358,7 +346,7 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
                 type="button"
                 onClick={prevImage}
                 aria-label="Previous product image"
-                className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 md:w-11 md:h-11 flex items-center justify-center bg-cream/90 hover:bg-cream border border-brown/20 text-brown shadow-sm transition-all md:opacity-0 md:group-hover:opacity-100 focus:opacity-100"
+                className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 md:w-11 md:h-11 flex items-center justify-center bg-cream/90 hover:bg-cream border border-brown/20 text-brown shadow-sm transition-all focus:opacity-100 touch-manipulation"
               >
                 <Icon name="arrowLeft" className="w-4 h-4" />
               </button>
@@ -366,14 +354,14 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
                 type="button"
                 onClick={nextImage}
                 aria-label="Next product image"
-                className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 md:w-11 md:h-11 flex items-center justify-center bg-cream/90 hover:bg-cream border border-brown/20 text-brown shadow-sm transition-all md:opacity-0 md:group-hover:opacity-100 focus:opacity-100"
+                className="absolute right-2.5 sm:right-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 md:w-11 md:h-11 flex items-center justify-center bg-cream/90 hover:bg-cream border border-brown/20 text-brown shadow-sm transition-all focus:opacity-100 touch-manipulation"
               >
                 <Icon name="arrowRight" className="w-4 h-4" />
               </button>
 
               {/* Minimal Counter Badge */}
               <div className="absolute bottom-3 right-3 z-20 bg-cream/90 backdrop-blur-xs px-2.5 py-1 border border-brown/15 text-[10px] tracking-widest text-brown/80 font-mono">
-                {activeImageIndex + 1} / {galleryImages.length}
+                {safeActiveIndex + 1} / {galleryImages.length}
               </div>
             </>
           )}
@@ -381,17 +369,17 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
 
         {/* Thumbnail Navigation Row */}
         {galleryImages.length > 1 && (
-          <div className="mt-3 flex gap-2.5 overflow-x-auto pb-1 scrollbar-none" role="tablist" aria-label="Product thumbnails">
+          <div className="mt-3 flex gap-2 sm:gap-2.5 overflow-x-auto pb-1 scrollbar-none min-w-0 max-w-full" role="tablist" aria-label="Product thumbnails">
             {galleryImages.map((src, i) => (
               <button
                 key={src + i}
                 type="button"
                 role="tab"
-                aria-selected={i === activeImageIndex}
+                aria-selected={i === safeActiveIndex}
                 aria-label={`View image ${i + 1}`}
                 onClick={() => setActiveImageIndex(i)}
-                className={`relative w-16 h-20 md:w-20 md:h-24 aspect-[3/4] shrink-0 bg-sand/15 overflow-hidden transition-all duration-150 border ${
-                  i === activeImageIndex
+                className={`relative w-14 h-18 sm:w-16 sm:h-20 md:w-20 md:h-24 aspect-[3/4] shrink-0 bg-sand/15 overflow-hidden transition-all duration-150 border ${
+                  i === safeActiveIndex
                     ? "border-brown ring-1 ring-brown opacity-100"
                     : "border-brown/15 opacity-60 hover:opacity-100 hover:border-brown/40"
                 }`}
@@ -401,6 +389,7 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
                   alt={`${p.name} thumbnail ${i + 1}`}
                   sizes="80px"
                   className="object-contain w-full h-full p-1"
+                  fallbackSrc={p.images[0]}
                 />
               </button>
             ))}
@@ -411,9 +400,9 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
       {/* ============================================================ */}
       {/* 2. PRODUCT INFORMATION & BUY PANEL (RIGHT COLUMN)            */}
       {/* ============================================================ */}
-      <div className="lg:sticky lg:top-28 lg:self-start w-full">
+      <div className="lg:sticky lg:top-28 lg:self-start w-full min-w-0 overflow-hidden">
         {/* Breadcrumb */}
-        <nav aria-label="Breadcrumb" className="label mb-4 text-brown/50 text-[11px]">
+        <nav aria-label="Breadcrumb" className="label mb-4 text-brown/50 text-[11px] truncate">
           <Link href="/shop" className="hover:text-brown transition-colors">
             {t.product.breadcrumbShop}
           </Link>{" "}
@@ -421,9 +410,9 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
         </nav>
 
         {/* Title & Wishlist */}
-        <div className="flex items-start justify-between gap-4">
-          <div className="max-w-xl">
-            <h1 className="h-display text-3xl sm:text-4xl md:text-5xl leading-[1.08] text-brown tracking-tight">
+        <div className="flex items-start justify-between gap-3 min-w-0 w-full">
+          <div className="min-w-0 flex-1 max-w-xl">
+            <h1 className="h-display text-2xl sm:text-3xl md:text-5xl leading-[1.1] text-brown tracking-tight break-words hyphens-auto">
               {p.name.toUpperCase()}
             </h1>
             {p.badge && (
@@ -435,24 +424,24 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
           <WishlistButton slug={p.slug} className="border border-brown/20 shrink-0" />
         </div>
 
-        {/* Price Display (Clean exact price, no "From" prefix) */}
-        <p className="mt-4 text-2xl font-light text-brown tracking-tight">
+        {/* Price Display (Clean exact verified price, no "From" prefix) */}
+        <p className="mt-3 sm:mt-4 text-xl sm:text-2xl font-light text-brown tracking-tight">
           {eur(displayPrice)}
         </p>
 
         {/* Heritage Tagline */}
-        <p className="label mt-2 text-gold text-[10px] tracking-[.22em]">
+        <p className="label mt-2 text-gold text-[10px] tracking-[.16em] sm:tracking-[.22em] break-words">
           {locale === "nl" ? "OOSTERSE WORTELS / EUROPESE VORM" : "EASTERN ROOTS / EUROPEAN STYLE"}
         </p>
 
-        <Divider className="my-6 justify-start" />
+        <Divider className="my-5 sm:my-6 justify-start" />
 
         {/* Color Selector */}
-        <div className="mb-6">
+        <div className="mb-6 min-w-0">
           <p className="label mb-3 text-xs">
             {t.product.colorLabel} — <span className="text-brown/70 font-medium">{color.toUpperCase()}</span>
           </p>
-          <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Color">
+          <div className="flex flex-wrap gap-1.5 sm:gap-2 min-w-0" role="radiogroup" aria-label="Color">
             {availableColors.map((c) => {
               const isSelected = color === c;
               return (
@@ -463,7 +452,7 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
                   aria-checked={isSelected}
                   aria-label={`Color: ${c}`}
                   onClick={() => handleColorChange(c)}
-                  className={`border px-4 py-2.5 text-[10px] uppercase tracking-[.18em] transition-all ${
+                  className={`max-w-full border px-3 sm:px-4 py-2 sm:py-2.5 text-[10px] uppercase tracking-[.14em] sm:tracking-[.18em] transition-all break-words ${
                     isSelected
                       ? "border-brown bg-brown text-cream shadow-xs font-semibold"
                       : "border-brown/25 text-brown/90 hover:border-brown bg-cream/40"
@@ -477,22 +466,22 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
         </div>
 
         {/* Size Selector */}
-        <div className="mb-6">
-          <div className="mb-3 flex items-center justify-between">
-            <p className="label text-xs">
+        <div className="mb-6 min-w-0">
+          <div className="mb-3 flex items-center justify-between min-w-0 gap-2">
+            <p className="label text-xs truncate">
               {t.product.sizeLabel} —{" "}
               <span className="text-brown/70 font-medium">{size ? size.toUpperCase() : "SELECT"}</span>
             </p>
             <button
               type="button"
-              className="label underline underline-offset-4 hover:text-burgundy text-[11px] transition-colors"
+              className="label underline underline-offset-4 hover:text-burgundy text-[11px] transition-colors shrink-0"
               onClick={() => setGuide(!guide)}
               aria-expanded={guide}
             >
               {t.product.sizeGuide}
             </button>
           </div>
-          <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Size">
+          <div className="flex flex-wrap gap-1.5 sm:gap-2 min-w-0" role="radiogroup" aria-label="Size">
             {allProductSizes.map((s) => {
               const isAvailable = currentSizesForColor.includes(s);
               const isSelected = size === s;
@@ -506,7 +495,7 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
                   aria-disabled={!isAvailable}
                   disabled={!isAvailable}
                   onClick={() => handleSizeChange(s)}
-                  className={`min-w-12 border px-3.5 py-3 text-[11px] font-mono tracking-widest transition-all ${
+                  className={`min-w-10 sm:min-w-12 border px-2.5 sm:px-3.5 py-2 sm:py-3 text-[11px] font-mono tracking-wider sm:tracking-widest transition-all ${
                     isSelected
                       ? "border-brown bg-brown text-cream shadow-xs font-semibold"
                       : isAvailable
@@ -528,8 +517,8 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
 
           {/* Size Guide Table */}
           {guide && (
-            <div className="mt-4 border border-brown/15 bg-sand/10 p-4 transition-all overflow-x-auto max-w-full">
-              <table className="w-full text-left text-xs">
+            <div className="mt-4 border border-brown/15 bg-sand/10 p-3 sm:p-4 transition-all overflow-x-auto max-w-full min-w-0">
+              <table className="w-full text-left text-xs min-w-[240px]">
                 <caption className="sr-only">{t.product.sizeGuideCaption}</caption>
                 <thead>
                   <tr className="label border-b border-brown/20 text-brown/70">
@@ -561,25 +550,25 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
         </div>
 
         {/* Quantity Selector & Real-Time Stock Status */}
-        <div className="mb-6">
+        <div className="mb-6 min-w-0">
           <label htmlFor="product-quantity-stepper" className="label mb-3 block text-xs">
             {locale === "nl" ? "AANTAL" : "QUANTITY"}
           </label>
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="inline-flex items-center border border-brown/30 bg-cream/50 shadow-2xs">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4 min-w-0 w-full">
+            <div className="inline-flex items-center border border-brown/30 bg-cream/50 shadow-2xs shrink-0">
               <button
                 type="button"
                 disabled={quantity <= 1 || isOutOfStock}
                 onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                 aria-label={locale === "nl" ? "Aantal verlagen" : "Decrease quantity"}
-                className="h-11 w-11 flex items-center justify-center hover:bg-brown/5 text-brown transition-colors disabled:opacity-30 disabled:cursor-not-allowed focus:outline-none focus-visible:bg-brown/10 touch-manipulation"
+                className="h-10 w-10 sm:h-11 sm:w-11 flex items-center justify-center hover:bg-brown/5 text-brown transition-colors disabled:opacity-30 disabled:cursor-not-allowed focus:outline-none focus-visible:bg-brown/10 touch-manipulation"
               >
                 <Icon name="minus" className="h-3 w-3" />
               </button>
               <span
                 id="product-quantity-stepper"
                 aria-live="polite"
-                className="w-10 text-center font-mono text-xs font-semibold text-brown select-none"
+                className="w-9 sm:w-10 text-center font-mono text-xs font-semibold text-brown select-none"
               >
                 {quantity}
               </span>
@@ -588,14 +577,14 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
                 disabled={quantity >= 10 || isOutOfStock}
                 onClick={() => setQuantity((q) => Math.min(10, q + 1))}
                 aria-label={locale === "nl" ? "Aantal verhogen" : "Increase quantity"}
-                className="h-11 w-11 flex items-center justify-center hover:bg-brown/5 text-brown transition-colors disabled:opacity-30 disabled:cursor-not-allowed focus:outline-none focus-visible:bg-brown/10 touch-manipulation"
+                className="h-10 w-10 sm:h-11 sm:w-11 flex items-center justify-center hover:bg-brown/5 text-brown transition-colors disabled:opacity-30 disabled:cursor-not-allowed focus:outline-none focus-visible:bg-brown/10 touch-manipulation"
               >
                 <Icon name="plus" className="h-3 w-3" />
               </button>
             </div>
-            <div className="flex items-center gap-2 text-xs">
-              <span className={`inline-block h-2 w-2 rounded-full ${isOutOfStock ? "bg-burgundy" : "bg-green-700"}`} />
-              <span className="text-brown/75 text-[11px] font-medium tracking-wide">
+            <div className="flex items-center gap-2 text-xs min-w-0 flex-1">
+              <span className={`shrink-0 inline-block h-2 w-2 rounded-full ${isOutOfStock ? "bg-burgundy" : "bg-green-700"}`} />
+              <span className="text-brown/75 text-[11px] font-medium tracking-normal sm:tracking-wide break-words min-w-0">
                 {isOutOfStock
                   ? (locale === "nl" ? "Tijdelijk uitverkocht" : "Currently out of stock")
                   : (locale === "nl" ? "Op voorraad • Verzonden binnen 1-3 werkdagen" : "In stock • Dispatched in 1-3 business days")}
@@ -605,11 +594,11 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
         </div>
 
         {/* Action Buttons */}
-        <div className="mt-8 grid gap-3">
+        <div className="mt-6 sm:mt-8 grid gap-3 min-w-0">
           <button
             type="button"
             disabled={isOutOfStock}
-            className={`btn w-full py-4 text-xs tracking-[.22em] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+            className={`btn w-full py-3.5 sm:py-4 px-3 sm:px-6 text-[11px] sm:text-xs tracking-[.16em] sm:tracking-[.22em] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-center break-words min-w-0 ${
               addedFeedback ? "bg-green-900 text-cream" : "btn-dark"
             }`}
             onClick={pick}
@@ -626,7 +615,7 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
               if (isOutOfStock || !pickQuiet()) e.preventDefault();
             }}
             aria-disabled={isOutOfStock}
-            className={`btn btn-line w-full py-3.5 text-xs tracking-[.22em] text-center ${
+            className={`btn btn-line w-full py-3 sm:py-3.5 px-3 sm:px-6 text-[11px] sm:text-xs tracking-[.16em] sm:tracking-[.22em] text-center break-words min-w-0 ${
               isOutOfStock ? "opacity-40 pointer-events-none" : ""
             }`}
           >
@@ -635,9 +624,9 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
         </div>
 
         {/* Shipping Reassurance */}
-        <div className="mt-5 flex items-center gap-2 text-[11px] text-brown/70 border-y border-brown/10 py-3">
-          <span className="text-gold font-serif text-sm">✦</span>
-          <span>
+        <div className="mt-5 flex items-start gap-2.5 text-[11px] text-brown/70 border-y border-brown/10 py-3 min-w-0 w-full">
+          <span className="text-gold font-serif text-sm shrink-0 mt-0.5 leading-none">✦</span>
+          <span className="min-w-0 flex-1 break-words leading-relaxed">
             {locale === "nl"
               ? "Gratis verzending in Europa vanaf €100 • 30 dagen kosteloos retourneren"
               : "Complimentary shipping in Europe on orders over €100 • 30-day free returns"}
@@ -645,25 +634,25 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
         </div>
 
         {/* Formatted Product Story & Features */}
-        <div className="mt-8 border-t border-brown/15 pt-6 space-y-6">
+        <div className="mt-8 border-t border-brown/15 pt-6 space-y-6 min-w-0">
           {/* Main Description Intro */}
           {descParsed.intro && (
-            <p className="text-sm leading-relaxed text-brown/85 font-light">
+            <p className="text-sm leading-relaxed text-brown/85 font-light break-words">
               {descParsed.intro}
             </p>
           )}
 
           {/* Product Features List */}
           {descParsed.features.length > 0 && (
-            <div>
+            <div className="min-w-0">
               <h3 className="label text-[11px] font-semibold tracking-[.2em] text-brown mb-2.5">
                 {locale === "nl" ? "KENMERKEN" : "PRODUCT FEATURES"}
               </h3>
-              <ul className="space-y-1.5 text-xs text-brown/80 font-light">
+              <ul className="space-y-1.5 text-xs text-brown/80 font-light min-w-0">
                 {descParsed.features.map((feat, idx) => (
-                  <li key={idx} className="flex items-start gap-2">
-                    <span className="text-gold leading-tight">•</span>
-                    <span className="leading-relaxed">{feat}</span>
+                  <li key={idx} className="flex items-start gap-2 min-w-0">
+                    <span className="text-gold leading-tight shrink-0">•</span>
+                    <span className="leading-relaxed break-words min-w-0 flex-1">{feat}</span>
                   </li>
                 ))}
               </ul>
@@ -672,15 +661,15 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
 
           {/* Care Instructions List */}
           {descParsed.care.length > 0 && (
-            <div>
+            <div className="min-w-0">
               <h3 className="label text-[11px] font-semibold tracking-[.2em] text-brown mb-2.5">
                 {locale === "nl" ? "WASVOORSCHRIFT" : "CARE INSTRUCTIONS"}
               </h3>
-              <ul className="space-y-1.5 text-xs text-brown/80 font-light">
+              <ul className="space-y-1.5 text-xs text-brown/80 font-light min-w-0">
                 {descParsed.care.map((item, idx) => (
-                  <li key={idx} className="flex items-start gap-2">
-                    <span className="text-gold leading-tight">•</span>
-                    <span className="leading-relaxed">{item}</span>
+                  <li key={idx} className="flex items-start gap-2 min-w-0">
+                    <span className="text-gold leading-tight shrink-0">•</span>
+                    <span className="leading-relaxed break-words min-w-0 flex-1">{item}</span>
                   </li>
                 ))}
               </ul>
@@ -688,7 +677,7 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
           )}
 
           {/* Audio Readout for Accessibility */}
-          <div className="pt-2 flex items-center">
+          <div className="pt-2 flex items-center min-w-0">
             <button
               type="button"
               onClick={() => {
@@ -709,10 +698,10 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
                   : "Listen to product description"
               }
               aria-pressed={isSpeaking}
-              className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[.2em] font-semibold text-gold hover:text-brown border border-gold/40 px-3.5 py-1.5 transition-all bg-sand/15 hover:bg-gold/20"
+              className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[.16em] sm:tracking-[.2em] font-semibold text-gold hover:text-brown border border-gold/40 px-3 sm:px-3.5 py-1.5 transition-all bg-sand/15 hover:bg-gold/20 max-w-full truncate"
             >
-              <Icon name={isSpeaking ? "volumeMute" : "volume"} className="w-3.5 h-3.5 text-gold" />
-              <span>
+              <Icon name={isSpeaking ? "volumeMute" : "volume"} className="w-3.5 h-3.5 text-gold shrink-0" />
+              <span className="truncate">
                 {isSpeaking
                   ? locale === "nl"
                     ? "Stop voorlezen"
@@ -726,7 +715,7 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
         </div>
 
         {/* Editorial Accordions */}
-        <div className="mt-8 border-t border-brown/15 pt-2">
+        <div className="mt-8 border-t border-brown/15 pt-2 min-w-0">
           <Accordion
             items={[
               {

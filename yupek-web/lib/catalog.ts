@@ -39,15 +39,49 @@ export const eur = (n: number) => `€${n.toFixed(2)}`;
 
 export const EXCLUDED_SIZES = new Set(["3XL", "4XL", "5XL", "XXXL", "XXXXL", "XXXXXL"]);
 
+export const STANDARD_GARMENT_SIZES = new Set([
+  "XXS", "XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL",
+  "XXXL", "XXXXL", "XXXXXL", "ONE SIZE", "OS"
+]);
+
 export function isExcludedSize(size?: string | null): boolean {
   if (!size) return false;
   const s = String(size).toUpperCase().trim();
   return EXCLUDED_SIZES.has(s) || s === "3XL" || s === "4XL" || s === "5XL";
 }
 
+/**
+ * Normalizes product sizes, variants, and descriptors.
+ * Safely detects and resolves inverted/swapped colors and sizes
+ * (e.g. where garment sizes were mistakenly stored under colors, and colors under sizes).
+ */
 export function sanitizeProductSizes(p: Product): Product {
-  const cleanSizes = (p.sizes || []).filter((s) => !isExcludedSize(s));
-  const cleanVariants = (p.variants || []).filter((v) => {
+  let rawColors = p.colors || [];
+  let rawSizes = p.sizes || [];
+  let rawVariants = p.variants || [];
+
+  // Detect inverted size/color data
+  const colorsAreSizes =
+    rawColors.length > 0 &&
+    rawColors.every((c) => STANDARD_GARMENT_SIZES.has(String(c).toUpperCase().trim()));
+  const sizesAreColors =
+    rawSizes.length > 0 &&
+    !rawSizes.some((s) => STANDARD_GARMENT_SIZES.has(String(s).toUpperCase().trim()));
+
+  if (colorsAreSizes && sizesAreColors) {
+    const tempColors = rawSizes;
+    rawSizes = rawColors;
+    rawColors = tempColors;
+
+    rawVariants = rawVariants.map((v) => ({
+      ...v,
+      color: v.size,
+      size: v.color,
+    }));
+  }
+
+  const cleanSizes = rawSizes.filter((s) => !isExcludedSize(s));
+  const cleanVariants = rawVariants.filter((v) => {
     if (isExcludedSize(v.size)) return false;
     const title = String(v.title || "").toUpperCase();
     if (title.includes("3XL") || title.includes("4XL") || title.includes("5XL")) return false;
@@ -68,11 +102,41 @@ export function sanitizeProductSizes(p: Product): Product {
 
   return {
     ...p,
+    colors: rawColors,
     descriptor: cleanDescriptor,
     sizes: cleanSizes,
     variants: cleanVariants,
     options: cleanOptions,
   };
+}
+
+/**
+ * Authoritative customer-facing price resolution.
+ * Prevents corrupted sub-unit conversions (e.g. 26 cents for a €26.99 garment)
+ * from rendering fractional pennies in UI or cart, and guarantees that product
+ * cards, product views, and cart line items share the exact same price source.
+ */
+export function getVerifiedPrice(
+  product: Product,
+  variant?: { price_cents?: number | null; price?: number | null } | null
+): number {
+  if (variant) {
+    if (typeof variant.price_cents === "number" && variant.price_cents >= 100) {
+      return variant.price_cents / 100;
+    }
+    if (typeof variant.price === "number" && variant.price >= 1.0) {
+      return variant.price;
+    }
+  }
+  return typeof product.price === "number" && product.price > 0 ? product.price : 0;
+}
+
+export function getVerifiedPriceCents(
+  product: Product,
+  variant?: { price_cents?: number | null; price?: number | null } | null
+): number {
+  const verified = getVerifiedPrice(product, variant);
+  return Math.round(verified * 100);
 }
 
 /**

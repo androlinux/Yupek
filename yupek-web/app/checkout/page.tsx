@@ -80,6 +80,7 @@ export default function Checkout() {
   const calculateLiveShipping = async (targetCountry: string) => {
     if (!lines.length) return;
     setCalculatingShipping(true);
+    setShippingError(null);
     try {
       const orderItems = lines.map((l) => {
         const p = getProduct(l.slug);
@@ -169,6 +170,25 @@ export default function Checkout() {
     e.preventDefault();
     setErrorMessage(null);
 
+    const trimmedFirst = firstName.trim();
+    const trimmedLast = lastName.trim();
+    const trimmedEmail = email.trim();
+    const trimmedStreet = street.trim();
+    const trimmedCity = city.trim();
+    const trimmedPostal = postalCode.trim();
+    const trimmedCountry = country.trim();
+    const trimmedPhone = phone.trim();
+
+    if (!trimmedFirst || !trimmedLast || !trimmedEmail || !trimmedStreet || !trimmedCity || !trimmedPostal || !trimmedCountry) {
+      setErrorMessage(locale === "nl" ? "Vul alle verplichte velden in." : "Please fill in all required fields.");
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      setErrorMessage(locale === "nl" ? "Voer een geldig e-mailadres in." : "Please enter a valid email address.");
+      return;
+    }
+
     if (!currentOption || shippingOptions.length === 0) {
       setErrorMessage(shippingError || "Server temporarily unavailable. Please try again.");
       return;
@@ -195,14 +215,14 @@ export default function Checkout() {
       order_id: orderId || undefined,
       user_id: user?.id || undefined,
       customer: {
-        firstName,
-        lastName,
-        email,
-        phone,
-        street,
-        city,
-        postalCode,
-        country,
+        firstName: trimmedFirst,
+        lastName: trimmedLast,
+        email: trimmedEmail,
+        phone: trimmedPhone,
+        street: trimmedStreet,
+        city: trimmedCity,
+        postalCode: trimmedPostal,
+        country: trimmedCountry,
       },
       items: orderItems,
       delivery: selectedDelivery,
@@ -408,8 +428,16 @@ export default function Checkout() {
               </div>
 
               {shippingError && shippingOptions.length === 0 && (
-                <div className="p-3.5 text-xs bg-amber-50/75 border border-amber-300 text-amber-900 rounded-sm leading-relaxed">
-                  {shippingError}
+                <div className="p-3.5 text-xs bg-amber-50/75 border border-amber-300 text-amber-900 rounded-sm leading-relaxed flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <span>{shippingError}</span>
+                  <button
+                    type="button"
+                    onClick={() => calculateLiveShipping(country)}
+                    disabled={calculatingShipping}
+                    className="underline font-semibold hover:text-brown self-start sm:self-auto text-[11px] uppercase tracking-wider"
+                  >
+                    {locale === "nl" ? "Opnieuw proberen" : "Try Again"}
+                  </button>
                 </div>
               )}
 
@@ -466,7 +494,7 @@ export default function Checkout() {
             <button
               type="submit"
               disabled={loadingIntent || calculatingShipping || shippingOptions.length === 0}
-              className="btn btn-dark w-full py-4 text-xs tracking-[.25em] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn btn-dark w-full py-4 text-xs tracking-[.15em] sm:tracking-[.25em] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loadingIntent ? (
                 <>

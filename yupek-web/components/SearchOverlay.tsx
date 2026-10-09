@@ -135,7 +135,7 @@ export default function SearchOverlay() {
       aria-modal="true"
       aria-label={t.nav.search}
       aria-hidden={!searchOpen}
-      inert={!searchOpen || undefined}
+      inert={!searchOpen}
       onClick={handleBackdropClick}
       style={{ backgroundColor: "#FAF7F2", color: "#171717" }}
       className={`fixed inset-0 z-[80] overflow-y-auto overflow-x-hidden max-w-full transition-all duration-300 ${
