@@ -228,7 +228,7 @@ export default function Header() {
         } ${tone}`}
         onMouseLeave={handleMouseLeave}
       >
-        <div className="wrap relative flex items-center w-full h-16 lg:h-20">
+        <div className="wrap relative flex items-center justify-between w-full h-16 lg:h-20">
           {/* ========================================================= */}
           {/* DESKTOP NAVBAR (>= 1024px)                                */}
           {/* LEFT: Logo + Nav Links | RIGHT: Actions & Controls        */}
@@ -577,7 +577,7 @@ export default function Header() {
           </div>
 
           {/* MOBILE RIGHT: Search and Bag */}
-          <div className="flex lg:hidden items-center gap-0.5 justify-end shrink-0">
+          <div className="flex lg:hidden items-center gap-0.5 justify-end shrink-0 ml-auto">
             <button
               id="nav-search-mobile"
               onClick={() => setSearchOpen(true)}
