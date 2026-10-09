@@ -126,8 +126,15 @@ export async function POST(req: NextRequest) {
         matchedVar = variants.find((v: any) => String(v.size || "").toLowerCase() === String(item.size).toLowerCase());
       }
 
-      if (!matchedVar && variants.length > 0) {
-        matchedVar = variants[0];
+      if (!matchedVar) {
+        if (!reqVarId && !item.size && !item.color && variants.length === 1) {
+          matchedVar = variants[0];
+        } else {
+          return NextResponse.json(
+            { error: `Selected variant (${item.size || ""}${item.color ? ` / ${item.color}` : ""}) is unavailable for '${item.title || matched.name}'.` },
+            { status: 400 }
+          );
+        }
       }
 
       let priceCents = 0;
@@ -148,13 +155,18 @@ export async function POST(req: NextRequest) {
       }
       const varIdNum = matchedVar ? Number(matchedVar.variant_id || matchedVar.id || 0) : 0;
 
-      if (prodId && varIdNum > 0) {
-        printifyLineItems.push({
-          product_id: prodId,
-          variant_id: varIdNum,
-          quantity: qty,
-        });
+      if (!prodId || varIdNum <= 0) {
+        return NextResponse.json(
+          { error: `Item '${item.title || matched.name}' variant (${item.size || "Default"}/${item.color || "Default"}) is currently unavailable for shipping calculation.` },
+          { status: 400 }
+        );
       }
+
+      printifyLineItems.push({
+        product_id: prodId,
+        variant_id: varIdNum,
+        quantity: qty,
+      });
     }
 
     // 2. Free Shipping Threshold from Site Config

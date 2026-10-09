@@ -79,13 +79,102 @@ class CreateIntentRequest(BaseModel):
 # TRUSTED CATALOG & PRICING HELPERS
 # =====================================================================
 
+def _enrich_catalog_variants(products: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Enrich custom products where Supabase site_config has null/missing variant_id.
+
+    STRICT SAFETY RULES:
+    1. Matches variants ONLY using verified product identity (supplierProductId or normalized id/slug)
+       and exact size + color values. NEVER matches by product name alone.
+    2. Does NOT overwrite valid authoritative IDs already present in Supabase (preserves existing valid IDs).
+    3. NEVER invents, guesses, or substitutes a variant ID. If no exact match exists, variant_id remains untouched.
+    """
+    if not products:
+        return products
+
+    # Load trusted reference catalog from local site-config.json
+    trusted_map: dict[str, int] = {}
+    try:
+        config_path = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))),
+            "yupek-web", "data", "site-config.json"
+        )
+        if os.path.exists(config_path):
+            import json
+            with open(config_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                for tp in data.get("customProducts") or []:
+                    raw_id = str(tp.get("supplierProductId") or tp.get("id") or "").strip()
+                    clean_id = raw_id[len("printify-"):] if raw_id.startswith("printify-") else raw_id
+                    slug = str(tp.get("slug") or "").strip()
+
+                    for tv in tp.get("variants") or []:
+                        v_id = tv.get("variant_id")
+                        if v_id is not None:
+                            try:
+                                v_id_int = int(v_id)
+                                if v_id_int > 0:
+                                    size = str(tv.get("size") or "").strip().lower()
+                                    color = str(tv.get("color") or "").strip().lower()
+                                    if size and color:
+                                        if clean_id:
+                                            trusted_map[f"{clean_id}:{size}:{color}"] = v_id_int
+                                        if slug:
+                                            trusted_map[f"{slug}:{size}:{color}"] = v_id_int
+                            except (ValueError, TypeError):
+                                pass
+    except Exception as exc:
+        logger.warning(f"Could not build trusted variant fallback map: {exc}")
+
+    enriched = []
+    for p in products:
+        p_copy = dict(p)
+        raw_id = str(p_copy.get("supplierProductId") or p_copy.get("id") or "").strip()
+        clean_id = raw_id[len("printify-"):] if raw_id.startswith("printify-") else raw_id
+        slug = str(p_copy.get("slug") or "").strip()
+
+        variants = p_copy.get("variants") or []
+        enriched_variants = []
+        for v in variants:
+            v_copy = dict(v)
+            v_id = v_copy.get("variant_id")
+            # 1. Preserve already valid non-zero variant_id
+            if v_id is not None:
+                try:
+                    if int(v_id) > 0:
+                        enriched_variants.append(v_copy)
+                        continue
+                except (ValueError, TypeError):
+                    pass
+
+            # 2. Look up exact size + color match
+            size = str(v_copy.get("size") or "").strip().lower()
+            color = str(v_copy.get("color") or "").strip().lower()
+            match_id = None
+            if size and color:
+                if clean_id:
+                    match_id = trusted_map.get(f"{clean_id}:{size}:{color}")
+                if not match_id and slug:
+                    match_id = trusted_map.get(f"{slug}:{size}:{color}")
+
+            if match_id is not None:
+                v_copy["variant_id"] = match_id
+            # 3. If no match, leave untouched (never guess)
+            enriched_variants.append(v_copy)
+
+        p_copy["variants"] = enriched_variants
+        enriched.append(p_copy)
+
+    return enriched
+
+
 def _load_trusted_products() -> list[dict[str, Any]]:
     """Load trusted products strictly from Supabase site_config (or local mirror fallback)."""
     try:
         db = get_db()
         row = db.table("site_config").select("value").eq("key", "global").maybe_single().execute().data
         if row and isinstance(row.get("value"), dict):
-            return row["value"].get("customProducts") or []
+            raw_prods = row["value"].get("customProducts") or []
+            return _enrich_catalog_variants(raw_prods)
     except Exception as exc:
         logger.warning(f"Could not load site_config from Supabase: {exc}")
 
