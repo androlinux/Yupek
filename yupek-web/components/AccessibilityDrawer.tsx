@@ -158,7 +158,7 @@ export default function AccessibilityDrawer() {
           aria-modal="true"
           aria-label={a.drawerTitle}
           aria-hidden={!drawerOpen}
-          inert={!drawerOpen || undefined}
+          inert={!drawerOpen}
           className={`fixed top-0 bottom-0 left-0 z-50 w-full max-w-full sm:max-w-md bg-cream text-brown border-r border-brown/20 shadow-2xl flex flex-col transition-transform duration-300 ease-out ${
             drawerOpen ? "translate-x-0" : "-translate-x-full pointer-events-none"
           }`}

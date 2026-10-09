@@ -1,9 +1,9 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Pattern } from "./Pattern";
 
-// Renders a placeholder until a real file is loaded or if loading fails. Parent must be `relative`.
+// Renders product image with automatic fallback and error recovery. Parent must be `relative`.
 export default function ProductImage({
   src,
   alt,
@@ -12,6 +12,7 @@ export default function ProductImage({
   sizes = "(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 300px",
   width,
   height,
+  fallbackSrc,
 }: {
   src?: string;
   alt: string;
@@ -20,45 +21,67 @@ export default function ProductImage({
   sizes?: string;
   width?: number;
   height?: number;
+  fallbackSrc?: string;
 }) {
+  const [currentSrc, setCurrentSrc] = useState<string | undefined>(src);
   const [hasError, setHasError] = useState(false);
 
-  if (!src || hasError) {
+  // Synchronize and reset error when src prop changes
+  useEffect(() => {
+    setCurrentSrc(src);
+    setHasError(false);
+  }, [src]);
+
+  const handleError = () => {
+    if (fallbackSrc && currentSrc !== fallbackSrc) {
+      setCurrentSrc(fallbackSrc);
+    } else {
+      setHasError(true);
+    }
+  };
+
+  const activeSrc = currentSrc || src;
+
+  if (!activeSrc || hasError) {
     return (
       <div
         role="img"
         aria-label={alt}
-        className={`absolute inset-0 flex items-center justify-center bg-sand/30 ${className}`}
+        className={`absolute inset-0 flex flex-col items-center justify-center bg-sand/20 text-brown/30 ${className}`}
       >
-        <Pattern className="h-10 w-10 text-brown/20" />
+        <Pattern className="h-8 w-8 text-brown/25 mb-1.5" />
+        <span className="text-[9px] uppercase tracking-[.2em] font-mono text-brown/40">YUPEK</span>
       </div>
     );
   }
+
   const fitClass = className.includes("object-") ? "" : "object-cover";
+
   if (width && height) {
     return (
       <Image
-        src={src}
+        src={activeSrc}
         alt={alt}
         width={width}
         height={height}
         sizes={sizes}
         priority={priority}
         loading={priority ? undefined : "lazy"}
-        onError={() => setHasError(true)}
+        onError={handleError}
         className={`${fitClass} ${className}`.trim()}
       />
     );
   }
+
   return (
     <Image
-      src={src}
+      src={activeSrc}
       alt={alt}
       fill
       sizes={sizes}
       priority={priority}
       loading={priority ? undefined : "lazy"}
-      onError={() => setHasError(true)}
+      onError={handleError}
       className={`${fitClass} ${className}`.trim()}
     />
   );

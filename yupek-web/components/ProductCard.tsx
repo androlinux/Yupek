@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import type { Product } from "@/data/products";
-import { eur, isCustomerFacingDescriptor, isExcludedSize } from "@/lib/catalog";
+import { eur, isCustomerFacingDescriptor, isExcludedSize, getVerifiedPrice, getVerifiedPriceCents } from "@/lib/catalog";
 import ProductImage from "./ui/ProductImage";
 import WishlistButton from "./WishlistButton";
 import { useStore } from "./Providers";
@@ -41,7 +41,7 @@ export default function ProductCard({ p, priority = false }: { p: Product; prior
         v.is_enabled !== false &&
         v.is_available !== false
     );
-    const unitPrice = variant?.price_cents ? variant.price_cents / 100 : p.price;
+    const unitPrice = getVerifiedPrice(p, variant);
     add({
       slug: p.slug,
       size: s,
@@ -51,7 +51,7 @@ export default function ProductCard({ p, priority = false }: { p: Product; prior
       printifyVariantId: variant?.variant_id != null ? String(variant.variant_id) : "",
       title: p.name,
       price: unitPrice,
-      price_cents: variant?.price_cents ?? Math.round(unitPrice * 100),
+      price_cents: getVerifiedPriceCents(p, variant),
       image: p.images[0] || "/images/look-1.jpg",
     });
   };

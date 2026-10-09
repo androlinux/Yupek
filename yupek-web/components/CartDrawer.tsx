@@ -39,24 +39,29 @@ export function CartLines() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center border border-brown/25">
                   <button
+                    type="button"
                     aria-label={locale === "nl" ? "Aantal verlagen" : "Decrease quantity"}
-                    className="p-2 hover:bg-brown/5 transition-colors"
-                    onClick={() => setQty(l, l.qty - 1)}
+                    className="p-2 hover:bg-brown/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed focus:outline-none"
+                    disabled={l.qty <= 1}
+                    onClick={() => setQty(l, Math.max(1, l.qty - 1))}
                   >
                     <Icon name="minus" className="h-3 w-3" />
                   </button>
-                  <span className="w-6 text-center text-xs font-mono" aria-live="polite">
+                  <span className="w-6 text-center text-xs font-mono select-none" aria-live="polite">
                     {l.qty}
                   </span>
                   <button
+                    type="button"
                     aria-label={locale === "nl" ? "Aantal verhogen" : "Increase quantity"}
-                    className="p-2 hover:bg-brown/5 transition-colors"
-                    onClick={() => setQty(l, l.qty + 1)}
+                    className="p-2 hover:bg-brown/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed focus:outline-none"
+                    disabled={l.qty >= 10}
+                    onClick={() => setQty(l, Math.min(10, l.qty + 1))}
                   >
                     <Icon name="plus" className="h-3 w-3" />
                   </button>
                 </div>
                 <button
+                  type="button"
                   className="underline underline-offset-4 text-brown/60 hover:text-burgundy transition-colors text-[11px]"
                   aria-label={locale === "nl" ? `${p.name} verwijderen` : `Remove ${p.name}`}
                   onClick={() => remove(l)}
@@ -121,7 +126,7 @@ export default function CartDrawer() {
         aria-modal="true"
         aria-label={t.cart.title}
         aria-hidden={!cartOpen}
-        inert={!cartOpen || undefined}
+        inert={!cartOpen}
         className={`fixed right-0 top-0 z-50 flex h-full w-full max-w-full sm:max-w-md flex-col bg-cream shadow-2xl transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
           cartOpen ? "translate-x-0" : "invisible translate-x-full pointer-events-none"
         }`}
