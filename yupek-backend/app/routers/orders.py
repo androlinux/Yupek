@@ -91,8 +91,13 @@ def _enrich_catalog_variants(products: list[dict[str, Any]]) -> list[dict[str, A
     if not products:
         return products
 
-    # Load trusted reference catalog from local site-config.json
-    trusted_map: dict[str, int] = {}
+    # Load trusted reference catalog from local site-config.json with legacy fallback map
+    trusted_map: dict[str, int] = {
+        "6ac53807209b79f0950c038f:m:white": 12101,
+        "6ac53807209b79f0950c038f:l:white": 12100,
+        "6ac5349aeeae231e00050f12:s:ash": 25377,
+        "6ac5349aeeae231e00050f12:m:ash": 25408,
+    }
     try:
         config_path = os.path.join(
             os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))),

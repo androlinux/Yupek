@@ -18,7 +18,8 @@ interface ConfigContextType {
   addStoreOrder: (order: StoreOrder) => void;
   updateOrderStatus: (orderId: string, status: StoreOrder["status"]) => void;
   deleteStoreOrder: (orderId: string) => Promise<{ success: boolean; error?: string }>;
-  retryPrintifyFulfillment: (orderId: string) => Promise<{ success: boolean; printify_order_id?: string; fulfillment_status?: string; error?: string }>;
+  retryPromioFulfillment: (orderId: string) => Promise<{ success: boolean; promio_order_id?: string; fulfillment_status?: string; error?: string }>;
+  retryPrintifyFulfillment: (orderId: string) => Promise<{ success: boolean; printify_order_id?: string; promio_order_id?: string; fulfillment_status?: string; error?: string }>;
   allProducts: Product[];
   catalogProducts: (Product & { isDeleted?: boolean })[];
   getProduct: (slug: string) => Product | undefined;
@@ -398,10 +399,10 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const retryPrintifyFulfillment = useCallback(
-    async (orderId: string): Promise<{ success: boolean; printify_order_id?: string; fulfillment_status?: string; error?: string }> => {
+  const retryPromioFulfillment = useCallback(
+    async (orderId: string): Promise<{ success: boolean; promio_order_id?: string; fulfillment_status?: string; error?: string }> => {
       try {
-        const res = await fetch(`/api/orders/${encodeURIComponent(orderId)}/printify/retry`, {
+        const res = await fetch(`/api/orders/${encodeURIComponent(orderId)}/promio/retry`, {
           method: "POST",
           headers: getAdminHeaders(),
         });
@@ -409,7 +410,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
         if (!res.ok || !data.success) {
           return {
             success: false,
-            error: data.error || data.details || "Printify fulfillment could not be created.",
+            error: data.error || data.details || "Promio fulfillment could not be created.",
           };
         }
 
@@ -418,8 +419,8 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
           o.id === orderId || o.orderNumber === orderId
             ? {
                 ...o,
-                printify_order_id: data.printify_order_id,
-                fulfillment_status: (data.fulfillment_status || "printify_order_created") as StoreOrder["fulfillment_status"],
+                promio_order_id: data.promio_order_id,
+                fulfillment_status: (data.fulfillment_status || "promio_order_created") as StoreOrder["fulfillment_status"],
                 status: "Processing" as const,
               }
             : o
@@ -430,15 +431,17 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
 
         return {
           success: true,
-          printify_order_id: data.printify_order_id,
+          promio_order_id: data.promio_order_id,
           fulfillment_status: data.fulfillment_status,
         };
       } catch (err: any) {
-        return { success: false, error: err.message || "Failed to retry Printify fulfillment" };
+        return { success: false, error: err.message || "Failed to retry Promio fulfillment" };
       }
     },
     []
   );
+
+  const retryPrintifyFulfillment = retryPromioFulfillment as any;
 
   return (
     <ConfigContext.Provider
@@ -456,6 +459,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
         addStoreOrder,
         updateOrderStatus,
         deleteStoreOrder,
+        retryPromioFulfillment,
         retryPrintifyFulfillment,
         allProducts,
         catalogProducts,
