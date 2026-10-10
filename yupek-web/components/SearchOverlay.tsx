@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState, useDeferredValue } from "react";
-import { eur, searchProducts } from "@/lib/catalog";
+import { eur, searchProducts, getLocalizedProduct } from "@/lib/catalog";
 import Icon from "./ui/Icon";
 import ProductImage from "./ui/ProductImage";
 import { useStore } from "./Providers";
@@ -358,7 +358,9 @@ export default function SearchOverlay() {
           )}
 
           <ul className="grid grid-cols-2 gap-5 sm:gap-6 md:grid-cols-4">
-            {rawResults.map((p) => (
+            {rawResults.map((rawP) => {
+              const p = getLocalizedProduct(rawP, locale);
+              return (
               <li key={p.id} className="group">
                 <Link
                   href={`/product/${p.slug}`}
@@ -413,7 +415,8 @@ export default function SearchOverlay() {
                   </div>
                 </Link>
               </li>
-            ))}
+            );
+          })}
           </ul>
         </div>
       </div>

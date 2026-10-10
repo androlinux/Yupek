@@ -12,20 +12,28 @@ const LanguageContext = createContext<LanguageContextType | null>(null);
 
 const STORAGE_KEY = "yupek_locale_preference";
 
+const VALID_LOCALES = new Set<Locale>(["en", "nl", "de", "fr", "es"]);
+
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>("en");
 
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY) as Locale | null;
-      if (saved === "en" || saved === "nl") {
+      if (saved && VALID_LOCALES.has(saved)) {
         setLocaleState(saved);
         document.documentElement.lang = saved;
-      } else {
-        // Auto-detect browser language if Dutch
-        if (typeof navigator !== "undefined" && navigator.language && navigator.language.startsWith("nl")) {
-          setLocaleState("nl");
-          document.documentElement.lang = "nl";
+      } else if (typeof navigator !== "undefined" && navigator.language) {
+        const lang = navigator.language.toLowerCase();
+        let detected: Locale = "en";
+        if (lang.startsWith("nl")) detected = "nl";
+        else if (lang.startsWith("de")) detected = "de";
+        else if (lang.startsWith("fr")) detected = "fr";
+        else if (lang.startsWith("es")) detected = "es";
+
+        if (detected !== "en") {
+          setLocaleState(detected);
+          document.documentElement.lang = detected;
         }
       }
     } catch {

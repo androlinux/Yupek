@@ -2,7 +2,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { eur } from "@/lib/catalog";
+import { eur, getLocalizedProduct } from "@/lib/catalog";
 import Icon from "./ui/Icon";
 import ProductImage from "./ui/ProductImage";
 import { useStore, type CartLine } from "./Providers";
@@ -22,7 +22,8 @@ export function CartLines() {
   return (
     <ul className="divide-y divide-brown/10">
       {lines.map((l) => {
-        const p = getProduct(l.slug);
+        const rawP = getProduct(l.slug);
+        const p = rawP ? getLocalizedProduct(rawP, locale) : undefined;
         const name = p?.name || l.title || "YUPEK Garment";
         const image = l.image || p?.images?.[0] || "/images/collection.jpg";
         const unitPrice = l.price !== undefined ? l.price : (p?.price ?? 0);
