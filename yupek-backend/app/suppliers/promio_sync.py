@@ -300,7 +300,7 @@ def normalize_promio_design_product(
     # Design Identifier
     design_name = str(raw_p.get("design") or raw_p.get("designs") or "").strip()
     if not design_name:
-        design_name = "Винтажная эмблема YUPEK с восточным орнаментом"
+        design_name = "YUPEK Vintage Emblem with Eastern Ornament"
 
     # Normalize Variants
     raw_variants = raw_p.get("variants") or raw_p.get("all_variants")
