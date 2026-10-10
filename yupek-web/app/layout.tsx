@@ -71,6 +71,7 @@ export const metadata: Metadata = {
         url: `${siteUrl}/images/og.jpg`,
         width: 1200,
         height: 630,
+        type: "image/jpeg",
         alt: title,
       },
     ],
@@ -88,6 +89,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
+  viewportFit: "cover",
 };
 
 const jsonLd = {
