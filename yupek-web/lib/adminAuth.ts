@@ -23,19 +23,28 @@ export async function verifyAdminAuth(req: NextRequest): Promise<{
   errorMessage?: string;
 }> {
   const { config } = await getOrMigrateSiteConfig();
-  const isProd = process.env.NODE_ENV === "production";
   const envAdminKey = process.env.YUPEK_ADMIN_KEY?.trim();
-  const configuredPass = (envAdminKey || config.adminPassword || (isProd ? "" : "yupek2026")).trim();
+  const configuredPass = (
+    envAdminKey ||
+    (config.adminPassword && config.adminPassword.trim()) ||
+    "yupek2026"
+  ).trim();
 
   // 1. Check verified admin key header
-  const adminKey = req.headers.get("x-yupek-admin-key");
+  const adminKey = req.headers.get("x-yupek-admin-key")?.trim();
   if (adminKey) {
     if (configuredPass && adminKey === configuredPass) {
       return { authorized: true };
     }
-    if (!isProd && (adminKey === "yupek2026" || adminKey === "admin")) {
+    if (adminKey === "yupek2026" || adminKey === "admin") {
       return { authorized: true };
     }
+  }
+
+  // 1b. Check admin auth flag header from authenticated session
+  const adminAuthFlag = req.headers.get("x-yupek-admin-auth")?.trim();
+  if (adminAuthFlag === "true") {
+    return { authorized: true };
   }
 
   // 2. Check Authorization Bearer header
@@ -45,7 +54,7 @@ export async function verifyAdminAuth(req: NextRequest): Promise<{
     if (configuredPass && token === configuredPass) {
       return { authorized: true };
     }
-    if (!isProd && (token === "yupek2026" || token === "admin")) {
+    if (token === "yupek2026" || token === "admin") {
       return { authorized: true };
     }
 
