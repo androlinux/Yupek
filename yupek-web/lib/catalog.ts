@@ -128,7 +128,27 @@ export function getVerifiedPrice(
   product: Product,
   variant?: { price_cents?: number | null; price?: number | null } | null
 ): number {
+  const isPromio =
+    (product as any).supplier === "Promio" ||
+    (product as any).supplier === "promio" ||
+    String(product.id || "").startsWith("promio-") ||
+    String((product as any).supplierProductId || "").startsWith("259865");
+
+  if (isPromio && typeof product.price === "number" && product.price > 0) {
+    return product.price;
+  }
+
   if (variant) {
+    // If variant.price_cents represents supplier wholesale cost while product retail price is set:
+    if (
+      typeof product.price === "number" &&
+      product.price > 0 &&
+      typeof variant.price_cents === "number" &&
+      variant.price_cents < product.price * 50
+    ) {
+      return product.price;
+    }
+
     if (typeof variant.price_cents === "number" && variant.price_cents >= 100) {
       return variant.price_cents / 100;
     }

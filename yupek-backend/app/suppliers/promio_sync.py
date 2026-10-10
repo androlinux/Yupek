@@ -381,6 +381,15 @@ def normalize_promio_design_product(
 
         cost_cents = int(round(cost_float * 100))
 
+        retail_price = None
+        if existing_product and existing_product.get("price") is not None:
+            try:
+                retail_price = float(existing_product["price"])
+            except (ValueError, TypeError):
+                retail_price = None
+
+        retail_cents = int(round(retail_price * 100)) if retail_price and retail_price > 0 else cost_cents
+
         normalized_variants.append({
             "variant_id": v_uid,
             "supplier_variant_uid": v_uid,
@@ -388,7 +397,9 @@ def normalize_promio_design_product(
             "sku": v_sku,
             "size": size,
             "color": color,
-            "price_cents": cost_cents,
+            "price_cents": retail_cents,
+            "price": retail_price,
+            "cost_cents": cost_cents,
             "supplier_cost_eur": cost_float,
             "is_available": True,
             "is_enabled": True,

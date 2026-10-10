@@ -139,12 +139,22 @@ export async function POST(req: NextRequest) {
       }
 
       let priceCents = 0;
-      if (matchedVar?.price_cents) {
+      const isPromio =
+        (matched as any).supplier === "Promio" ||
+        (matched as any).supplier === "promio" ||
+        String(matched.id || "").startsWith("promio-") ||
+        String((matched as any).supplierProductId || "").startsWith("259865");
+
+      if (isPromio && typeof matched.price === "number" && matched.price > 0) {
+        priceCents = Math.round(Number(matched.price) * 100);
+      } else if (matchedVar?.price_cents && Number(matchedVar.price_cents) >= 1000) {
         priceCents = Number(matchedVar.price_cents);
-      } else if (matchedVar?.price) {
+      } else if (matchedVar?.price && Number(matchedVar.price) >= 10.0) {
         priceCents = Math.round(Number(matchedVar.price) * 100);
       } else if (matched.price) {
         priceCents = Math.round(Number(matched.price) * 100);
+      } else if (matchedVar?.price_cents) {
+        priceCents = Number(matchedVar.price_cents);
       }
 
       subtotalCents += priceCents * qty;
