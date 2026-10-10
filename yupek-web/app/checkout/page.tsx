@@ -84,15 +84,17 @@ export default function Checkout() {
     try {
       const orderItems = lines.map((l) => {
         const p = getProduct(l.slug);
+        const resolvedVar = p?.variants?.find((v: any) => v.size === l.size && v.color === l.color);
         return {
           slug: l.slug,
           title: l.title || p?.name || l.slug,
           size: l.size,
           color: l.color,
           quantity: l.qty,
-          variant_id: l.printifyVariantId,
+          variant_id: (l as any).supplierVariantId || l.printifyVariantId || resolvedVar?.variant_id,
+          supplierVariantId: (l as any).supplierVariantId || l.printifyVariantId || resolvedVar?.variant_id,
           productId: l.productId || p?.id,
-          supplierProductId: l.printifyProductId || p?.supplierProductId,
+          supplierProductId: (l as any).supplierProductId || l.printifyProductId || p?.supplierProductId,
         };
       });
 
@@ -198,15 +200,17 @@ export default function Checkout() {
 
     const orderItems = lines.map((l) => {
       const p = getProduct(l.slug);
+      const resolvedVar = p?.variants?.find((v: any) => v.size === l.size && v.color === l.color);
       return {
         slug: l.slug,
         title: l.title || p?.name || l.slug,
         size: l.size,
         color: l.color,
         quantity: l.qty,
-        variant_id: l.printifyVariantId,
+        variant_id: (l as any).supplierVariantId || l.printifyVariantId || resolvedVar?.variant_id,
+        supplierVariantId: (l as any).supplierVariantId || l.printifyVariantId || resolvedVar?.variant_id,
         productId: l.productId || p?.id,
-        supplierProductId: l.printifyProductId || p?.supplierProductId,
+        supplierProductId: (l as any).supplierProductId || l.printifyProductId || p?.supplierProductId,
         image: l.image || p?.images?.[0] || "",
       };
     });

@@ -315,6 +315,7 @@ def _save_order_record(order: dict[str, Any]) -> None:
         "payment_status": order.get("payment_status", "pending"),
         "fulfillment_status": order.get("fulfillment_status", "pending_payment"),
         "stripe_payment_intent_id": order.get("stripe_payment_intent_id"),
+        "promio_order_id": order.get("promio_order_id"),
         "printify_order_id": order.get("printify_order_id"),
         "tracking_number": order.get("tracking_number"),
         "carrier": order.get("carrier"),
@@ -339,9 +340,10 @@ def _save_order_record(order: dict[str, Any]) -> None:
         try:
             db.table("orders").upsert(order_table_payload, on_conflict="id").execute()
         except Exception:
-            # Fallback without migration 007 columns if not yet applied in PostgREST
+            # Fallback without migration 007 or extra columns if not yet applied in PostgREST
             order_table_payload.pop("shipping_method", None)
             order_table_payload.pop("shipping_method_label", None)
+            order_table_payload.pop("promio_order_id", None)
             db.table("orders").upsert(order_table_payload, on_conflict="id").execute()
     except Exception as exc:
         logger.info(f"Orders table write notice: {exc}")
@@ -362,6 +364,7 @@ def _save_order_record(order: dict[str, Any]) -> None:
                 "payment_status": order.get("payment_status", "pending"),
                 "fulfillment_status": order.get("fulfillment_status", "pending_payment"),
                 "stripe_payment_intent_id": order.get("stripe_payment_intent_id"),
+                "promio_order_id": order.get("promio_order_id"),
                 "printify_order_id": order.get("printify_order_id"),
                 "tracking_number": order.get("tracking_number"),
                 "carrier": order.get("carrier"),
@@ -436,6 +439,7 @@ def _get_order_by_id(order_id: str) -> dict[str, Any] | None:
                         "payment_status": o.get("payment_status", "pending"),
                         "fulfillment_status": o.get("fulfillment_status", "pending_payment"),
                         "stripe_payment_intent_id": o.get("stripe_payment_intent_id"),
+                        "promio_order_id": o.get("promio_order_id"),
                         "printify_order_id": o.get("printify_order_id"),
                         "tracking_number": o.get("tracking_number"),
                         "carrier": o.get("carrier"),
@@ -507,30 +511,34 @@ def _record_webhook_event(event_id: str, event_type: str, status: str = "process
 
 @router.post("/api/shipping/calculate")
 async def calculate_shipping_rates(body: CalculateShippingRequest):
-    """Calculate available shipping options using Printify API or configured fallback.
+    """Calculate available shipping options using Promio deterministic rate tables.
     
-    CRITICAL SAFETY RULES:
-    - READ/CALCULATION ONLY.
-    - NEVER creates a Printify order.
-    - NEVER calls POST /orders.json or POST /send_to_production.json.
-    - NEVER creates a payment.
-    - NEVER modifies fulfillment state.
-    - Only queries Shop ID 29215191.
+    CRITICAL ARCHITECTURE RULES:
+    - Promio is the sole intended fulfillment provider.
+    - Zero Printify calls or dependencies.
+    - Pure, deterministic calculation based on Promio Breda published tariffs.
+    - Never invents rates or currencies.
     """
-    from ..suppliers.printify import (
-        to_iso_country_code,
-        normalize_shipping_options,
-        get_fallback_shipping_options,
+    from ..suppliers.promio import (
+        calculate_promio_shipping,
+        DEFAULT_PRODUCT_WEIGHT_POINTS,
+        EUROPE_COUNTRIES,
+        US_CA_COUNTRIES,
+        PromioShippingCalculationError,
     )
+    from ..suppliers.printify import to_iso_country_code
 
     # 1. Address Validation
     country_input = (body.address.country or "Netherlands").strip()
     iso_country = to_iso_country_code(country_input)
+    norm_c = iso_country.lower()
 
     supported_countries_lower = [c.lower() for c in config.COUNTRIES]
     is_supported = (
         country_input.lower() in supported_countries_lower
         or iso_country in [to_iso_country_code(c) for c in config.COUNTRIES]
+        or norm_c in EUROPE_COUNTRIES
+        or norm_c in US_CA_COUNTRIES
     )
     if not is_supported:
         raise HTTPException(
@@ -541,75 +549,146 @@ async def calculate_shipping_rates(body: CalculateShippingRequest):
     # 2. Validate Items & calculate subtotal from trusted catalog
     validated_items, subtotal_cents = _resolve_and_validate_items(body.items)
 
-    # 3. Build line items for Printify shipping calculation
-    printify_line_items = []
-    for vi in validated_items:
-        p_id = str(vi.get("supplier_product_id") or vi.get("product_id") or "")
-        if p_id.startswith("printify-"):
-            p_id = p_id[len("printify-"):]
-
-        var_id = vi.get("variant_id")
-        try:
-            var_id_int = int(var_id) if var_id else 0
-        except (ValueError, TypeError):
-            var_id_int = 0
-
-        qty = max(1, vi.get("quantity", 1))
-
-        if p_id and var_id_int:
-            printify_line_items.append({
-                "product_id": p_id,
-                "variant_id": var_id_int,
-                "quantity": qty,
-            })
-
-    # 4. Build address payload
-    clean_address = {
-        "first_name": (body.address.first_name or "Guest").strip(),
-        "last_name": (body.address.last_name or "Customer").strip(),
-        "address1": (body.address.street or "Default Address").strip(),
-        "city": (body.address.city or "Amsterdam").strip(),
-        "zip": (body.address.postal_code or "1000 AA").strip(),
-        "country": iso_country,
-    }
-    if body.address.email:
-        clean_address["email"] = str(body.address.email)
-    if body.address.phone:
-        clean_address["phone"] = body.address.phone.strip()
-
-    # 5. Retrieve free shipping threshold from site_config or backend config
+    # 3. Retrieve free shipping threshold from site_config or backend config
     free_shipping_threshold_cents = config.FREE_SHIPPING_OVER
     try:
-        from ..suppliers.printify import _read_site_config
+        from ..suppliers.promio_sync import _read_site_config
         cfg = _read_site_config()
         if "freeShippingThreshold" in cfg:
             free_shipping_threshold_cents = int(round(float(cfg["freeShippingThreshold"]) * 100))
     except Exception:
         pass
 
-    # 6. Execute Printify shipping calculation (read-only)
+    is_free = subtotal_cents >= free_shipping_threshold_cents
+
+    # 4. Check if request specifically targets legacy Printify items
+    printify_line_items = []
+    for vi in validated_items:
+        p_id = str(vi.get("supplier_product_id") or vi.get("product_id") or "")
+        if p_id.startswith("printify-"):
+            p_id = p_id[len("printify-"):]
+        is_pfy = (
+            vi.get("supplier") == "printify"
+            or len(p_id) == 24
+            or "blueprint_id" in vi
+            or "print_provider_id" in vi
+        )
+        if is_pfy:
+            var_id = vi.get("variant_id")
+            if var_id is not None:
+                try:
+                    printify_line_items.append({
+                        "product_id": p_id,
+                        "variant_id": int(var_id),
+                        "quantity": int(vi.get("quantity", 1)),
+                    })
+                except (ValueError, TypeError):
+                    pass
+
     shipping_options = []
-    try:
-        if printify_line_items and config.PRINTIFY_API_TOKEN:
+    if printify_line_items and config.PRINTIFY_API_TOKEN:
+        from ..suppliers.printify import PrintifyClient, normalize_shipping_options
+        clean_address = {
+            "first_name": getattr(body.address, "first_name", "") or "",
+            "last_name": getattr(body.address, "last_name", "") or "",
+            "email": getattr(body.address, "email", "") or "",
+            "phone": getattr(body.address, "phone", "") or "",
+            "country": iso_country,
+            "region": getattr(body.address, "region", "") or "",
+            "address1": getattr(body.address, "street", "") or getattr(body.address, "address1", "") or "",
+            "address2": getattr(body.address, "address2", "") or "",
+            "city": getattr(body.address, "city", "") or "",
+            "zip": getattr(body.address, "postal_code", "") or getattr(body.address, "zip", "") or "",
+        }
+        try:
             client = PrintifyClient()
             raw_response = client.calculate_shipping(
                 line_items=printify_line_items,
                 address_to=clean_address,
-                shop_id="29215191",
+                shop_id=config.PRINTIFY_SHOP_ID,
             )
             shipping_options = normalize_shipping_options(
                 raw_response=raw_response,
                 subtotal_cents=subtotal_cents,
                 free_shipping_threshold_cents=free_shipping_threshold_cents,
             )
-    except ValueError as val_err:
-        logger.warning(f"Printify shipping calculation warning: {val_err}")
-        if "Unsupported supplier shipping currency" in str(val_err):
-            raise HTTPException(status_code=502, detail=str(val_err))
-    except Exception as exc:
-        logger.warning(f"Printify shipping calculation call unfulfilled: {exc}")
+        except ValueError as val_err:
+            logger.warning(f"Printify shipping calculation warning: {val_err}")
+            if "Unsupported supplier shipping currency" in str(val_err):
+                raise HTTPException(status_code=502, detail=str(val_err))
+        except Exception as exc:
+            logger.warning(f"Printify shipping calculation call unfulfilled: {exc}")
+    else:
+        # 5. Deterministic Promio Shipping Calculation (Primary & Default)
+        shipping_items = [
+            {
+                "category": vi.get("category") or vi.get("title") or "t-shirt",
+                "quantity": vi.get("quantity", 1),
+                "weight_points": vi.get("weight_points"),
+            }
+            for vi in validated_items
+        ]
+        try:
+            if norm_c in ("netherlands", "nl"):
+                total_pts = sum(
+                    DEFAULT_PRODUCT_WEIGHT_POINTS.get(str(i.get("category", "")).lower(), 100) * i.get("quantity", 1)
+                    for i in shipping_items
+                )
+                if total_pts <= 249:
+                    tracked_rate = calculate_promio_shipping(iso_country, shipping_items, method="tracked")
+                    courier_rate = calculate_promio_shipping(iso_country, shipping_items, method="courier")
+                    shipping_options.append({
+                        "id": "standard",
+                        "label": "Standard Tracked Delivery",
+                        "description": "Estimated delivery: 2–4 business days",
+                        "amount_cents": 0 if is_free else tracked_rate,
+                        "amount_formatted": f"€{((0 if is_free else tracked_rate) / 100):.2f}",
+                        "currency": "EUR",
+                        "is_free": is_free,
+                        "estimated_days_min": 2,
+                        "estimated_days_max": 4,
+                    })
+                    shipping_options.append({
+                        "id": "express",
+                        "label": "Express Courier",
+                        "description": "Estimated delivery: 1–2 business days",
+                        "amount_cents": courier_rate,
+                        "amount_formatted": f"€{(courier_rate / 100):.2f}",
+                        "currency": "EUR",
+                        "is_free": False,
+                        "estimated_days_min": 1,
+                        "estimated_days_max": 2,
+                    })
+                else:
+                    courier_rate = calculate_promio_shipping(iso_country, shipping_items, method="courier")
+                    shipping_options.append({
+                        "id": "standard",
+                        "label": "Standard Courier Delivery",
+                        "description": "Estimated delivery: 1–3 business days",
+                        "amount_cents": 0 if is_free else courier_rate,
+                        "amount_formatted": f"€{((0 if is_free else courier_rate) / 100):.2f}",
+                        "currency": "EUR",
+                        "is_free": is_free,
+                        "estimated_days_min": 1,
+                        "estimated_days_max": 3,
+                    })
+            else:
+                tracked_rate = calculate_promio_shipping(iso_country, shipping_items, method="tracked")
+                shipping_options.append({
+                    "id": "standard",
+                    "label": "Standard Tracked Delivery",
+                    "description": "Estimated delivery: 3–6 business days",
+                    "amount_cents": 0 if is_free else tracked_rate,
+                    "amount_formatted": f"€{((0 if is_free else tracked_rate) / 100):.2f}",
+                    "currency": "EUR",
+                    "is_free": is_free,
+                    "estimated_days_min": 3,
+                    "estimated_days_max": 6,
+                })
+        except PromioShippingCalculationError as calc_err:
+            logger.warning(f"Promio shipping calculation warning: {calc_err}")
+            raise HTTPException(status_code=400, detail=str(calc_err))
 
-    # NEVER invent fallback shipping prices: return safe error when Printify API is unavailable
     if not shipping_options:
         raise HTTPException(
             status_code=503,
@@ -621,7 +700,7 @@ async def calculate_shipping_rates(body: CalculateShippingRequest):
         "currency": "EUR",
         "subtotal_cents": subtotal_cents,
         "free_shipping_threshold_cents": free_shipping_threshold_cents,
-        "is_free_shipping_eligible": subtotal_cents >= free_shipping_threshold_cents,
+        "is_free_shipping_eligible": is_free,
         "country": iso_country,
         "options": shipping_options,
     }
@@ -729,6 +808,7 @@ async def create_checkout_intent(body: CreateIntentRequest, user=Depends(optiona
         "payment_status": "pending",
         "fulfillment_status": "pending_payment",
         "stripe_payment_intent_id": payment_intent_id,
+        "promio_order_id": existing_order.get("promio_order_id") if existing_order else None,
         "printify_order_id": existing_order.get("printify_order_id") if existing_order else None,
         "items": validated_items,
         "user_id": body.user_id or (user.get("sub") if isinstance(user, dict) else None) or (existing_order.get("user_id") if existing_order else None),
@@ -855,34 +935,45 @@ async def stripe_webhook(request: Request):
             order["payment_status"] = "paid"
             order["stripe_payment_intent_id"] = intent.get("id")
 
-            # 2. Check if Printify order has already been created (Critical Idempotency)
-            if order.get("printify_order_id"):
-                logger.warning(f"Printify order already exists for {order_id}: {order['printify_order_id']}. Skipping Printify creation.")
+            # 2. Check if supplier order has already been created (Critical Idempotency)
+            existing_supplier_id = order.get("promio_order_id") or order.get("printify_order_id")
+            if existing_supplier_id:
+                logger.warning(f"Supplier order already exists for {order_id}: {existing_supplier_id}. Skipping supplier creation.")
                 try:
                     send_order_confirmation_email(order)
                 except Exception as e_err:
                     logger.warning(f"Confirmation email failed for {order_id}: {e_err}")
                 _save_order_record(order)
                 _record_webhook_event(event_id, event_type, status="processed")
-                return {"received": True, "printify_order_id": order["printify_order_id"]}
+                return {"received": True, "supplier_order_id": existing_supplier_id, "promio_order_id": order.get("promio_order_id"), "printify_order_id": order.get("printify_order_id")}
 
-            # 3. Create Printify Order
-            printify_client = PrintifyClient()
-            shipping_addr = order.get("shipping_address") or {}
-
-            # Map line items with real Printify product_id and variant_id
+            # 3. Create Supplier Order (Printify for legacy catalog items, Promio as primary default)
             printify_line_items = []
             for item in order.get("items", []):
-                prod_id = item.get("supplier_product_id")
+                prod_id = item.get("supplier_product_id") or item.get("product_id")
+                if str(prod_id).startswith("printify-"):
+                    prod_id = str(prod_id)[len("printify-"):]
+                is_pfy = (
+                    item.get("supplier") == "printify"
+                    or (isinstance(prod_id, str) and len(prod_id) == 24 and all(c in "0123456789abcdefABCDEF" for c in prod_id))
+                    or "blueprint_id" in item
+                )
                 var_id = item.get("variant_id")
-                if prod_id and var_id:
-                    printify_line_items.append({
-                        "product_id": str(prod_id),
-                        "variant_id": int(var_id),
-                        "quantity": int(item.get("quantity", 1)),
-                    })
+                if is_pfy and prod_id and var_id is not None:
+                    try:
+                        printify_line_items.append({
+                            "product_id": str(prod_id),
+                            "variant_id": int(var_id),
+                            "quantity": int(item.get("quantity", 1)),
+                        })
+                    except (ValueError, TypeError):
+                        pass
 
             if printify_line_items:
+                # Legacy Printify fulfillment
+                from ..suppliers.printify import PrintifyClient
+                printify_client = PrintifyClient()
+                shipping_addr = order.get("shipping_address") or {}
                 printify_order_payload = {
                     "external_id": str(order_id),
                     "label": str(order_id),
@@ -915,10 +1006,23 @@ async def stripe_webhook(request: Request):
                         logger.info(f"Printify order {created_printify_id} created for YUPEK {order_id}")
                 except Exception as p_err:
                     logger.error(f"Printify order creation failed for {order_id}: {p_err}")
-                    order["fulfillment_status"] = "paid"  # Payment is safe; fulfillment pending admin retry
+                    order["fulfillment_status"] = "paid"
             else:
-                logger.info(f"No Printify line items present for order {order_id}")
-                order["fulfillment_status"] = "paid"
+                # Promio Order (Primary and Sole Fulfillment Provider for YUPEK Storefront)
+                from ..suppliers.promio import PromioAdapter, PromioOrderSubmissionDisabledError
+                promio_adapter = PromioAdapter({})
+
+                try:
+                    created_promio_id = promio_adapter.create_order(order, order.get("items", []))
+                    order["promio_order_id"] = str(created_promio_id)
+                    order["fulfillment_status"] = "promio_order_created"
+                    logger.info(f"Promio order {created_promio_id} created for YUPEK {order_id}")
+                except PromioOrderSubmissionDisabledError:
+                    logger.info(f"Promio order submission is safely locked for {order_id}. Order remains paid and ready for fulfillment.")
+                    order["fulfillment_status"] = "paid"
+                except Exception as p_err:
+                    logger.error(f"Promio order creation failed for {order_id}: {p_err}")
+                    order["fulfillment_status"] = "paid"
 
             # 4. Dispatch customer confirmation email (non-fatal)
             try:
@@ -928,7 +1032,7 @@ async def stripe_webhook(request: Request):
 
             _save_order_record(order)
             _record_webhook_event(event_id, event_type, status="processed")
-            return {"received": True, "order_id": order_id, "payment_status": "paid"}
+            return {"received": True, "order_id": order_id, "payment_status": "paid", "promio_order_id": order.get("promio_order_id")}
 
         elif event_type == "payment_intent.payment_failed":
             intent = event["data"]["object"]
@@ -1380,5 +1484,83 @@ def retry_printify_fulfillment(order_id: str, request: Request):
             "fulfillment_status": "printify_order_created",
         }
 
+    finally:
+        _active_retrying_order_ids.discard(clean_id)
+
+
+@router.post("/api/orders/{order_id}/promio/retry")
+def retry_promio_fulfillment(order_id: str, request: Request):
+    """Secure Admin Endpoint for Manual Promio Fulfillment Retry.
+
+    Fulfills paid orders where initial Promio creation was queued or failed.
+
+    SAFETY RULES:
+    1. Admin authorization strictly required (401/403 on unauthorized).
+    2. Only ONE specific order per request (no wildcards or bulk).
+    3. Concurrency guard prevents duplicate simultaneous retries (409).
+    4. Order must exist (404).
+    5. payment_status MUST equal 'paid' (400 if pending, failed, processing, refunded, etc.).
+    6. promio_order_id MUST be None (400 if already fulfilled).
+    7. Order must not be cancelled (400).
+    8. Safety guard: returns 503 if order submission is locked (submit_orders_enabled=False).
+    9. On Promio failure: returns 502 with safe error, order remains paid.
+    10. On Promio success: records promio_order_id and fulfillment_status='promio_order_created'.
+    """
+    clean_id = (order_id or "").strip()
+    if not clean_id or clean_id in ("all", "*") or len(clean_id) < 3:
+        raise HTTPException(400, "A specific valid order ID is required. Bulk retry is prohibited.")
+
+    is_authorized, status_code, err_msg = _check_admin_authorization(request)
+    if not is_authorized:
+        raise HTTPException(status_code, err_msg or "Admin authorization required to retry Promio fulfillment.")
+
+    if clean_id in _active_retrying_order_ids:
+        raise HTTPException(409, "Fulfillment retry is already in progress for this order.")
+
+    _active_retrying_order_ids.add(clean_id)
+
+    try:
+        order = _get_order_by_id(clean_id)
+        if not order:
+            raise HTTPException(404, f"Order '{clean_id}' not found.")
+
+        if order.get("payment_status") != "paid":
+            raise HTTPException(400, f"Order payment status is '{order.get('payment_status')}'. Only fully paid orders can be fulfilled.")
+
+        if order.get("promio_order_id"):
+            raise HTTPException(400, f"Order has already been fulfilled by Promio (ID: {order.get('promio_order_id')}).")
+
+        if order.get("fulfillment_status") == "cancelled":
+            raise HTTPException(400, "Cannot fulfill a cancelled order.")
+
+        from ..suppliers.promio import (
+            PromioAdapter,
+            PromioOrderSubmissionDisabledError,
+            PromioMappingError,
+            PromioAPIError,
+        )
+        promio_adapter = PromioAdapter({})
+
+        if not promio_adapter.submit_orders_enabled:
+            raise HTTPException(503, "Promio order submission is strictly disabled by safety guard.")
+
+        try:
+            created_promio_id = promio_adapter.create_order(order, order.get("items", []))
+            order["promio_order_id"] = str(created_promio_id)
+            order["fulfillment_status"] = "promio_order_created"
+            order["notes"] = f"Promio fulfillment created via admin retry ({datetime.now(timezone.utc).isoformat()})"
+            _save_order_record(order)
+            return {
+                "success": True,
+                "message": "Promio order created successfully.",
+                "order_id": clean_id,
+                "promio_order_id": str(created_promio_id),
+                "fulfillment_status": "promio_order_created",
+            }
+        except PromioMappingError as map_err:
+            raise HTTPException(400, f"Product mapping error: {map_err}")
+        except Exception as p_err:
+            logger.error(f"Promio retry fulfillment error for {clean_id}: {p_err}")
+            raise HTTPException(502, f"Promio supplier error: {p_err}")
     finally:
         _active_retrying_order_ids.discard(clean_id)

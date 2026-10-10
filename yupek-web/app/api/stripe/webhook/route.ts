@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStripeServer } from "@/lib/stripeServer";
 import { getOrderRecordById, persistOrderRecord } from "@/lib/orderPersistence";
-import { createPrintifyOrder } from "@/lib/printifyOrders";
+import { createPromioOrder } from "@/lib/promioOrders";
 import {
   sendOrderConfirmationEmail,
   sendPaymentFailedEmail,
@@ -24,7 +24,8 @@ function logWebhook(
     order_id?: string;
     event_id?: string;
     payment_intent_id?: string;
-    printify_order_id?: string;
+    promio_order_id?: string | null;
+    printify_order_id?: string | null;
     category?: string;
     message: string;
   }
@@ -35,6 +36,7 @@ function logWebhook(
     (data.order_id ? ` order_id=${data.order_id}` : "") +
     (data.event_id ? ` event_id=${data.event_id}` : "") +
     (data.payment_intent_id ? ` pi_id=${data.payment_intent_id}` : "") +
+    (data.promio_order_id ? ` promio_id=${data.promio_order_id}` : "") +
     (data.printify_order_id ? ` printify_id=${data.printify_order_id}` : "") +
     (data.category ? ` category=${data.category}` : "") +
     ` message="${data.message}"`;
@@ -219,36 +221,37 @@ export async function POST(req: NextRequest) {
       order.payment_status = "paid";
       order.stripe_payment_intent_id = intent.id;
 
-      // 2. Strict Printify Idempotency Protection:
-      // Never create duplicate Printify orders if one is already linked
-      if (order.printify_order_id) {
+      // 2. Strict Supplier Idempotency Protection:
+      // Never create duplicate supplier orders if one is already linked
+      if (order.promio_order_id || order.printify_order_id) {
+        const existingSupplierId = order.promio_order_id || order.printify_order_id;
         logWebhook("info", {
-          op: "printify_idempotency_gate",
+          op: "supplier_idempotency_gate",
           order_id: order.id,
           event_id: eventId,
-          printify_order_id: order.printify_order_id,
+          promio_order_id: existingSupplierId,
           category: "fulfillment_already_exists",
-          message: `Printify order ${order.printify_order_id} already exists for ${order.id}. Skipping Printify call.`,
+          message: `Supplier order ${existingSupplierId} already exists for ${order.id}. Skipping fulfillment creation.`,
         });
         await persistOrderRecord(order);
         await markEventProcessed(eventId, eventType, "processed");
-        return NextResponse.json({ received: true, printify_order_id: order.printify_order_id });
+        return NextResponse.json({ received: true, supplier_order_id: existingSupplierId });
       }
 
-      // 3. Create Printify Order on Shop 29215191
-      const printifyLineItems = order.items
-        .filter((i) => i.supplier_product_id && i.variant_id)
+      // 3. Create Promio Order (Primary and Sole Fulfillment Provider)
+      const promioLineItems = order.items
+        .filter((i) => i.variant_id || (i as any).supplier_variant_uid)
         .map((i) => ({
-          product_id: String(i.supplier_product_id),
-          variant_id: Number(i.variant_id),
+          variant_uid: String(i.variant_id || (i as any).supplier_variant_uid || ""),
+          sku: String((i as any).sku || (i as any).variant_id || ""),
           quantity: Math.max(1, i.quantity || 1),
         }));
 
-      if (printifyLineItems.length > 0) {
+      if (promioLineItems.length > 0) {
         try {
-          const printifyRes = await createPrintifyOrder({
-            external_id: order.id,
-            line_items: printifyLineItems,
+          const promioRes = await createPromioOrder({
+            client_order_id: order.id,
+            line_items: promioLineItems,
             shipping_address: {
               first_name: order.shipping_address.first_name,
               last_name: order.shipping_address.last_name,
@@ -263,36 +266,35 @@ export async function POST(req: NextRequest) {
             },
           });
 
-          order.printify_order_id = printifyRes.id;
-          order.fulfillment_status = "printify_order_created";
+          order.promio_order_id = promioRes.id;
+          order.fulfillment_status = "promio_order_created";
           logWebhook("info", {
-            op: "printify_order_created",
+            op: "promio_order_created",
             order_id: order.id,
             event_id: eventId,
-            printify_order_id: printifyRes.id,
+            promio_order_id: promioRes.id,
             category: "fulfillment_success",
-            message: `Printify order ${printifyRes.id} successfully created for ${order.id}`,
+            message: `Promio order ${promioRes.id} successfully created for ${order.id}`,
           });
-        } catch (printifyErr: any) {
-          logWebhook("error", {
-            op: "create_printify_order",
+        } catch (promioErr: any) {
+          logWebhook("info", {
+            op: "create_promio_order",
             order_id: order.id,
             event_id: eventId,
-            category: "printify_temporary_failure",
-            message: `Printify order creation failed: ${printifyErr.message}`,
+            category: "promio_safety_notice",
+            message: `Promio order submission status: ${promioErr.message}`,
           });
-          // TASK 001 Safety: Payment is confirmed. Order remains identifiable as 'paid'
-          // and pending manual/retry fulfillment in TASK 002.
+          // Order payment is confirmed. Fulfillment is queued/pending admin review.
           order.fulfillment_status = "paid";
-          order.notes = `Printify fulfillment pending retry: ${printifyErr.message.substring(0, 200)}`;
+          order.notes = `Promio fulfillment pending activation: ${promioErr.message.substring(0, 200)}`;
         }
       } else {
         logWebhook("info", {
-          op: "printify_line_items_check",
+          op: "promio_line_items_check",
           order_id: order.id,
           event_id: eventId,
           category: "no_supplier_items",
-          message: `No Printify line items present for order ${order.id}. Marked as paid.`,
+          message: `No Promio line items present for order ${order.id}. Marked as paid.`,
         });
         order.fulfillment_status = "paid";
       }

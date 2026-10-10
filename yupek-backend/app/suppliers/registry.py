@@ -1,8 +1,12 @@
 from .base import SupplierAdapter
 from .mock import MockSupplier
+from .promio import PromioAdapter
 
 # Register new suppliers here: "cjdropshipping": CJAdapter, "printful": PrintfulAdapter ...
-ADAPTERS: dict[str, type[SupplierAdapter]] = {"mock": MockSupplier}
+ADAPTERS: dict[str, type[SupplierAdapter]] = {
+    "mock": MockSupplier,
+    "promio": PromioAdapter,
+}
 
 
 def get_adapter(supplier: dict) -> SupplierAdapter:

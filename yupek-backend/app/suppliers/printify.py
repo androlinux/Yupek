@@ -763,7 +763,16 @@ def _load_sync_metadata() -> dict[str, Any]:
     }
 
 
+def _is_serverless_readonly() -> bool:
+    """Return True if running in a serverless environment (e.g. Vercel) with read-only root."""
+    return bool(os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
+
+
 def _save_sync_metadata(meta: dict[str, Any]) -> None:
+    if _is_serverless_readonly():
+        logger.debug("Serverless environment detected (VERCEL); printify sync metadata local write skipped.")
+        return
+
     try:
         os.makedirs(os.path.dirname(_SYNC_EVENTS_FILE), exist_ok=True)
         # Keep last 100 events to avoid unbounded file growth
@@ -773,6 +782,8 @@ def _save_sync_metadata(meta: dict[str, Any]) -> None:
             meta["events"] = meta["events"][-50:]
         with open(_SYNC_EVENTS_FILE, "w", encoding="utf-8") as f:
             json.dump(meta, f, indent=2)
+    except OSError as exc:
+        logger.warning(f"Notice: Local printify sync metadata write skipped on read-only filesystem ({exc})")
     except Exception as exc:
         logger.error(f"Error saving sync metadata: {exc}")
 
@@ -890,10 +901,16 @@ def _write_site_config(cfg: dict[str, Any]) -> None:
         logger.error(f"Error writing site_config to Supabase: {exc}")
 
     path = _get_site_config_path()
+    if _is_serverless_readonly():
+        logger.debug("Serverless environment detected (VERCEL); local disk site_config mirror skipped, Supabase persistence active.")
+        return
+
     try:
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, "w", encoding="utf-8") as f:
             json.dump(cfg, f, indent=2)
+    except OSError as exc:
+        logger.warning(f"Notice: Local site-config.json write skipped on read-only filesystem ({exc})")
     except Exception as exc:
         logger.error(f"Error writing site-config.json: {exc}")
 

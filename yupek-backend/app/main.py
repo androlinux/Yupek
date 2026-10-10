@@ -8,7 +8,7 @@ from slowapi.middleware import SlowAPIMiddleware
 from slowapi.util import get_remote_address
 from starlette.types import ASGIApp, Receive, Scope, Send
 from . import config
-from .routers import admin, cart, orders, printify, products, wishlist
+from .routers import admin, cart, orders, printify, products, promio, wishlist
 
 # Ensure Starlette Config supports UTF-8 on Windows
 import starlette.config
@@ -89,7 +89,7 @@ app.add_middleware(GZipMiddleware, minimum_size=800)
 app.add_middleware(CORSMiddleware, allow_origins=config.CORS_ORIGINS, allow_credentials=True,
                    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"], allow_headers=["Authorization", "Content-Type"])
 
-for r in (products.router, cart.router, wishlist.router, orders.router, admin.router, printify.router):
+for r in (products.router, cart.router, wishlist.router, orders.router, admin.router, printify.router, promio.router):
     app.include_router(r)
 
 

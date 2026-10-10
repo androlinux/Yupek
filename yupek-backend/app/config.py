@@ -21,6 +21,12 @@ PRINTIFY_BASE_URL = os.getenv("PRINTIFY_BASE_URL", "https://api.printify.com/v1"
 PRINTIFY_SHOP_ID = os.getenv("PRINTIFY_SHOP_ID", "29215191") or "29215191"
 PRINTIFY_WEBHOOK_SECRET = os.getenv("PRINTIFY_WEBHOOK_SECRET", "")
 
+PROMIO_APP_ID = os.getenv("PROMIO_APP_ID", "")
+PROMIO_SECRET_KEY = os.getenv("PROMIO_SECRET_KEY", "")
+PROMIO_BASE_URL = os.getenv("PROMIO_BASE_URL", "https://promio.pro/api").rstrip("/")
+PROMIO_ENABLED = os.getenv("PROMIO_ENABLED", "false").lower() in ("true", "1", "yes")
+PROMIO_CATALOG_SYNC_ENABLED = os.getenv("PROMIO_CATALOG_SYNC_ENABLED", "false").lower() in ("true", "1", "yes")
+
 COUNTRIES = ["Netherlands", "Belgium", "Germany", "France", "Italy", "Spain", "Austria",
              "Denmark", "Sweden", "Finland", "Ireland", "Portugal", "Poland"]
 DELIVERY = {"standard": 495, "express": 995}  # cents

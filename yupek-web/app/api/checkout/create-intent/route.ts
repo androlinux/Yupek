@@ -52,12 +52,12 @@ export async function POST(req: NextRequest) {
 
       // Match and validate variant relationship
       const productVariants = matchedProduct.variants || [];
-      const requestedVariantId = rawItem.variant_id || rawItem.variantId || rawItem.printifyVariantId;
+      const requestedVariantId = rawItem.variant_id || rawItem.variantId || rawItem.supplierVariantId || rawItem.printifyVariantId;
       let matchedVariant: any = null;
 
       if (requestedVariantId) {
         const targetVarId = String(requestedVariantId);
-        matchedVariant = productVariants.find((v: any) => String(v.variant_id || v.id) === targetVarId);
+        matchedVariant = productVariants.find((v: any) => String(v.variant_id || v.id || v.supplier_variant_uid) === targetVarId);
         if (!matchedVariant) {
           return NextResponse.json(
             { error: `Selected variant does not exist or does not belong to product '${matchedProduct.name}'.` },
@@ -251,6 +251,7 @@ export async function POST(req: NextRequest) {
       payment_status: "pending",
       fulfillment_status: "pending_payment",
       stripe_payment_intent_id: paymentIntentId,
+      promio_order_id: existingOrder?.promio_order_id || null,
       printify_order_id: existingOrder?.printify_order_id || null,
       items: validatedItems,
       user_id: body.user_id || existingOrder?.user_id || null,

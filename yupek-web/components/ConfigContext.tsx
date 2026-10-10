@@ -280,16 +280,22 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     }).map((p) => sanitizeProductSizes(p) as Product & { isDeleted?: boolean });
   }, [config.productOverrides, config.customProducts]);
 
-  // Active storefront products (excluding deleted ones)
+  // Active storefront products (excluding deleted ones, unpublished drafts, and unpriced items)
   const allProducts = useMemo(() => {
-    return catalogProducts.filter((p) => !p.isDeleted);
+    return catalogProducts.filter((p) => {
+      if (p.isDeleted) return false;
+      if ((p as any).isDraft) return false;
+      const price = typeof p.price === "number" ? p.price : Number(p.price);
+      if (!price || isNaN(price) || price <= 0) return false;
+      return true;
+    });
   }, [catalogProducts]);
 
   const getProduct = useCallback(
     (slug: string) => {
-      return allProducts.find((p) => p.slug === slug) || catalogProducts.find((p) => p.slug === slug);
+      return allProducts.find((p) => p.slug === slug);
     },
-    [allProducts, catalogProducts]
+    [allProducts]
   );
 
   const addProduct = useCallback(async (product: Product): Promise<{ success: boolean; error?: string }> => {

@@ -175,8 +175,12 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       images: [ogImageUrl],
     },
     other: {
-      "product:price:amount": p.price.toFixed(2),
-      "product:price:currency": "EUR",
+      ...(typeof p.price === "number" && !isNaN(p.price)
+        ? {
+            "product:price:amount": p.price.toFixed(2),
+            "product:price:currency": "EUR",
+          }
+        : {}),
       "product:availability":
         p.inventory !== undefined && p.inventory <= 0 ? "out of stock" : "in stock",
       "product:condition": "new",
