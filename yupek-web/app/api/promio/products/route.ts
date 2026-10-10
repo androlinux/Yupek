@@ -13,30 +13,32 @@ export async function GET(req: NextRequest) {
     );
 
     const formatted = customProducts.map((p: any) => ({
-      printify_product_id: String(p.supplierProductId || p.id),
       id: p.id,
+      supplier_product_id: String(p.supplierProductId || p.id.replace("promio-", "")),
       title: p.name,
-      slug: p.slug,
       description: p.description || "",
-      tags: p.tags || [],
+      category: p.category || "garments",
+      gender: p.gender || "unisex",
+      supplier: "Promio",
       price: typeof p.price === "number" ? p.price : 29.99,
-      currency: "EUR",
       images: Array.isArray(p.images) ? p.images : [],
       variants: Array.isArray(p.variants) ? p.variants : [],
-      available: !p.isDraft,
+      tags: Array.isArray(p.tags) ? p.tags : [],
+      is_draft: Boolean(p.isDraft),
       visible: !p.isDraft,
+      colors: Array.isArray(p.colors) ? p.colors : [],
+      sizes: Array.isArray(p.sizes) ? p.sizes : [],
+      base_garment: p.baseGarment || "",
     }));
 
     return NextResponse.json({
-      products: formatted,
+      success: true,
       total: formatted.length,
-      page: 1,
-      last_page: 1,
-      per_page: 50,
+      products: formatted,
     });
   } catch (err: any) {
     return NextResponse.json(
-      { error: err.message || "Failed to load products" },
+      { error: err.message || "Failed to load Promio products" },
       { status: 500 }
     );
   }

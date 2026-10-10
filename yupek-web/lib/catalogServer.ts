@@ -17,7 +17,7 @@ export function enrichCatalogVariants(customProducts: Product[]): Product[] {
     return customProducts || [];
   }
 
-  const trustedProducts = (initialSiteConfig.customProducts || []) as Product[];
+  const trustedProducts = (initialSiteConfig.customProducts || []) as unknown as Product[];
   const trustedVariantMap = new Map<string, number | string>();
 
   for (const tp of trustedProducts) {

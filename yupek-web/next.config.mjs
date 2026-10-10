@@ -59,6 +59,11 @@ const nextConfig = {
         destination: "/privacy",
         permanent: true,
       },
+      {
+        source: "/admin/printify",
+        destination: "/admin/promio",
+        permanent: false,
+      },
     ];
   },
   async headers() {

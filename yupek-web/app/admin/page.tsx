@@ -48,7 +48,7 @@ export default function AdminPage() {
     deleteSubmission,
     updateOrderStatus,
     deleteStoreOrder,
-    retryPrintifyFulfillment,
+    retryPromioFulfillment,
   } = useSiteConfig();
   const { user } = useAuth();
 
@@ -436,7 +436,7 @@ export default function AdminPage() {
     }
   };
 
-  // Manual Printify Retry State & Handlers
+  // Manual Promio Retry State & Handlers
   const [orderToRetryFulfill, setOrderToRetryFulfill] = useState<StoreOrder | null>(null);
   const [retryFulfillLoading, setRetryFulfillLoading] = useState(false);
   const [retryFulfillError, setRetryFulfillError] = useState<string | null>(null);
@@ -449,9 +449,9 @@ export default function AdminPage() {
     setRetryFulfillLoading(true);
     setRetryFulfillError(null);
     try {
-      const res = await retryPrintifyFulfillment(targetId);
+      const res = await retryPromioFulfillment(targetId);
       if (!res.success) {
-        setRetryFulfillError(res.error || "Printify fulfillment could not be created. The order remains paid and can be retried.");
+        setRetryFulfillError(res.error || "Promio fulfillment could not be created. The order remains paid and can be retried.");
         return;
       }
 
@@ -461,18 +461,18 @@ export default function AdminPage() {
           o.id === targetId || o.orderNumber === targetId
             ? {
                 ...o,
-                printify_order_id: res.printify_order_id,
-                fulfillment_status: (res.fulfillment_status || "printify_order_created") as StoreOrder["fulfillment_status"],
+                promio_order_id: res.promio_order_id,
+                fulfillment_status: (res.fulfillment_status || "promio_order_created") as StoreOrder["fulfillment_status"],
                 status: "Processing",
               }
             : o
         ),
       }));
 
-      showToast("Printify order created successfully.");
+      showToast("Promio order fulfillment processed successfully.");
       setOrderToRetryFulfill(null);
     } catch (err: any) {
-      setRetryFulfillError(err.message || "Failed to retry Printify fulfillment. The order remains paid.");
+      setRetryFulfillError(err.message || "Failed to retry Promio fulfillment. The order remains paid.");
     } finally {
       setRetryFulfillLoading(false);
     }
@@ -626,10 +626,10 @@ export default function AdminPage() {
 
           <div className="flex items-center gap-3">
             <Link
-              href="/admin/printify"
+              href="/admin/promio"
               className="inline-flex items-center gap-1.5 border border-gold/60 bg-gold/10 px-3.5 py-2 text-[11px] uppercase tracking-wider text-brown hover:bg-gold/20 transition-colors font-medium"
             >
-              <span>Printify Sync</span>
+              <span>Promio Sync</span>
               <span className="text-[10px] font-bold">&rarr;</span>
             </Link>
 
@@ -806,8 +806,8 @@ export default function AdminPage() {
                           {/* Fulfillment Status Badge */}
                           <span
                             className={`text-[9px] uppercase tracking-widest font-bold px-2.5 py-0.5 rounded-full border ${
-                              order.fulfillment_status === "printify_order_created"
-                                ? "bg-blue-100 text-blue-900 border-blue-300"
+                              order.fulfillment_status === "promio_order_created" || order.fulfillment_status === "printify_order_created"
+                                ? "bg-amber-100 text-amber-900 border-amber-300"
                                 : order.fulfillment_status === "sent_to_production" || order.fulfillment_status === "in_production"
                                 ? "bg-purple-100 text-purple-900 border-purple-300"
                                 : order.fulfillment_status === "shipped" || order.fulfillment_status === "delivered"
@@ -843,11 +843,11 @@ export default function AdminPage() {
                               </span>
                             </>
                           )}
-                          {order.printify_order_id && (
+                          {(order.promio_order_id || order.printify_order_id) && (
                             <>
                               <span>&bull;</span>
-                              <span className="font-mono text-[10px] bg-amber-50 text-amber-900 px-1.5 py-0.5 rounded border border-amber-300 font-bold" title="Printify Order ID">
-                                Printify: #{order.printify_order_id} (Shop 29215191)
+                              <span className="font-mono text-[10px] bg-amber-50 text-amber-900 px-1.5 py-0.5 rounded border border-amber-300 font-bold" title="Promio Order ID">
+                                Promio: #{order.promio_order_id || order.printify_order_id} (Breda, NL)
                               </span>
                             </>
                           )}
@@ -908,9 +908,10 @@ export default function AdminPage() {
                           </select>
                         </div>
 
-                        {/* Retry Printify Fulfillment Button:
-                            Shown strictly for paid orders with NO printify_order_id */}
+                        {/* Retry Promio Fulfillment Button:
+                            Shown strictly for paid orders with NO promio_order_id */}
                         {(order.payment_status === "paid" || order.status === "Paid") &&
+                          !order.promio_order_id &&
                           !order.printify_order_id &&
                           order.payment_status !== "failed" &&
                           order.payment_status !== "pending" &&
@@ -923,11 +924,11 @@ export default function AdminPage() {
                                 setOrderToRetryFulfill(order);
                                 setRetryFulfillError(null);
                               }}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium tracking-wider uppercase text-blue-900 hover:text-white bg-blue-50 hover:bg-blue-700 border border-blue-300 hover:border-blue-700 rounded transition-colors shadow-xs"
-                              title={`Retry Printify fulfillment for #${order.orderNumber}`}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium tracking-wider uppercase text-amber-900 hover:text-white bg-amber-50 hover:bg-amber-700 border border-amber-300 hover:border-amber-700 rounded transition-colors shadow-xs"
+                              title={`Retry Promio fulfillment for #${order.orderNumber}`}
                             >
                               <Icon name="refresh" className="h-3 w-3" />
-                              <span>Retry Printify Fulfillment</span>
+                              <span>Retry Promio Fulfillment</span>
                             </button>
                         )}
 
@@ -2494,7 +2495,7 @@ export default function AdminPage() {
                 </h3>
                 <p className="text-xs text-brown/70 mt-1 leading-relaxed">
                   This action permanently removes this order from your local store database.
-                  It will <strong className="text-brown">NOT</strong> call Stripe, refund funds, call Printify, or modify customer profiles.
+                  It will <strong className="text-brown">NOT</strong> call Stripe, refund funds, call Promio, or modify customer profiles.
                 </p>
               </div>
             </div>
@@ -2584,25 +2585,25 @@ export default function AdminPage() {
         </div>
       )}
       {/* ========================================================================= */}
-      {/* MANUAL PRINTIFY FULFILLMENT RETRY CONFIRMATION MODAL                      */}
+      {/* MANUAL PROMIO FULFILLMENT RETRY CONFIRMATION MODAL                        */}
       {/* ========================================================================= */}
       {orderToRetryFulfill && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-fadeIn">
           <div className="bg-[#FAF7F2] border border-brown/30 w-full max-w-lg p-6 md:p-8 rounded shadow-2xl space-y-5 text-left">
             {/* Modal Header */}
             <div className="flex items-start gap-3.5">
-              <div className="h-11 w-11 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center shrink-0 border border-blue-200">
+              <div className="h-11 w-11 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center shrink-0 border border-amber-200">
                 <Icon name="refresh" className="h-5 w-5" />
               </div>
               <div>
-                <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-blue-900 block">
-                  PRINTIFY FULFILLMENT DISPATCH
+                <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-amber-900 block">
+                  PROMIO FULFILLMENT DISPATCH
                 </span>
                 <h3 className="font-serif text-xl md:text-2xl text-brown font-bold mt-0.5">
-                  Retry Printify fulfillment for this paid order?
+                  Retry Promio fulfillment for this paid order?
                 </h3>
                 <p className="text-xs text-brown/70 mt-1 leading-relaxed">
-                  This will send the paid order to Printify Shop 29215191 for production and fulfillment.
+                  This will dispatch the paid order to Promio (Breda, NL) for production and fulfillment.
                   The customer will <strong className="text-brown">NOT</strong> be charged again.
                 </p>
               </div>
@@ -2640,8 +2641,8 @@ export default function AdminPage() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-brown/60 uppercase tracking-wider text-[10px] font-semibold">Target Fulfillment</span>
-                <span className="font-mono text-[10px] font-bold text-blue-900 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-                  Printify Shop 29215191
+                <span className="font-mono text-[10px] font-bold text-amber-900 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                  Promio Brick API 1.0 (Breda, NL)
                 </span>
               </div>
             </div>
@@ -2663,15 +2664,15 @@ export default function AdminPage() {
                 type="button"
                 disabled={retryFulfillLoading}
                 onClick={handleConfirmRetryFulfill}
-                className="px-6 py-2 text-xs font-semibold uppercase tracking-wider text-white bg-blue-700 hover:bg-blue-800 rounded transition-colors shadow-sm disabled:opacity-50 flex items-center gap-2"
+                className="px-6 py-2 text-xs font-semibold uppercase tracking-wider text-white bg-amber-800 hover:bg-amber-900 rounded transition-colors shadow-sm disabled:opacity-50 flex items-center gap-2"
               >
                 {retryFulfillLoading ? (
                   <>
                     <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-solid border-white border-r-transparent" />
-                    <span>SENDING TO PRINTIFY...</span>
+                    <span>SENDING TO PROMIO...</span>
                   </>
                 ) : (
-                  <span>RETRY FULFILLMENT</span>
+                  <span>DISPATCH TO PROMIO</span>
                 )}
               </button>
             </div>
