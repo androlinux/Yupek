@@ -1,6 +1,6 @@
 import { products, type Product } from "@/data/products";
 import { getOrMigrateSiteConfig } from "@/lib/siteConfigServer";
-import { sanitizeProductSizes } from "@/lib/catalog";
+import { sanitizeProductSizes, getLocalizedProduct } from "@/lib/catalog";
 import initialSiteConfig from "@/data/site-config.json";
 
 /**
@@ -127,7 +127,8 @@ export async function getCatalogProductsServer(): Promise<Product[]> {
           variants: p.variants,
         };
       })
-      .map(sanitizeProductSizes);
+      .map(sanitizeProductSizes)
+      .map((p) => getLocalizedProduct(p, "en"));
   } catch {
     return products;
   }
