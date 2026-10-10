@@ -59,7 +59,7 @@ export default function HomeClient() {
           <div className="mt-14 text-center">
             <Link
               href="/shop?new=1"
-              className="inline-flex items-center justify-center border border-brown px-8 py-3.5 text-xs font-medium tracking-[.2em] text-brown transition-all duration-300 hover:bg-brown hover:text-cream"
+              className="btn btn-line text-xs"
             >
               {t.home.exploreNewArrivals}
             </Link>
@@ -80,7 +80,7 @@ export default function HomeClient() {
           <div className="mt-10">
             <Link
               href={config.editorialButtonLink || "/lookbook"}
-              className="inline-flex items-center justify-center bg-brown px-8 py-3.5 text-xs font-medium tracking-[.2em] text-cream transition-all duration-300 hover:bg-black shadow-sm"
+              className="btn btn-dark text-xs"
             >
               {editorialBtn}
             </Link>
@@ -124,13 +124,13 @@ export default function HomeClient() {
             <div className="mt-10 flex flex-col sm:flex-row justify-center gap-4">
               <Link
                 href="/about"
-                className="inline-flex items-center justify-center border border-cream px-8 py-3.5 text-xs font-medium tracking-[.2em] text-cream hover:bg-cream hover:text-brown transition-all duration-300"
+                className="btn btn-light text-xs"
               >
                 {t.home.ourStoryBtn}
               </Link>
               <Link
                 href="/contact"
-                className="inline-flex items-center justify-center border border-cream/40 bg-brown/50 backdrop-blur-sm px-8 py-3.5 text-xs font-medium tracking-[.2em] text-cream hover:border-cream transition-all duration-300"
+                className="btn border border-cream/40 bg-brown/50 backdrop-blur-sm text-cream hover:border-cream hover:bg-cream/10 text-xs"
               >
                 {t.home.visitShowroomBtn}
               </Link>
@@ -153,7 +153,7 @@ export default function HomeClient() {
               { src: "/images/look-3.jpg", caption: t.home.look3Caption },
             ].map((look, i) => (
               <div key={look.src} className={`group ${i === 1 ? "md:mt-12" : ""}`}>
-                <div className="relative aspect-[3/4] overflow-hidden bg-sand/30 border border-brown/10">
+                <div className="relative aspect-[3/4] overflow-hidden bg-sand/30 border border-brown/10 shadow-[0_4px_16px_rgba(43,29,20,0.04)] group-hover:shadow-[0_12px_32px_rgba(43,29,20,0.08)] transition-all duration-500">
                   <Editorial
                     src={look.src}
                     label={look.caption}
@@ -172,7 +172,7 @@ export default function HomeClient() {
           <div className="mt-14 text-center">
             <Link
               href="/lookbook"
-              className="inline-flex items-center justify-center border border-brown px-8 py-3.5 text-xs font-medium tracking-[.2em] text-brown transition-all duration-300 hover:bg-brown hover:text-cream"
+              className="btn btn-line text-xs"
             >
               {t.home.viewLookbookBtn}
             </Link>

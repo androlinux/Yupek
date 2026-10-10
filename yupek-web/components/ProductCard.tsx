@@ -58,7 +58,7 @@ export default function ProductCard({ p, priority = false }: { p: Product; prior
 
   return (
     <article className="group">
-      <div className="relative aspect-[3/4] overflow-hidden bg-sand/30">
+      <div className="relative aspect-[3/4] overflow-hidden bg-sand/30 border border-brown/5 shadow-[0_2px_10px_rgba(43,29,20,0.03)] group-hover:shadow-[0_14px_32px_rgba(43,29,20,0.08)] transition-all duration-500">
         <Link href={`/product/${p.slug}`} className="absolute inset-0 block" aria-label={p.name}>
           <ProductImage
             src={p.images[0]}
@@ -84,7 +84,7 @@ export default function ProductCard({ p, priority = false }: { p: Product; prior
           className="absolute right-3 top-3 lg:opacity-0 lg:transition-opacity lg:group-hover:opacity-100 lg:focus-visible:opacity-100"
         />
         {availableSizes.length > 0 && (
-          <div className="absolute inset-x-0 bottom-0 hidden translate-y-full bg-cream/95 p-3 transition-transform duration-300 group-hover:translate-y-0 group-focus-within:translate-y-0 lg:block">
+          <div className="absolute inset-x-0 bottom-0 hidden translate-y-full bg-cream/95 backdrop-blur-xs p-3 transition-transform duration-300 group-hover:translate-y-0 group-focus-within:translate-y-0 lg:block">
             <p className="label mb-2 text-center text-[9px]">{t.common.quickAdd}</p>
             <div className="flex flex-wrap justify-center gap-1.5">
               {availableSizes.map((s) => (
@@ -93,7 +93,7 @@ export default function ProductCard({ p, priority = false }: { p: Product; prior
                   type="button"
                   aria-label={`${t.common.quickAdd} ${s}`}
                   onClick={() => handleQuickAdd(s)}
-                  className="min-w-9 border border-brown/30 px-2 py-1.5 text-[10px] tracking-widest hover:bg-brown hover:text-cream transition-colors"
+                  className="min-w-9 border border-brown/30 px-2 py-1.5 text-[10px] tracking-widest hover:bg-brown hover:text-cream active:scale-95 transition-all duration-150"
                 >
                   {s}
                 </button>
