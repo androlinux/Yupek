@@ -1,5 +1,6 @@
 import { products, type Product } from "@/data/products";
 import initialSiteConfig from "@/data/site-config.json";
+import type { Locale } from "@/lib/i18n";
 
 export type ProductSource = "local" | "supabase" | "printify";
 
@@ -461,4 +462,299 @@ export function filterProducts(f: Filters, list?: Product[]): Product[] {
   else if (f.sort === "newest") r = [...r].sort((a, b) => Number(b.newArrival) - Number(a.newArrival));
   else r = [...r].sort((a, b) => Number(b.featured) - Number(a.featured));
   return r;
+}
+
+export interface ProductTranslation {
+  name: string;
+  descriptor?: string;
+  description?: string;
+  material?: string;
+  badge?: string;
+}
+
+export const PRODUCT_TRANSLATIONS: Record<string, Partial<Record<Locale, ProductTranslation>>> = {
+  // 1. Crafter T-shirt (promio-25986528 / yupek-tees-25986528)
+  "yupek-tees-25986528": {
+    en: {
+      name: "Crafter 2.0 — Vintage Emblem Organic T-Shirt",
+      descriptor: "Organic Cotton Vintage Emblem Tee",
+      description: "Heavyweight 100% organic cotton T-shirt featuring the archival YUPEK emblem inspired by ancient Silk Road geometric talismans. Cut with a relaxed European silhouette, reinforced ribbed collar, and twin-needle hems. Breathable, durable, and designed for perpetual everyday wear.",
+      material: "100% Organic Ring-Spun Combed Cotton (220 GSM). Wash at 30°C delicate, do not tumble dry.",
+    },
+    nl: {
+      name: "Crafter 2.0 — Vintage Embleem Biologisch T-Shirt",
+      descriptor: "Biologisch Katoenen Vintage Embleem T-Shirt",
+      description: "Zwaar 100% biologisch katoenen T-shirt met het historische YUPEK-embleem geïnspireerd op geometrische zijderoute-talismannen. Voorzien van een ontspannen Europese pasvorm, versterkte geribde hals en dubbelgestikte zomen.",
+      material: "100% Biologisch gekamd ringgesponnen katoen (220 g/m²). Wassen op 30°C fijnwas, niet in de droogtrommel.",
+    },
+    de: {
+      name: "Crafter 2.0 — Vintage-Emblem Bio-T-Shirt",
+      descriptor: "Bio-Baumwoll-T-Shirt mit Vintage-Emblem",
+      description: "Schweres T-Shirt aus 100 % gekämmter Bio-Baumwolle mit dem historischen YUPEK-Emblem, inspiriert von geometrischen Talismanen der Seidenstraße. Entspannte europäische Schnittführung mit verstärktem Rippkragen und doppelten Steppnähten.",
+      material: "100 % Gekämmte ringgesponnene Bio-Baumwolle (220 g/m²). Schonwaschgang bei 30°C, nicht im Trockner trocknen.",
+    },
+    fr: {
+      name: "Crafter 2.0 — T-shirt Bio avec Emblème Vintage",
+      descriptor: "T-shirt en Coton Biologique avec Emblème Vintage",
+      description: "T-shirt épais en pur coton 100 % biologique arborant l'emblème d'archive YUPEK inspiré des motifs géométriques protecteurs de la Route de la Soie. Coupe européenne décontractée, col côtelé renforcé et finitions surpiquées durables.",
+      material: "100 % Coton peigné biologique filé à l'anneau (220 g/m²). Lavage délicat à 30°C, ne pas sécher en machine.",
+    },
+    es: {
+      name: "Crafter 2.0 — Camiseta Orgánica con Emblema Vintage",
+      descriptor: "Camiseta de Algodón Orgánico con Emblema Vintage",
+      description: "Camiseta gruesa de algodón 100 % orgánico con el emblema de archivo YUPEK, inspirado en la geometría y los talismanes textiles de la Ruta de la Seda. Corte europeo relajado, cuello acanalado reforzado y dobladillo con doble pespunte.",
+      material: "100 % Algodón orgánico peinado hilado en anillo (220 g/m²). Lavar a 30°C en ciclo delicado, no secar en secadora.",
+    },
+  },
+  "promio-25986528": {
+    en: {
+      name: "Crafter 2.0 — Vintage Emblem Organic T-Shirt",
+      descriptor: "Organic Cotton Vintage Emblem Tee",
+      description: "Heavyweight 100% organic cotton T-shirt featuring the archival YUPEK emblem inspired by ancient Silk Road geometric talismans. Cut with a relaxed European silhouette, reinforced ribbed collar, and twin-needle hems. Breathable, durable, and designed for perpetual everyday wear.",
+      material: "100% Organic Ring-Spun Combed Cotton (220 GSM). Wash at 30°C delicate, do not tumble dry.",
+    },
+    nl: {
+      name: "Crafter 2.0 — Vintage Embleem Biologisch T-Shirt",
+      descriptor: "Biologisch Katoenen Vintage Embleem T-Shirt",
+      description: "Zwaar 100% biologisch katoenen T-shirt met het historische YUPEK-embleem geïnspireerd op geometrische zijderoute-talismannen. Voorzien van een ontspannen Europese pasvorm, versterkte geribde hals en dubbelgestikte zomen.",
+      material: "100% Biologisch gekamd ringgesponnen katoen (220 g/m²). Wassen op 30°C fijnwas, niet in de droogtrommel.",
+    },
+    de: {
+      name: "Crafter 2.0 — Vintage-Emblem Bio-T-Shirt",
+      descriptor: "Bio-Baumwoll-T-Shirt mit Vintage-Emblem",
+      description: "Schweres T-Shirt aus 100 % gekämmter Bio-Baumwolle mit dem historischen YUPEK-Emblem, inspiriert von geometrischen Talismanen der Seidenstraße. Entspannte europäische Schnittführung mit verstärktem Rippkragen und doppelten Steppnähten.",
+      material: "100 % Gekämmte ringgesponnene Bio-Baumwolle (220 g/m²). Schonwaschgang bei 30°C, nicht im Trockner trocknen.",
+    },
+    fr: {
+      name: "Crafter 2.0 — T-shirt Bio avec Emblème Vintage",
+      descriptor: "T-shirt en Coton Biologique avec Emblème Vintage",
+      description: "T-shirt épais en pur coton 100 % biologique arborant l'emblème d'archive YUPEK inspiré des motifs géométriques protecteurs de la Route de la Soie. Coupe européenne décontractée, col côtelé renforcé et finitions surpiquées durables.",
+      material: "100 % Coton peigné biologique filé à l'anneau (220 g/m²). Lavage délicat à 30°C, ne pas sécher en machine.",
+    },
+    es: {
+      name: "Crafter 2.0 — Camiseta Orgánica con Emblema Vintage",
+      descriptor: "Camiseta de Algodón Orgánico con Emblema Vintage",
+      description: "Camiseta gruesa de algodón 100 % orgánico con el emblema de archivo YUPEK, inspirado en la geometría y los talismanes textiles de la Ruta de la Seda. Corte europeo relajado, cuello acanalado reforzado y dobladillo con doble pespunte.",
+      material: "100 % Algodón orgánico peinado hilado en anillo (220 g/m²). Lavar a 30°C en ciclo delicado, no secar en secadora.",
+    },
+  },
+
+  // 2. AWDis JH030 Crewneck Sweatshirt (promio-25986529 / yupek-sweatshirts-25986529)
+  "yupek-sweatshirts-25986529": {
+    en: {
+      name: "AWDis JH030 — Vintage Emblem Crewneck Sweatshirt",
+      descriptor: "Heavyweight Heritage Crewneck Sweatshirt",
+      description: "Classic architectural crewneck sweatshirt crafted from heavyweight brushed fleece. Features drop-shoulder styling, ribbed cuffs and hem, and our signature central Silk Road emblem print with rich pigment density.",
+      material: "80% Ringspun Cotton, 20% Polyester (280 GSM brushed fleece). Machine wash cold, hang dry.",
+    },
+    nl: {
+      name: "AWDis JH030 — Vintage Embleem Crewneck Sweatshirt",
+      descriptor: "Zwaar Vintage Embleem Sweatshirt met Ronde Hals",
+      description: "Klassiek architectonisch sweatshirt met ronde hals, vervaardigd uit zwaar geborsteld fleece. Voorzien van verlaagde schoudernaden, geribde boorden en onze kenmerkende centrale zijderoute-embleemopdruk.",
+      material: "80% Ringgesponnen katoen, 20% polyester (280 g/m² geborsteld fleece). Wassen op 30°C, hangend drogen.",
+    },
+    de: {
+      name: "AWDis JH030 — Vintage-Emblem Rundhals-Sweatshirt",
+      descriptor: "Schweres Heritage Rundhals-Sweatshirt",
+      description: "Klassisches architektonisches Sweatshirt aus schwerem angerautem Fleece. Mit überschnittenen Schultern, elastischen Rippbündchen und unserem charakteristischen YUPEK-Emblem-Druck in hoher Farbdichte.",
+      material: "80 % Ringgesponnene Baumwolle, 20 % Polyester (280 g/m² angerautes Fleece). Kaltwäsche bei 30°C, hängend trocknen.",
+    },
+    fr: {
+      name: "AWDis JH030 — Sweat-shirt Col Rond avec Emblème Vintage",
+      descriptor: "Sweat-shirt Épais Heritage Col Rond",
+      description: "Sweat-shirt classique à col rond confectionné dans un molleton brossé épais et réconfortant. Épaules tombantes, finitions côtelées aux poignets et à la taille, rehaussé de notre emblème patrimonial de la Route de la Soie.",
+      material: "80 % Coton peigné, 20 % Polyester (molleton brossé 280 g/m²). Lavage en machine à froid, séchage sur cintre.",
+    },
+    es: {
+      name: "AWDis JH030 — Sudadera Cuello Redondo con Emblema Vintage",
+      descriptor: "Sudadera Gruesa Heritage Cuello Redondo",
+      description: "Sudadera arquitectónica clásica de cuello redondo elaborada en suave felpa gruesa cepillada. Hombros caídos, puños y bajo de canalé reforzado y nuestro emblemático estampado de la Ruta de la Seda.",
+      material: "80 % Algodón hilado en anillo, 20 % Poliéster (felpa cepillada 280 g/m²). Lavar en frío, secar colgado.",
+    },
+  },
+  "promio-25986529": {
+    en: {
+      name: "AWDis JH030 — Vintage Emblem Crewneck Sweatshirt",
+      descriptor: "Heavyweight Heritage Crewneck Sweatshirt",
+      description: "Classic architectural crewneck sweatshirt crafted from heavyweight brushed fleece. Features drop-shoulder styling, ribbed cuffs and hem, and our signature central Silk Road emblem print with rich pigment density.",
+      material: "80% Ringspun Cotton, 20% Polyester (280 GSM brushed fleece). Machine wash cold, hang dry.",
+    },
+    nl: {
+      name: "AWDis JH030 — Vintage Embleem Crewneck Sweatshirt",
+      descriptor: "Zwaar Vintage Embleem Sweatshirt met Ronde Hals",
+      description: "Klassiek architectonisch sweatshirt met ronde hals, vervaardigd uit zwaar geborsteld fleece. Voorzien van verlaagde schoudernaden, geribde boorden en onze kenmerkende centrale zijderoute-embleemopdruk.",
+      material: "80% Ringgesponnen katoen, 20% polyester (280 g/m² geborsteld fleece). Wassen op 30°C, hangend drogen.",
+    },
+    de: {
+      name: "AWDis JH030 — Vintage-Emblem Rundhals-Sweatshirt",
+      descriptor: "Schweres Heritage Rundhals-Sweatshirt",
+      description: "Klassisches architektonisches Sweatshirt aus schwerem angerautem Fleece. Mit überschnittenen Schultern, elastischen Rippbündchen und unserem charakteristischen YUPEK-Emblem-Druck in hoher Farbdichte.",
+      material: "80 % Ringgesponnene Baumwolle, 20 % Polyester (280 g/m² angerautes Fleece). Kaltwäsche bei 30°C, hängend trocknen.",
+    },
+    fr: {
+      name: "AWDis JH030 — Sweat-shirt Col Rond avec Emblème Vintage",
+      descriptor: "Sweat-shirt Épais Heritage Col Rond",
+      description: "Sweat-shirt classique à col rond confectionné dans un molleton brossé épais et réconfortant. Épaules tombantes, finitions côtelées aux poignets et à la taille, rehaussé de notre emblème patrimonial de la Route de la Soie.",
+      material: "80 % Coton peigné, 20 % Polyester (molleton brossé 280 g/m²). Lavage en machine à froid, séchage sur cintre.",
+    },
+    es: {
+      name: "AWDis JH030 — Sudadera Cuello Redondo con Emblema Vintage",
+      descriptor: "Sudadera Gruesa Heritage Cuello Redondo",
+      description: "Sudadera arquitectónica clásica de cuello redondo elaborada en suave felpa gruesa cepillada. Hombros caídos, puños y bajo de canalé reforzado y nuestro emblemático estampado de la Ruta de la Seda.",
+      material: "80 % Algodón hilado en anillo, 20 % Poliéster (felpa cepillada 280 g/m²). Lavar en frío, secar colgado.",
+    },
+  },
+
+  // 3. AWDis JH001 DTG Hoodie (promio-25986530 / yupek-sweatshirts-25986530)
+  "yupek-sweatshirts-25986530": {
+    en: {
+      name: "AWDis JH001 — Vintage Emblem DTG Hoodie",
+      descriptor: "Kangaroo Pocket Heritage Fleece Hoodie",
+      description: "Architectural heavyweight fleece hoodie featuring a double-fabric hood with self-coloured drawcords, kangaroo pouch pocket, and high-definition direct-to-garment emblem print celebrating Central Asian textile geometry.",
+      material: "80% Ringspun Cotton, 20% Polyester (280 GSM). Double-fabric hood, twin needle stitch detailing.",
+    },
+    nl: {
+      name: "AWDis JH001 — Vintage Embleem DTG Hoodie",
+      descriptor: "Heritage Fleece Hoodie met Kangoeroezak",
+      description: "Zware fleece hoodie met dubbellaagse capuchon, kangoeroezak en hoogwaardige direct-to-garment opdruk van het traditionele Centraal-Aziatische textielembleem.",
+      material: "80% Ringgesponnen katoen, 20% polyester (280 g/m²). Dubbellaagse capuchon, dubbelgestikte naden.",
+    },
+    de: {
+      name: "AWDis JH001 — Vintage-Emblem DTG Hoodie",
+      descriptor: "Heritage Fleece-Kapuzenpullover mit Kängurutasche",
+      description: "Kapuzenpullover aus dichtem Fleece mit doppellagiger Kapuze, passenden Kordelzügen, Kängurutasche und hochauflösendem Direktdruck des traditionellen zentralasiatischen Textilornaments.",
+      material: "80 % Ringgesponnene Baumwolle, 20 % Polyester (280 g/m²). Doppellagige Kapuze, Doppelnaht-Details.",
+    },
+    fr: {
+      name: "AWDis JH001 — Sweat à Capuche DTG avec Emblème Vintage",
+      descriptor: "Sweat à Capuche en Molleton Heritage avec Poche Kangourou",
+      description: "Sweat à capuche architectural en molleton dense avec capuche doublée, cordons ton sur ton, poche kangourou et impression numérique haute précision célébrant la géométrie textile d'Asie centrale.",
+      material: "80 % Coton peigné, 20 % Polyester (280 g/m²). Capuche doublée en tissu assorti, coutures doubles renforcées.",
+    },
+    es: {
+      name: "AWDis JH001 — Sudadera con Capucha DTG y Emblema Vintage",
+      descriptor: "Sudadera con Capucha de Felpa Heritage con Bolsillo Canguro",
+      description: "Sudadera con capucha de felpa gruesa, capucha de doble capa con cordones a tono, bolsillo canguro y estampado directo de alta definición con el emblema geométrico de Asia Central.",
+      material: "80 % Algodón hilado en anillo, 20 % Poliéster (280 g/m²). Capuche de doble tela, costuras dobles reforzadas.",
+    },
+  },
+  "promio-25986530": {
+    en: {
+      name: "AWDis JH001 — Vintage Emblem DTG Hoodie",
+      descriptor: "Kangaroo Pocket Heritage Fleece Hoodie",
+      description: "Architectural heavyweight fleece hoodie featuring a double-fabric hood with self-coloured drawcords, kangaroo pouch pocket, and high-definition direct-to-garment emblem print celebrating Central Asian textile geometry.",
+      material: "80% Ringspun Cotton, 20% Polyester (280 GSM). Double-fabric hood, twin needle stitch detailing.",
+    },
+    nl: {
+      name: "AWDis JH001 — Vintage Embleem DTG Hoodie",
+      descriptor: "Heritage Fleece Hoodie met Kangoeroezak",
+      description: "Zware fleece hoodie met dubbellaagse capuchon, kangoeroezak en hoogwaardige direct-to-garment opdruk van het traditionele Centraal-Aziatische textielembleem.",
+      material: "80% Ringgesponnen katoen, 20% polyester (280 g/m²). Dubbellaagse capuchon, dubbelgestikte naden.",
+    },
+    de: {
+      name: "AWDis JH001 — Vintage-Emblem DTG Hoodie",
+      descriptor: "Heritage Fleece-Kapuzenpullover mit Kängurutasche",
+      description: "Kapuzenpullover aus dichtem Fleece mit doppellagiger Kapuze, passenden Kordelzügen, Kängurutasche und hochauflösendem Direktdruck des traditionellen zentralasiatischen Textilornaments.",
+      material: "80 % Ringgesponnene Baumwolle, 20 % Polyester (280 g/m²). Doppellagige Kapuze, Doppelnaht-Details.",
+    },
+    fr: {
+      name: "AWDis JH001 — Sweat à Capuche DTG avec Emblème Vintage",
+      descriptor: "Sweat à Capuche en Molleton Heritage avec Poche Kangourou",
+      description: "Sweat à capuche architectural en molleton dense avec capuche doublée, cordons ton sur ton, poche kangourou et impression numérique haute précision célébrant la géométrie textile d'Asie centrale.",
+      material: "80 % Coton peigné, 20 % Polyester (280 g/m²). Capuche doublée en tissu assorti, coutures doubles renforcées.",
+    },
+    es: {
+      name: "AWDis JH001 — Sudadera con Capucha DTG y Emblema Vintage",
+      descriptor: "Sudadera con Capucha de Felpa Heritage con Bolsillo Canguro",
+      description: "Sudadera con capucha de felpa gruesa, capucha de doble capa con cordones a tono, bolsillo canguro y estampado directo de alta definición con el emblema geométrico de Asia Central.",
+      material: "80 % Algodón hilado en anillo, 20 % Poliéster (280 g/m²). Capuche de doble tela, costuras dobles reforzadas.",
+    },
+  },
+
+  // 4. AWDis JH001 Embroidered Hoodie (promio-25986531 / yupek-sweatshirts-25986531)
+  "yupek-sweatshirts-25986531": {
+    en: {
+      name: "AWDis JH001 — Vintage Embroidered Emblem Hoodie",
+      descriptor: "Textured Archival Embroidery Edition",
+      description: "Our pinnacle capsule edition. Heavyweight fleece hoodie adorned with high-density, multi-thread direct embroidery reproducing the sacred Silk Road emblem in tactile relief. Built with double-fabric hood, rib cuffs, and premium finish.",
+      material: "80% Ringspun Cotton, 20% Polyester (280 GSM). Multi-thread architectural direct embroidery.",
+    },
+    nl: {
+      name: "AWDis JH001 — Vintage Geborduurd Embleem Hoodie",
+      descriptor: "Exclusieve Geborduurde Archief Editie",
+      description: "Onze exclusieve capsule-editie. Zware fleece hoodie versierd met dichte borduursels met meerdere draden die het historische zijderoute-embleem in voelbaar reliëf weergeven. Voorzien van dubbellaagse capuchon en premium afwerking.",
+      material: "80% Ringgesponnen katoen, 20% polyester (280 g/m²). Verfijnd direct borduurwerk.",
+    },
+    de: {
+      name: "AWDis JH001 — Vintage Bestickter Emblem Hoodie",
+      descriptor: "Strukturierte Archiv-Stickerei Edition",
+      description: "Unser Meisterstück der Kapselkollektion. Dichter Fleece-Kapuzenpullover mit aufwendiger Mehrfaden-Direktstickerei, die das historische Seidenstraßen-Emblem als spürbares Relief verewigt. Doppellagige Kapuze und veredelte Kanten.",
+      material: "80 % Ringgesponnene Baumwolle, 20 % Polyester (280 g/m²). Hochdichte architektonische Direktstickerei.",
+    },
+    fr: {
+      name: "AWDis JH001 — Sweat à Capuche avec Emblème Brodé Vintage",
+      descriptor: "Édition Broderie d'Archive Texturée",
+      description: "La pièce maîtresse de notre capsule. Sweat à capuche en molleton dense sublimé par une broderie directe haute densité en fils multiples, restituant l'emblème de la Route de la Soie en relief tactile. Capuche doublée et finitions d'exception.",
+      material: "80 % Coton peigné, 20 % Polyester (280 g/m²). Broderie architecturale directe haute densité.",
+    },
+    es: {
+      name: "AWDis JH001 — Sudadera con Capucha y Emblema Bordado Vintage",
+      descriptor: "Edición de Archivo con Bordado Texturizado",
+      description: "La pieza cumbre de nuestra colección cápsula. Sudadera de felpa gruesa adornada con bordado directo de alta densidad y múltiples hilos que reproduce el emblema sagrado de la Ruta de la Seda en relieve táctil.",
+      material: "80 % Algodón hilado en anillo, 20 % Poliéster (280 g/m²). Bordado arquitectónico directo de alta densidad.",
+    },
+  },
+  "promio-25986531": {
+    en: {
+      name: "AWDis JH001 — Vintage Embroidered Emblem Hoodie",
+      descriptor: "Textured Archival Embroidery Edition",
+      description: "Our pinnacle capsule edition. Heavyweight fleece hoodie adorned with high-density, multi-thread direct embroidery reproducing the sacred Silk Road emblem in tactile relief. Built with double-fabric hood, rib cuffs, and premium finish.",
+      material: "80% Ringspun Cotton, 20% Polyester (280 GSM). Multi-thread architectural direct embroidery.",
+    },
+    nl: {
+      name: "AWDis JH001 — Vintage Geborduurd Embleem Hoodie",
+      descriptor: "Exclusieve Geborduurde Archief Editie",
+      description: "Onze exclusieve capsule-editie. Zware fleece hoodie versierd met dichte borduursels met meerdere draden die het historische zijderoute-embleem in voelbaar reliëf weergeven. Voorzien van dubbellaagse capuchon en premium afwerking.",
+      material: "80% Ringgesponnen katoen, 20% polyester (280 g/m²). Verfijnd direct borduurwerk.",
+    },
+    de: {
+      name: "AWDis JH001 — Vintage Bestickter Emblem Hoodie",
+      descriptor: "Strukturierte Archiv-Stickerei Edition",
+      description: "Unser Meisterstück der Kapselkollektion. Dichter Fleece-Kapuzenpullover mit aufwendiger Mehrfaden-Direktstickerei, die das historische Seidenstraßen-Emblem als spürbares Relief verewigt. Doppellagige Kapuze und veredelte Kanten.",
+      material: "80 % Ringgesponnene Baumwolle, 20 % Polyester (280 g/m²). Hochdichte architektonische Direktstickerei.",
+    },
+    fr: {
+      name: "AWDis JH001 — Sweat à Capuche avec Emblème Brodé Vintage",
+      descriptor: "Édition Broderie d'Archive Texturée",
+      description: "La pièce maîtresse de notre capsule. Sweat à capuche en molleton dense sublimé par une broderie directe haute densité en fils multiples, restituant l'emblème de la Route de la Soie en relief tactile. Capuche doublée et finitions d'exception.",
+      material: "80 % Coton peigné, 20 % Polyester (280 g/m²). Broderie architecturale directe haute densité.",
+    },
+    es: {
+      name: "AWDis JH001 — Sudadera con Capucha y Emblema Bordado Vintage",
+      descriptor: "Edición de Archivo con Bordado Texturizado",
+      description: "La pieza cumbre de nuestra colección cápsula. Sudadera de felpa gruesa adornada con bordado directo de alta densidad y múltiples hilos que reproduce el emblema sagrado de la Ruta de la Seda en relieve táctil.",
+      material: "80 % Algodón hilado en anillo, 20 % Poliéster (280 g/m²). Bordado arquitectónico directo de alta densidad.",
+    },
+  },
+};
+
+export function getLocalizedProduct(p: Product, locale?: Locale): Product {
+  if (!p) return p;
+  const targetLocale = locale || "en";
+  const map = PRODUCT_TRANSLATIONS[p.slug] || PRODUCT_TRANSLATIONS[p.id];
+  const tr = map?.[targetLocale] || map?.["en"];
+
+  // Strict purge: if Cyrillic characters exist in p.name, override from translation map
+  const hasRussian = /[\u0400-\u04FF]/.test(p.name || "");
+
+  if (!tr && !hasRussian) return p;
+
+  return {
+    ...p,
+    name: tr?.name || (hasRussian ? (map?.["en"]?.name || "YUPEK Garment") : p.name),
+    descriptor: tr?.descriptor ?? p.descriptor,
+    description: tr?.description ?? p.description,
+    material: tr?.material ?? p.material,
+    badge: tr?.badge !== undefined ? tr.badge : p.badge,
+  };
 }

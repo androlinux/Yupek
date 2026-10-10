@@ -1,4 +1,7 @@
-export type Locale = "en" | "nl";
+export type Locale = "en" | "nl" | "de" | "fr" | "es";
+import { de } from "./locales/de";
+import { fr } from "./locales/fr";
+import { es } from "./locales/es";
 
 export interface Translations {
   common: {
@@ -1602,4 +1605,7 @@ export const dictionaries: Record<Locale, Translations> = {
       closeBtn: "Sluit Toegankelijkheidsmenu",
     },
   },
+  de,
+  fr,
+  es,
 };

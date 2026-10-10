@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import type { Product } from "@/data/products";
-import { eur, isExcludedSize, getVerifiedPrice, getVerifiedPriceCents } from "@/lib/catalog";
+import { eur, isExcludedSize, getVerifiedPrice, getVerifiedPriceCents, getLocalizedProduct } from "@/lib/catalog";
 import { useStore } from "@/components/Providers";
 import { useSiteConfig } from "@/components/ConfigContext";
 import { useLanguage } from "@/components/LanguageContext";
@@ -72,7 +72,8 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
   const { speakText, isSpeaking, stopSpeech } = useAccessibility();
   
   // Real-time catalog product merge
-  const p = getProduct(initialProduct.slug) || initialProduct;
+  const rawProduct = getProduct(initialProduct.slug) || initialProduct;
+  const p = getLocalizedProduct(rawProduct, locale);
 
   // 1. Filter enabled & available variants (strictly excluding 3XL, 4XL, 5XL)
   const activeVariants = useMemo(() => {

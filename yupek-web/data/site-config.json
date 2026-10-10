@@ -78,7 +78,7 @@
   "customProducts": [
     {
       "id": "promio-25986529",
-      "name": "AWDis Sweatshirt Винтажная эмблема YUPEK с восточным орнаментом",
+      "name": "AWDis JH030 — Vintage Emblem Crewneck Sweatshirt",
       "slug": "yupek-sweatshirts-25986529",
       "price": 29.99,
       "currency": "EUR",
@@ -4700,11 +4700,12 @@
       "hs_code": "61099090",
       "country_of_origin": "NL",
       "suggestedRetailPrice": 29.99,
-      "weight_points": 250
+      "weight_points": 250,
+      "descriptor": "Heavyweight Heritage Crewneck Sweatshirt"
     },
     {
       "id": "promio-25986531",
-      "name": "College Hoodie - AWDis Borduring Винтажная эмблема YUPEK с восточным орнаментом",
+      "name": "AWDis JH001 — Vintage Embroidered Emblem Hoodie",
       "slug": "yupek-sweatshirts-25986531",
       "price": 49.99,
       "currency": "EUR",
@@ -15598,11 +15599,12 @@
       "hs_code": "61099090",
       "country_of_origin": "NL",
       "suggestedRetailPrice": 49.99,
-      "weight_points": 250
+      "weight_points": 250,
+      "descriptor": "Textured Archival Embroidery Edition"
     },
     {
       "id": "promio-25986530",
-      "name": "College Hoodie - AWDis Винтажная эмблема YUPEK с восточным орнаментом",
+      "name": "AWDis JH001 — Vintage Emblem DTG Hoodie",
       "slug": "yupek-sweatshirts-25986530",
       "price": 36.99,
       "currency": "EUR",
@@ -24088,11 +24090,12 @@
       "hs_code": "61099090",
       "country_of_origin": "NL",
       "suggestedRetailPrice": 36.99,
-      "weight_points": 250
+      "weight_points": 250,
+      "descriptor": "Kangaroo Pocket Heritage Fleece Hoodie"
     },
     {
       "id": "promio-25986528",
-      "name": "Crafter Винтажная эмблема YUPEK с восточным орнаментом",
+      "name": "Crafter 2.0 — Vintage Emblem Organic T-Shirt",
       "slug": "yupek-tees-25986528",
       "price": 24.99,
       "currency": "EUR",
@@ -31362,7 +31365,8 @@
       "hs_code": "61099090",
       "country_of_origin": "NL",
       "suggestedRetailPrice": 24.99,
-      "weight_points": 100
+      "weight_points": 100,
+      "descriptor": "Organic Cotton Vintage Emblem Tee"
     }
   ],
   "contactSubmissions": [],

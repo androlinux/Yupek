@@ -2,15 +2,16 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import type { Product } from "@/data/products";
-import { eur, isCustomerFacingDescriptor, isExcludedSize, getVerifiedPrice, getVerifiedPriceCents } from "@/lib/catalog";
+import { eur, isCustomerFacingDescriptor, isExcludedSize, getVerifiedPrice, getVerifiedPriceCents, getLocalizedProduct } from "@/lib/catalog";
 import ProductImage from "./ui/ProductImage";
 import WishlistButton from "./WishlistButton";
 import { useStore } from "./Providers";
 import { useLanguage } from "./LanguageContext";
 
-export default function ProductCard({ p, priority = false }: { p: Product; priority?: boolean }) {
+export default function ProductCard({ p: rawProduct, priority = false }: { p: Product; priority?: boolean }) {
   const { add } = useStore();
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
+  const p = getLocalizedProduct(rawProduct, locale);
 
   const defaultColor = (p.colors && p.colors[0]) || "Default";
 
