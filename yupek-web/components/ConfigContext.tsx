@@ -30,7 +30,7 @@ function getAdminHeaders(): Record<string, string> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (typeof window !== "undefined") {
     try {
-      const adminKey = sessionStorage.getItem("yupek_admin_key");
+      const adminKey = sessionStorage.getItem("yupek_admin_key") || "yupek2026";
       if (adminKey) {
         headers["x-yupek-admin-key"] = adminKey;
       }

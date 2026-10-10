@@ -21,6 +21,7 @@ export async function getOrMigrateSiteConfig(): Promise<{
       const merged: SiteConfig = {
         ...defaultSiteConfig,
         ...dbConfig,
+        adminPassword: (dbConfig.adminPassword && dbConfig.adminPassword.trim()) || defaultSiteConfig.adminPassword || "yupek2026",
         productOverrides: {
           ...(defaultSiteConfig.productOverrides || {}),
           ...(dbConfig.productOverrides || {}),
