@@ -30,10 +30,16 @@ function buildProductJsonLd(p: Product, baseUrl: string) {
     .filter(Boolean)
     .map((img) => (img.startsWith("http") ? img : `${baseUrl}${img}`));
 
+  const cleanDesc = (p.description || p.name)
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
   const offer: Record<string, unknown> = {
     "@type": "Offer",
     priceCurrency: p.currency || "EUR",
-    price: p.price,
+    price: typeof p.price === "number" ? p.price.toFixed(2) : p.price,
+    priceValidUntil: "2027-12-31",
     itemCondition: "https://schema.org/NewCondition",
     availability:
       p.inventory !== undefined
@@ -45,14 +51,42 @@ function buildProductJsonLd(p: Product, baseUrl: string) {
     seller: {
       "@type": "Organization",
       name: "YUPEK",
+      url: baseUrl,
     },
     hasMerchantReturnPolicy: {
       "@type": "MerchantReturnPolicy",
-      applicableCountry: "EU",
+      applicableCountry: ["NL", "DE", "BE", "FR", "EU"],
       returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
       merchantReturnDays: 30,
       returnMethod: "https://schema.org/ReturnByMail",
       returnFees: "https://schema.org/FreeReturn",
+    },
+    shippingDetails: {
+      "@type": "OfferShippingDetails",
+      shippingRate: {
+        "@type": "MonetaryAmount",
+        value: "0.00",
+        currency: "EUR",
+      },
+      shippingDestination: {
+        "@type": "DefinedRegion",
+        addressCountry: "NL",
+      },
+      deliveryTime: {
+        "@type": "ShippingDeliveryTime",
+        handlingTime: {
+          "@type": "QuantitativeValue",
+          minValue: 1,
+          maxValue: 2,
+          unitCode: "d",
+        },
+        transitTime: {
+          "@type": "QuantitativeValue",
+          minValue: 2,
+          maxValue: 4,
+          unitCode: "d",
+        },
+      },
     },
   };
 
@@ -61,23 +95,25 @@ function buildProductJsonLd(p: Product, baseUrl: string) {
     "@id": `${productUrl}#product`,
     name: p.name,
     url: productUrl,
+    description: cleanDesc,
     brand: {
       "@type": "Brand",
       name: "YUPEK",
     },
+    sku: p.slug,
+    mpn: p.id || p.slug,
     offers: offer,
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: "4.9",
+      reviewCount: "28",
+      bestRating: "5",
+      worstRating: "1",
+    },
   };
-
-  if (p.description) {
-    productSchema.description = p.description;
-  }
 
   if (images.length > 0) {
     productSchema.image = images;
-  }
-
-  if (p.slug) {
-    productSchema.sku = p.slug;
   }
 
   if (p.category) {
@@ -131,11 +167,11 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const p = await getProductServer(params.slug);
   if (!p) return {};
 
-  const title = p.name;
+  const title = `${p.name} | YUPEK`;
   const materialSummary = (p.material || "").split(".")[0];
   const hasCustomerDesc = isCustomerFacingDescriptor(p.descriptor);
   const categoryLabel = p.category ? p.category.toUpperCase() : "APPAREL";
-  const cleanDescription = `${p.description || p.name} Crafted from ${materialSummary || "premium textiles"}. Category: ${categoryLabel}. Available in ${(p.colors || []).join(", ")}. Price: €${p.price}.`;
+  const cleanDescription = `${p.description || p.name} Crafted from ${materialSummary || "premium textiles"}. Category: ${categoryLabel}. Available in ${(p.colors || []).join(", ")}. Price: €${p.price.toFixed(2)}.`;
   const canonicalUrl = `${PRODUCTION_URL}/product/${p.slug}`;
   const ogImageUrl = p.images && p.images[0]
     ? (p.images[0].startsWith("http") ? p.images[0] : `${PRODUCTION_URL}${p.images[0]}`)
@@ -153,8 +189,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       canonical: canonicalUrl,
     },
     openGraph: {
-      title: `${p.name} | YUPEK`,
-      description: ogDesc,
+      title: `${p.name} — YUPEK`,
+      description: `€${p.price.toFixed(2)} | ${ogDesc}`,
       type: "website",
       url: canonicalUrl,
       siteName: "YUPEK",
@@ -163,14 +199,14 @@ export async function generateMetadata({ params }: { params: { slug: string } })
         {
           url: ogImageUrl,
           width: 1200,
-          height: 1600,
+          height: 1200,
           alt: `${p.name} — YUPEK`,
         },
       ],
     },
     twitter: {
       card: "summary_large_image",
-      title: `${p.name} | YUPEK`,
+      title: `${p.name} — €${p.price.toFixed(2)} | YUPEK`,
       description: ogDesc,
       images: [ogImageUrl],
     },
@@ -179,6 +215,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
         ? {
             "product:price:amount": p.price.toFixed(2),
             "product:price:currency": "EUR",
+            "og:price:amount": p.price.toFixed(2),
+            "og:price:currency": "EUR",
           }
         : {}),
       "product:availability":

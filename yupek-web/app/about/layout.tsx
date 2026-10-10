@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "https://www.yupek.shop/images/about.jpg",
+        url: "https://www.yupek.shop/images/og-about.jpg",
         width: 1200,
         height: 630,
         alt: "About YUPEK — Brand Heritage & Story",
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     title: "About YUPEK — Eastern Heritage, European Style",
     description:
       "Uniting Silk Road textile memory with modern European architectural tailoring.",
-    images: ["https://www.yupek.shop/images/about.jpg"],
+    images: ["https://www.yupek.shop/images/og-about.jpg"],
   },
 };
 

@@ -1,5 +1,6 @@
 import type { Product } from "@/data/products";
 import ProductCard from "./ProductCard";
+import ScrollReveal from "./ScrollReveal";
 
 export default function ProductGrid({
   items,
@@ -18,7 +19,9 @@ export default function ProductGrid({
     return (
       <div className="flex justify-center">
         <div className="w-full max-w-xs md:max-w-sm">
-          <ProductCard p={items[0]} priority={priority} />
+          <ScrollReveal direction="up" delayMs={50}>
+            <ProductCard p={items[0]} priority={priority} />
+          </ScrollReveal>
         </div>
       </div>
     );
@@ -28,7 +31,9 @@ export default function ProductGrid({
     return (
       <div className="grid grid-cols-2 gap-x-4 gap-y-10 md:gap-x-6 max-w-2xl mx-auto">
         {items.map((p, i) => (
-          <ProductCard key={p.id} p={p} priority={priority && i === 0} />
+          <ScrollReveal key={p.id} direction="up" delayMs={i * 80}>
+            <ProductCard p={p} priority={priority && i === 0} />
+          </ScrollReveal>
         ))}
       </div>
     );
@@ -37,9 +42,12 @@ export default function ProductGrid({
   return (
     <div className={`grid grid-cols-2 gap-x-4 gap-y-10 md:gap-x-6 ${cols === 4 ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}>
       {items.map((p, i) => (
-        <ProductCard key={p.id} p={p} priority={priority && i === 0} />
+        <ScrollReveal key={p.id} direction="up" delayMs={(i % 4) * 75}>
+          <ProductCard p={p} priority={priority && i === 0} />
+        </ScrollReveal>
       ))}
     </div>
   );
 }
+
 

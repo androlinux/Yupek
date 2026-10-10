@@ -1,20 +1,24 @@
 "use client";
-import { useEffect, useRef, useState, ReactNode } from "react";
+import React, { useEffect, useRef, useState, ReactNode, ElementType } from "react";
 
 interface ScrollRevealProps {
   children: ReactNode;
   className?: string;
   delayMs?: number;
-  direction?: "up" | "fade" | "scale";
+  durationMs?: number;
+  direction?: "up" | "fade" | "scale" | "left" | "right";
   threshold?: number;
+  as?: ElementType;
 }
 
 export default function ScrollReveal({
   children,
   className = "",
   delayMs = 0,
+  durationMs = 750,
   direction = "up",
-  threshold = 0.12,
+  threshold = 0.1,
+  as: Component = "div",
 }: ScrollRevealProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -23,7 +27,6 @@ export default function ScrollReveal({
     const el = ref.current;
     if (!el) return;
 
-    // If intersection observer not supported or user prefers reduced motion
     if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       setIsVisible(true);
       return;
@@ -36,7 +39,7 @@ export default function ScrollReveal({
           observer.unobserve(el);
         }
       },
-      { threshold, rootMargin: "0px 0px -40px 0px" }
+      { threshold, rootMargin: "0px 0px -50px 0px" }
     );
 
     observer.observe(el);
@@ -47,22 +50,28 @@ export default function ScrollReveal({
   }, [threshold]);
 
   const getTransitionStyle = () => {
-    let base = "transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ";
+    const base = "transition-all ease-[cubic-bezier(0.16,1,0.3,1)] transform-gpu ";
     if (!isVisible) {
-      if (direction === "up") return base + "opacity-0 translate-y-6";
-      if (direction === "scale") return base + "opacity-0 scale-[0.97]";
+      if (direction === "up") return base + "opacity-0 translate-y-7";
+      if (direction === "scale") return base + "opacity-0 scale-[0.96]";
+      if (direction === "left") return base + "opacity-0 -translate-x-6";
+      if (direction === "right") return base + "opacity-0 translate-x-6";
       return base + "opacity-0";
     }
-    return base + "opacity-100 translate-y-0 scale-100";
+    return base + "opacity-100 translate-y-0 translate-x-0 scale-100";
   };
 
   return (
-    <div
+    <Component
       ref={ref}
-      style={{ transitionDelay: `${delayMs}ms` }}
+      style={{
+        transitionDelay: `${delayMs}ms`,
+        transitionDuration: `${durationMs}ms`,
+      }}
       className={`${getTransitionStyle()} ${className}`}
     >
       {children}
-    </div>
+    </Component>
   );
 }
+

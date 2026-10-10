@@ -212,7 +212,7 @@ export default function CartDrawer() {
             <div className="flex-1 overflow-y-auto px-6">
               <CartLines />
             </div>
-            <div className="border-t border-brown/10 p-6 space-y-4 bg-sand/10">
+            <div className="border-t border-brown/10 p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] space-y-4 bg-sand/10">
               <div className="label flex justify-between text-xs text-brown">
                 <span>{t.cart.subtotal}</span>
                 <span className="font-semibold text-sm">{eur(total)}</span>

@@ -17,9 +17,9 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "https://www.yupek.shop/images/look-1.jpg",
+        url: "https://www.yupek.shop/images/og-lookbook.jpg",
         width: 1200,
-        height: 1600,
+        height: 630,
         alt: "YUPEK Visual Lookbook — Collection 01",
       },
     ],
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     title: "Visual Lookbook — Collection 01 | YUPEK",
     description:
       "Central Asian heritage silhouettes reimagined for contemporary European life.",
-    images: ["https://www.yupek.shop/images/look-1.jpg"],
+    images: ["https://www.yupek.shop/images/og-lookbook.jpg"],
   },
 };
 
