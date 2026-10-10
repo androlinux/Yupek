@@ -94,7 +94,17 @@ export async function POST(req: NextRequest) {
 
       // Authoritative unit price in integer cents
       let unitPriceCents = 0;
-      if (matchedVariant?.price_cents && Number(matchedVariant.price_cents) > 0) {
+      const isPromioProduct =
+        (matchedProduct as any).supplier === "Promio" ||
+        String(matchedProduct.id || "").startsWith("promio-");
+
+      if (isPromioProduct) {
+        // For Promio products, matchedProduct.price is the authoritative consumer retail price.
+        // Variant price_cents in Promio represents supplier wholesale blank cost (€5.75).
+        if (matchedProduct.price !== undefined && Number(matchedProduct.price) > 0) {
+          unitPriceCents = Math.round(Number(matchedProduct.price) * 100);
+        }
+      } else if (matchedVariant?.price_cents && Number(matchedVariant.price_cents) > 0) {
         unitPriceCents = Math.round(Number(matchedVariant.price_cents));
       } else if (matchedVariant?.price !== undefined && Number(matchedVariant.price) > 0) {
         unitPriceCents = Math.round(Number(matchedVariant.price) * 100);

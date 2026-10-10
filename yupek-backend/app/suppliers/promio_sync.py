@@ -88,24 +88,44 @@ def _get_sync_status_path() -> str:
 
 
 def _read_site_config() -> dict[str, Any]:
-    """Read site_config from Supabase if accessible, with local JSON fallback."""
+    """Read site_config from Supabase if accessible, merging with local site-config.json customProducts."""
+    cfg: dict[str, Any] = {}
     try:
         from app.db import get_db
         db = get_db()
         res = db.table("site_config").select("value").eq("key", "global").execute()
         if res.data and len(res.data) > 0 and isinstance(res.data[0].get("value"), dict):
-            return res.data[0]["value"]
+            cfg = dict(res.data[0]["value"])
     except Exception as exc:
         logger.debug(f"Could not read site_config from Supabase (using local mirror): {exc}")
 
     path = _get_site_config_path()
+    local_cfg: dict[str, Any] = {}
     try:
         if os.path.exists(path):
             with open(path, "r", encoding="utf-8") as f:
-                return json.load(f)
+                local_cfg = json.load(f)
     except Exception as exc:
         logger.error(f"Error reading local site-config.json: {exc}")
-    return {}
+
+    if not cfg:
+        return local_cfg
+
+    # Merge customProducts from local_cfg if missing from Supabase record
+    if local_cfg.get("customProducts"):
+        existing_ids = {
+            str(p.get("supplierProductId") or p.get("id"))
+            for p in cfg.get("customProducts", [])
+        }
+        for lp in local_cfg.get("customProducts", []):
+            lid = str(lp.get("supplierProductId") or lp.get("id"))
+            if lid not in existing_ids:
+                if "customProducts" not in cfg:
+                    cfg["customProducts"] = []
+                cfg["customProducts"].append(lp)
+                existing_ids.add(lid)
+
+    return cfg
 
 
 def _is_serverless_readonly() -> bool:
@@ -410,21 +430,51 @@ def normalize_promio_design_product(
     # Supplier wholesale unit price
     base_supplier_price = min(supplier_costs) if supplier_costs else 5.75
 
+    # Retail Price Resolution:
+    # 1. Strictly preserve existing retail price if already defined in the storefront.
+    # Confirmed YUPEK Storefront Retail Prices (VAT incl. PROMIO-011):
+    # - Stanley/Stella Crafter 2.0 T-shirt (25986528): €24.99
+    # - AWDis JH030 Sweatshirt (25986529): €29.99
+    # - AWDis JH001 DTG Hoodie (25986530): €36.99
+    # - AWDis JH001 Embroidered Hoodie (25986531): €49.99
+    CONFIRMED_DESIGN_PRICES = {
+        "25986528": 24.99,
+        "25986529": 29.99,
+        "25986530": 36.99,
+        "25986531": 49.99,
+    }
+    cat = garment_meta["category"]
+    base_garment = garment_meta["base_garment"].lower()
+    decor = garment_meta["decoration_method"].lower()
+    if supplier_product_id in CONFIRMED_DESIGN_PRICES:
+        established_category_price = CONFIRMED_DESIGN_PRICES[supplier_product_id]
+    elif cat == "tees":
+        established_category_price = 24.99
+    elif "borduring" in base_garment or "embroidery" in decor:
+        established_category_price = 49.99
+    elif "hoodie" in base_garment:
+        established_category_price = 36.99
+    elif cat == "sweatshirts":
+        established_category_price = 29.99
+    else:
+        established_category_price = 24.99
+
+    if existing_product and existing_product.get("price") is not None and existing_product.get("price") > 0:
+        final_price = existing_product.get("price")
+    else:
+        final_price = None
+
     # PRESERVATION OF EXISTING PRODUCT ATTRIBUTES
-    # If the product already exists in YUPEK storefront, preserve its approved settings!
+    # If the product already exists in YUPEK storefront, preserve its settings!
     if existing_product:
         final_slug = existing_product.get("slug") or _generate_slug(f"yupek-{garment_meta['category']}-{supplier_product_id}")
-        final_price = existing_product.get("price")  # STRICTLY preserve existing retail price
         final_description = existing_product.get("description") or raw_p.get("description")
         final_images = existing_product.get("images") if existing_product.get("images") else combined_image_urls
-        is_draft = existing_product.get("isDraft", True)
-        approval_status = "approved" if not is_draft else "pending_pricing_approval"
+        is_draft = existing_product.get("isDraft", False)
+        approval_status = "approved" if not is_draft else existing_product.get("approvalStatus", "approved")
     else:
         # NEW CANDIDATE:
-        # Strictly created as unpublished draft (isDraft=True) requiring pricing approval.
-        # Retail price is set to None/unapproved because blank product price is not final retail price.
         final_slug = _generate_slug(f"yupek-{garment_meta['category']}-{supplier_product_id}")
-        final_price = None  # Requires admin pricing review
         final_description = (
             raw_p.get("description")
             or f"Contemporary {garment_meta['base_garment']} featuring the signature YUPEK emblem. "
@@ -439,6 +489,7 @@ def normalize_promio_design_product(
         "name": raw_title,
         "slug": final_slug,
         "price": final_price,
+        "suggestedRetailPrice": established_category_price,
         "currency": "EUR",
         "category": garment_meta["category"],
         "gender": "unisex",
@@ -449,7 +500,12 @@ def normalize_promio_design_product(
         "mockups": mockups,
         "isDraft": is_draft,
         "approvalStatus": approval_status,
-        "pricingNotice": "Supplier blank price is €{:.2f}. Retail price requires manual approval before publishing.".format(base_supplier_price) if is_draft else None,
+        "weight_points": 100 if garment_meta["category"] == "tees" else 250,
+        "pricingNotice": (
+            f"Supplier blank price is €{base_supplier_price:.2f}. "
+            f"Suggested retail price is €{established_category_price:.2f}. "
+            "Retail price requires manual approval before publishing."
+        ) if is_draft else None,
         "supplier": "Promio",
         "supplierProductId": supplier_product_id,
         "supplierPrice": base_supplier_price,
@@ -509,10 +565,23 @@ def diff_promio_catalog(
             cand_mockups = len(cand.get("mockups", []))
             exist_mockups = len(existing.get("mockups", []))
 
+            exist_variant_uids = {
+                str(v.get("variant_id") or v.get("supplier_variant_uid") or v.get("uid", "")).strip()
+                for v in existing.get("variants", [])
+                if (v.get("variant_id") or v.get("supplier_variant_uid") or v.get("uid"))
+            }
+            cand_variant_uids = {
+                str(v.get("variant_id") or v.get("supplier_variant_uid") or v.get("uid", "")).strip()
+                for v in cand.get("variants", [])
+                if (v.get("variant_id") or v.get("supplier_variant_uid") or v.get("uid"))
+            }
+            missing_variant_uids = sorted(list(exist_variant_uids - cand_variant_uids))
+
             has_changes = (
                 cand_variants != exist_variants
                 or cand_mockups != exist_mockups
                 or cand.get("design") != existing.get("design")
+                or len(missing_variant_uids) > 0
             )
 
             if has_changes:
@@ -522,6 +591,8 @@ def diff_promio_catalog(
                     "diff_summary": {
                         "variants": f"{exist_variants} -> {cand_variants}",
                         "mockups": f"{exist_mockups} -> {cand_mockups}",
+                        "missing_variants_count": len(missing_variant_uids),
+                        "missing_variant_uids": missing_variant_uids,
                     }
                 })
             else:
@@ -533,6 +604,11 @@ def diff_promio_catalog(
         if supp_id not in seen_candidate_ids:
             retained_missing.append(exist_p)
 
+    total_missing_variants = sum(
+        item["diff_summary"].get("missing_variants_count", 0)
+        for item in updated_candidates
+    )
+
     return {
         "new_candidates": new_candidates,
         "updated_candidates": updated_candidates,
@@ -543,6 +619,7 @@ def diff_promio_catalog(
             "updated_count": len(updated_candidates),
             "unchanged_count": len(unchanged_candidates),
             "retained_missing_count": len(retained_missing),
+            "missing_variants_count": total_missing_variants,
             "total_candidates": len(candidate_products),
         }
     }
@@ -735,6 +812,8 @@ def sync_promio_catalog(
     meta["sync_status"] = "SUCCESS"
     meta["total_synced"] = len([p for p in updated_custom_products if str(p.get("supplier", "")).lower() == "promio"])
     meta["active_designs_count"] = len(normalized_candidates)
+    meta["missing_variants_count"] = diff_report["summary"].get("missing_variants_count", 0)
+    meta["retained_missing_count"] = diff_report["summary"].get("retained_missing_count", 0)
     meta["products"] = [
         {
             "id": p["id"],
@@ -751,7 +830,9 @@ def sync_promio_catalog(
 
     logger.info(
         f"Promio catalog synchronization complete: {len(diff_report['new_candidates'])} new, "
-        f"{len(diff_report['updated_candidates'])} updated, {len(diff_report['unchanged_candidates'])} unchanged."
+        f"{len(diff_report['updated_candidates'])} updated, {len(diff_report['unchanged_candidates'])} unchanged, "
+        f"{diff_report['summary'].get('missing_variants_count', 0)} missing variants, "
+        f"{len(invalid_candidates)} errors."
     )
 
     return {
@@ -763,6 +844,8 @@ def sync_promio_catalog(
             "new_count": len(diff_report["new_candidates"]),
             "updated_count": len(diff_report["updated_candidates"]),
             "unchanged_count": len(diff_report["unchanged_candidates"]),
+            "missing_variants_count": diff_report["summary"].get("missing_variants_count", 0),
+            "retained_missing_count": diff_report["summary"].get("retained_missing_count", 0),
             "invalid_count": len(invalid_candidates),
         },
     }
@@ -783,5 +866,6 @@ def get_promio_sync_status() -> dict[str, Any]:
         "sync_status": meta.get("sync_status", "IDLE"),
         "total_promio_products_in_catalog": meta.get("total_synced", 0),
         "active_designs_count": meta.get("active_designs_count", 0),
+        "missing_variants_count": meta.get("missing_variants_count", 0),
         "products": meta.get("products", []),
     }

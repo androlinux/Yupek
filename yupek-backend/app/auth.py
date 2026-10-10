@@ -48,7 +48,14 @@ def admin_only(user: dict = Depends(current_user)) -> dict:
     return user
 
 
-def cron_only(x_cron_secret: str = Header(default="")) -> None:
-    if not config.CRON_SECRET or x_cron_secret != config.CRON_SECRET:
+def cron_only(
+    x_cron_secret: str = Header(default=""),
+    authorization: str = Header(default=""),
+) -> None:
+    if not config.CRON_SECRET:
         raise HTTPException(403, "Forbidden")
-
+    bearer_token = ""
+    if authorization.startswith("Bearer "):
+        bearer_token = authorization[7:].strip()
+    if x_cron_secret != config.CRON_SECRET and bearer_token != config.CRON_SECRET:
+        raise HTTPException(403, "Forbidden")

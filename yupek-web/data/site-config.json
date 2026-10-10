@@ -3594,7 +3594,7 @@
       "id": "promio-25986529",
       "name": "AWDis Sweatshirt Винтажная эмблема YUPEK с восточным орнаментом",
       "slug": "yupek-sweatshirts-25986529",
-      "price": null,
+      "price": 29.99,
       "currency": "EUR",
       "category": "sweatshirts",
       "gender": "unisex",
@@ -3661,9 +3661,9 @@
           "src": "https://promio.pro/images/pictures/artists/custom_user_94792/230348f6fdf7c634fe9ab80ebac445a4-205.png"
         }
       ],
-      "isDraft": true,
-      "approvalStatus": "pending_pricing_approval",
-      "pricingNotice": "Supplier blank price is €5.75. Retail price requires manual approval before publishing.",
+      "isDraft": false,
+      "approvalStatus": "approved",
+      "pricingNotice": null,
       "supplier": "Promio",
       "supplierProductId": "25986529",
       "supplierPrice": 5.75,
@@ -7708,13 +7708,15 @@
       "inventory": 50,
       "weight_kg": 0.575,
       "hs_code": "61099090",
-      "country_of_origin": "NL"
+      "country_of_origin": "NL",
+      "suggestedRetailPrice": 29.99,
+      "weight_points": 250
     },
     {
       "id": "promio-25986531",
       "name": "College Hoodie - AWDis Borduring Винтажная эмблема YUPEK с восточным орнаментом",
       "slug": "yupek-sweatshirts-25986531",
-      "price": null,
+      "price": 49.99,
       "currency": "EUR",
       "category": "sweatshirts",
       "gender": "unisex",
@@ -7797,9 +7799,9 @@
           "src": "https://promio.pro/images/pictures/artists/custom_user_94792/13c8a2dc1e4211984a5cf474b04c2411-377.png"
         }
       ],
-      "isDraft": true,
-      "approvalStatus": "pending_pricing_approval",
-      "pricingNotice": "Supplier blank price is €5.75. Retail price requires manual approval before publishing.",
+      "isDraft": false,
+      "approvalStatus": "approved",
+      "pricingNotice": null,
       "supplier": "Promio",
       "supplierProductId": "25986531",
       "supplierPrice": 5.75,
@@ -17468,13 +17470,15 @@
       "inventory": 50,
       "weight_kg": 0.35,
       "hs_code": "61099090",
-      "country_of_origin": "NL"
+      "country_of_origin": "NL",
+      "suggestedRetailPrice": 49.99,
+      "weight_points": 250
     },
     {
       "id": "promio-25986530",
       "name": "College Hoodie - AWDis Винтажная эмблема YUPEK с восточным орнаментом",
       "slug": "yupek-sweatshirts-25986530",
-      "price": null,
+      "price": 36.99,
       "currency": "EUR",
       "category": "sweatshirts",
       "gender": "unisex",
@@ -17571,9 +17575,9 @@
           "src": "https://promio.pro/images/pictures/artists/custom_user_94792/3012f6c891774e39be8c6becc1aa3496-193.png"
         }
       ],
-      "isDraft": true,
-      "approvalStatus": "pending_pricing_approval",
-      "pricingNotice": "Supplier blank price is €5.75. Retail price requires manual approval before publishing.",
+      "isDraft": false,
+      "approvalStatus": "approved",
+      "pricingNotice": null,
       "supplier": "Promio",
       "supplierProductId": "25986530",
       "supplierPrice": 5.75,
@@ -25026,13 +25030,15 @@
       "inventory": 50,
       "weight_kg": 0.575,
       "hs_code": "61099090",
-      "country_of_origin": "NL"
+      "country_of_origin": "NL",
+      "suggestedRetailPrice": 36.99,
+      "weight_points": 250
     },
     {
       "id": "promio-25986528",
       "name": "Crafter Винтажная эмблема YUPEK с восточным орнаментом",
       "slug": "yupek-tees-25986528",
-      "price": null,
+      "price": 24.99,
       "currency": "EUR",
       "category": "tees",
       "gender": "unisex",
@@ -25119,9 +25125,9 @@
           "src": "https://promio.pro/images/pictures/artists/custom_user_94792/b3e083bd3bb2caa852b7653786f49fe5-679.png"
         }
       ],
-      "isDraft": true,
-      "approvalStatus": "pending_pricing_approval",
-      "pricingNotice": "Supplier blank price is €5.75. Retail price requires manual approval before publishing.",
+      "isDraft": false,
+      "approvalStatus": "approved",
+      "pricingNotice": null,
       "supplier": "Promio",
       "supplierProductId": "25986528",
       "supplierPrice": 5.75,
@@ -31502,7 +31508,9 @@
       "inventory": 50,
       "weight_kg": 0.1,
       "hs_code": "61099090",
-      "country_of_origin": "NL"
+      "country_of_origin": "NL",
+      "suggestedRetailPrice": 24.99,
+      "weight_points": 100
     }
   ],
   "contactSubmissions": [],
