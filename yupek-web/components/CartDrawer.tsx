@@ -23,18 +23,26 @@ export function CartLines() {
     <ul className="divide-y divide-brown/10">
       {lines.map((l) => {
         const p = getProduct(l.slug);
-        if (!p) return null;
+        const name = p?.name || l.title || "YUPEK Garment";
+        const image = l.image || p?.images?.[0] || "/images/collection.jpg";
+        const unitPrice = l.price !== undefined ? l.price : (p?.price ?? 0);
+
         return (
           <li key={`${l.slug}-${l.size}-${l.color}`} className="flex gap-4 py-5">
             <div className="relative h-28 w-20 aspect-[5/7] shrink-0 bg-sand/30 overflow-hidden">
-              <ProductImage src={l.image || p.images[0]} alt={p.name} width={80} height={112} sizes="80px" />
+              <ProductImage src={image} alt={name} width={80} height={112} sizes="80px" />
             </div>
             <div className="flex flex-1 flex-col justify-between text-xs">
               <div>
-                <p className="uppercase tracking-[.14em] font-medium text-brown">{p.name}</p>
+                <p className="uppercase tracking-[.14em] font-medium text-brown">{name}</p>
                 <p className="mt-1 text-brown/60">
                   {l.color} / {l.size}
                 </p>
+                {!p && (
+                  <span className="inline-block mt-1 text-[10px] text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                    {locale === "nl" ? "Niet meer leverbaar" : "Archived item"}
+                  </span>
+                )}
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center border border-brown/25">
@@ -63,14 +71,14 @@ export function CartLines() {
                 <button
                   type="button"
                   className="underline underline-offset-4 text-brown/60 hover:text-burgundy transition-colors text-[11px]"
-                  aria-label={locale === "nl" ? `${p.name} verwijderen` : `Remove ${p.name}`}
+                  aria-label={locale === "nl" ? `${name} verwijderen` : `Remove ${name}`}
                   onClick={() => remove(l)}
                 >
                   {t.cart.remove}
                 </button>
               </div>
             </div>
-            <p className="text-sm font-medium text-brown">{eur((l.price !== undefined ? l.price : p.price) * l.qty)}</p>
+            <p className="text-sm font-medium text-brown">{eur(unitPrice * l.qty)}</p>
           </li>
         );
       })}
@@ -79,7 +87,7 @@ export function CartLines() {
 }
 
 export default function CartDrawer() {
-  const { lines, cartOpen, setCartOpen } = useStore();
+  const { lines, cartOpen, setCartOpen, clearCart } = useStore();
   const { config } = useSiteConfig();
   const { t, locale } = useLanguage();
   const total = useCartTotal(lines);
@@ -132,9 +140,21 @@ export default function CartDrawer() {
         }`}
       >
         <div className="flex items-center justify-between border-b border-brown/10 px-6 py-5">
-          <h2 className="label text-brown">
-            {t.cart.title} ({lines.reduce((n, l) => n + l.qty, 0)})
-          </h2>
+          <div className="flex items-center gap-3">
+            <h2 className="label text-brown">
+              {t.cart.title} ({lines.reduce((n, l) => n + l.qty, 0)})
+            </h2>
+            {lines.length > 0 && (
+              <button
+                type="button"
+                onClick={clearCart}
+                className="text-[10px] uppercase tracking-wider text-brown/50 hover:text-burgundy underline underline-offset-2 transition-colors cursor-pointer"
+                title={locale === "nl" ? "Winkelmand legen" : "Clear bag"}
+              >
+                {locale === "nl" ? "Wissen" : "Clear Bag"}
+              </button>
+            )}
+          </div>
           <button
             aria-label={t.common.close}
             onClick={() => setCartOpen(false)}
