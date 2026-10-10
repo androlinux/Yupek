@@ -27,6 +27,7 @@ export interface OrderRecord {
   fulfillment_status:
     | "pending_payment"
     | "paid"
+    | "promio_order_created"
     | "printify_order_created"
     | "sent_to_production"
     | "in_production"
@@ -35,6 +36,7 @@ export interface OrderRecord {
     | "cancelled"
     | "failed";
   stripe_payment_intent_id?: string | null;
+  promio_order_id?: string | null;
   printify_order_id?: string | null;
   tracking_number?: string | null;
   carrier?: string | null;
@@ -101,6 +103,7 @@ export async function persistOrderRecord(order: OrderRecord): Promise<void> {
       payment_status: order.payment_status,
       fulfillment_status: order.fulfillment_status,
       stripe_payment_intent_id: order.stripe_payment_intent_id || null,
+      promio_order_id: order.promio_order_id || null,
       printify_order_id: order.printify_order_id || null,
       tracking_number: order.tracking_number ?? null,
       carrier: order.carrier ?? null,
@@ -178,6 +181,7 @@ export async function persistOrderRecord(order: OrderRecord): Promise<void> {
         payment_status: order.payment_status,
         fulfillment_status: order.fulfillment_status,
         stripe_payment_intent_id: order.stripe_payment_intent_id,
+        promio_order_id: order.promio_order_id || null,
         printify_order_id: order.printify_order_id,
         tracking_number: order.tracking_number ?? null,
         carrier: order.carrier ?? null,

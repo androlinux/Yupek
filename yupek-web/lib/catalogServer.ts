@@ -26,15 +26,19 @@ export function enrichCatalogVariants(customProducts: Product[]): Product[] {
     const slug = String(tp.slug || "").trim();
 
     for (const tv of tp.variants || []) {
-      if (tv.variant_id != null && tv.variant_id !== "" && Number(tv.variant_id) > 0) {
-        const cleanSize = String(tv.size || "").trim().toLowerCase();
-        const cleanColor = String(tv.color || "").trim().toLowerCase();
-        if (cleanSize && cleanColor) {
-          if (cleanProdId) {
-            trustedVariantMap.set(`${cleanProdId}:${cleanSize}:${cleanColor}`, tv.variant_id);
-          }
-          if (slug) {
-            trustedVariantMap.set(`${slug}:${cleanSize}:${cleanColor}`, tv.variant_id);
+      const vId = tv.variant_id;
+      if (vId != null && vId !== "") {
+        const isValid = typeof vId === "string" ? vId.trim().length > 0 : Number(vId) > 0;
+        if (isValid) {
+          const cleanSize = String(tv.size || "").trim().toLowerCase();
+          const cleanColor = String(tv.color || "").trim().toLowerCase();
+          if (cleanSize && cleanColor) {
+            if (cleanProdId) {
+              trustedVariantMap.set(`${cleanProdId}:${cleanSize}:${cleanColor}`, vId);
+            }
+            if (slug) {
+              trustedVariantMap.set(`${slug}:${cleanSize}:${cleanColor}`, vId);
+            }
           }
         }
       }
@@ -48,7 +52,11 @@ export function enrichCatalogVariants(customProducts: Product[]): Product[] {
 
     const enrichedVariants = (p.variants || []).map((v) => {
       // 1. If valid authoritative variant_id already present in Supabase, preserve it untouched
-      if (v.variant_id != null && v.variant_id !== "" && Number(v.variant_id) > 0) {
+      const isValidExisting =
+        v.variant_id != null &&
+        v.variant_id !== "" &&
+        (typeof v.variant_id === "string" ? v.variant_id.trim().length > 0 : Number(v.variant_id) > 0);
+      if (isValidExisting) {
         return v;
       }
 
@@ -90,7 +98,13 @@ export async function getCatalogProductsServer(): Promise<Product[]> {
     const combined = [...products, ...enrichedCustom];
 
     return combined
-      .filter((p) => !overrides[p.slug]?.deleted)
+      .filter((p) => {
+        if (overrides[p.slug]?.deleted) return false;
+        if ((p as any).isDraft) return false;
+        const effectivePrice = overrides[p.slug]?.price ?? p.price;
+        if (typeof effectivePrice !== "number" || isNaN(effectivePrice) || effectivePrice <= 0) return false;
+        return true;
+      })
       .map((p) => {
         const ov = overrides[p.slug];
         if (!ov) return p;

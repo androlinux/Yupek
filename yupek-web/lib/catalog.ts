@@ -35,19 +35,27 @@ export interface NormalizedPrintifyProduct {
   updated_at?: string | null;
 }
 
-export const eur = (n: number) => `€${n.toFixed(2)}`;
+export const eur = (n?: number | null) => {
+  if (typeof n !== "number" || isNaN(n) || n <= 0) return "";
+  return `€${n.toFixed(2)}`;
+};
 
-export const EXCLUDED_SIZES = new Set(["3XL", "4XL", "5XL", "XXXL", "XXXXL", "XXXXXL"]);
+export const EXCLUDED_SIZES = new Set([
+  "3XL", "4XL", "5XL", "XXXL", "XXXXL", "XXXXXL",
+  "3X-LARGE", "4X-LARGE", "5X-LARGE"
+]);
 
 export const STANDARD_GARMENT_SIZES = new Set([
   "XXS", "XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL",
-  "XXXL", "XXXXL", "XXXXXL", "ONE SIZE", "OS"
+  "XXXL", "XXXXL", "XXXXXL", "ONE SIZE", "OS",
+  "XX-SMALL", "X-SMALL", "SMALL", "MEDIUM", "LARGE", "X-LARGE",
+  "2X-LARGE", "3X-LARGE", "4X-LARGE", "5X-LARGE"
 ]);
 
 export function isExcludedSize(size?: string | null): boolean {
   if (!size) return false;
   const s = String(size).toUpperCase().trim();
-  return EXCLUDED_SIZES.has(s) || s === "3XL" || s === "4XL" || s === "5XL";
+  return EXCLUDED_SIZES.has(s) || s.includes("3XL") || s.includes("4XL") || s.includes("5XL") || s.includes("3X-LARGE") || s.includes("4X-LARGE") || s.includes("5X-LARGE");
 }
 
 /**
@@ -180,7 +188,13 @@ export function getCatalogProducts(): Product[] {
     const combined = [...products, ...custom];
 
     return combined
-      .filter((p) => !overrides[p.slug]?.deleted)
+      .filter((p) => {
+        if (overrides[p.slug]?.deleted) return false;
+        if ((p as any).isDraft) return false;
+        const effectivePrice = overrides[p.slug]?.price ?? p.price;
+        if (typeof effectivePrice !== "number" || isNaN(effectivePrice) || effectivePrice <= 0) return false;
+        return true;
+      })
       .map((p) => {
         const ov = overrides[p.slug];
         if (!ov) return p;

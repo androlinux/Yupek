@@ -181,13 +181,15 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
 
   // 6b. Availability State
   const isOutOfStock = useMemo(() => {
+    if (Boolean((p as any).isDraft)) return true;
+    if (typeof displayPrice !== "number" || isNaN(displayPrice) || displayPrice <= 0) return true;
     if (p.inventory !== undefined && p.inventory <= 0) return true;
     if (p.variants && p.variants.length > 0) {
       if (activeVariants.length === 0) return true;
       if (selectedVariant && selectedVariant.is_available === false) return true;
     }
     return false;
-  }, [p.inventory, p.variants, activeVariants.length, selectedVariant]);
+  }, [p, displayPrice, activeVariants.length, selectedVariant]);
 
   // 7. Handlers for Color and Size changes
   const handleColorChange = (newColor: string) => {

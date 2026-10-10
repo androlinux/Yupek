@@ -67,6 +67,7 @@ export interface StoreOrder {
   fulfillment_status?:
     | "pending_payment"
     | "paid"
+    | "promio_order_created"
     | "printify_order_created"
     | "sent_to_production"
     | "in_production"
@@ -75,6 +76,7 @@ export interface StoreOrder {
     | "cancelled"
     | "failed";
   stripe_payment_intent_id?: string | null;
+  promio_order_id?: string | null;
   printify_order_id?: string | null;
   tracking_number?: string | null;
   carrier?: string | null;

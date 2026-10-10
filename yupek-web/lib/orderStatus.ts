@@ -12,6 +12,7 @@
 export type InternalFulfillmentStatus =
   | "pending_payment"
   | "paid"
+  | "promio_order_created"
   | "printify_order_created"
   | "sent_to_production"
   | "in_production"
@@ -38,6 +39,7 @@ export function mapFulfillmentStatus(status: InternalFulfillmentStatus, locale: 
     case "pending_payment":
       return isNl ? "Bestelling ontvangen" : "Order received";
     case "paid":
+    case "promio_order_created":
     case "printify_order_created":
     case "sent_to_production":
       return isNl ? "Bestelling in voorbereiding" : "Preparing your order";
@@ -182,6 +184,7 @@ export function getOrderTimelineSteps(
   const isInProduction = isShipped || fulfillment_status === "in_production";
   const isPreparing =
     isInProduction ||
+    fulfillment_status === "promio_order_created" ||
     fulfillment_status === "printify_order_created" ||
     fulfillment_status === "sent_to_production" ||
     fulfillment_status === "paid" ||
