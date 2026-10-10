@@ -131,7 +131,7 @@ export default function Hero() {
               <li>
                 <Link
                   href={config.heroButtonLink || "/shop"}
-                  className="group relative inline-flex items-center justify-center overflow-hidden border border-cream bg-cream px-8 py-3.5 text-xs font-medium tracking-[.2em] text-brown transition-all duration-300 hover:bg-transparent hover:text-cream shadow-lg"
+                  className="group relative inline-flex items-center justify-center overflow-hidden border border-cream bg-cream px-8 py-3.5 text-xs font-medium tracking-[.2em] text-brown transition-all duration-300 hover:bg-transparent hover:text-cream shadow-lg hover:-translate-y-[1px] active:scale-[0.97] active:translate-y-[1px]"
                 >
                   <span className="relative z-10">{buttonText}</span>
                 </Link>
@@ -139,7 +139,7 @@ export default function Hero() {
               <li>
                 <Link
                   href={config.heroSecondaryButtonLink || "/about"}
-                  className="inline-flex items-center justify-center border border-cream/50 bg-brown/40 backdrop-blur-sm px-8 py-3.5 text-xs font-medium tracking-[.2em] text-cream transition-all duration-300 hover:border-cream hover:bg-cream/10"
+                  className="inline-flex items-center justify-center border border-cream/50 bg-brown/40 backdrop-blur-sm px-8 py-3.5 text-xs font-medium tracking-[.2em] text-cream transition-all duration-300 hover:border-cream hover:bg-cream/10 shadow-sm hover:-translate-y-[1px] active:scale-[0.97] active:translate-y-[1px]"
                 >
                   {secondaryButtonText}
                 </Link>

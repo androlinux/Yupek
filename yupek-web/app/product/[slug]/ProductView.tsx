@@ -563,7 +563,7 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
                 disabled={quantity <= 1 || isOutOfStock}
                 onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                 aria-label={locale === "nl" ? "Aantal verlagen" : "Decrease quantity"}
-                className="h-10 w-10 sm:h-11 sm:w-11 flex items-center justify-center hover:bg-brown/5 text-brown transition-colors disabled:opacity-30 disabled:cursor-not-allowed focus:outline-none focus-visible:bg-brown/10 touch-manipulation"
+                className="h-10 w-10 sm:h-11 sm:w-11 flex items-center justify-center hover:bg-brown/5 active:scale-90 text-brown transition-all disabled:opacity-30 disabled:cursor-not-allowed focus:outline-none touch-manipulation"
               >
                 <Icon name="minus" className="h-3 w-3" />
               </button>
@@ -579,7 +579,7 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
                 disabled={quantity >= 10 || isOutOfStock}
                 onClick={() => setQuantity((q) => Math.min(10, q + 1))}
                 aria-label={locale === "nl" ? "Aantal verhogen" : "Increase quantity"}
-                className="h-10 w-10 sm:h-11 sm:w-11 flex items-center justify-center hover:bg-brown/5 text-brown transition-colors disabled:opacity-30 disabled:cursor-not-allowed focus:outline-none focus-visible:bg-brown/10 touch-manipulation"
+                className="h-10 w-10 sm:h-11 sm:w-11 flex items-center justify-center hover:bg-brown/5 active:scale-90 text-brown transition-all disabled:opacity-30 disabled:cursor-not-allowed focus:outline-none touch-manipulation"
               >
                 <Icon name="plus" className="h-3 w-3" />
               </button>
@@ -600,8 +600,8 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
           <button
             type="button"
             disabled={isOutOfStock}
-            className={`btn w-full py-3.5 sm:py-4 px-3 sm:px-6 text-[11px] sm:text-xs tracking-[.16em] sm:tracking-[.22em] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-center break-words min-w-0 ${
-              addedFeedback ? "bg-green-900 text-cream" : "btn-dark"
+            className={`btn w-full py-3.5 sm:py-4 px-3 sm:px-6 text-[11px] sm:text-xs tracking-[.16em] sm:tracking-[.22em] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-center break-words min-w-0 shadow-sm hover:shadow-lg active:scale-[0.97] ${
+              addedFeedback ? "bg-green-900 text-cream scale-[0.99]" : "btn-dark"
             }`}
             onClick={pick}
           >
@@ -617,7 +617,7 @@ export default function ProductView({ p: initialProduct }: { p: Product }) {
               if (isOutOfStock || !pickQuiet()) e.preventDefault();
             }}
             aria-disabled={isOutOfStock}
-            className={`btn btn-line w-full py-3 sm:py-3.5 px-3 sm:px-6 text-[11px] sm:text-xs tracking-[.16em] sm:tracking-[.22em] text-center break-words min-w-0 ${
+            className={`btn btn-line w-full py-3 sm:py-3.5 px-3 sm:px-6 text-[11px] sm:text-xs tracking-[.16em] sm:tracking-[.22em] text-center break-words min-w-0 active:scale-[0.97] ${
               isOutOfStock ? "opacity-40 pointer-events-none" : ""
             }`}
           >
