@@ -600,6 +600,101 @@ class TestPromioCatalogSync(unittest.TestCase):
             # In serverless mode, open() must not be called to write to disk
             mock_open.assert_not_called()
 
+    def test_diff_detects_missing_variants(self):
+        """Diff engine must detect and report missing variants when candidate has fewer variants than catalog."""
+        existing = {
+            "id": "promio-25986528",
+            "supplierProductId": "25986528",
+            "supplier": "Promio",
+            "name": "Crafter Tee",
+            "variants": [
+                {"variant_id": "V1", "supplier_variant_uid": "V1", "sku": "SKU-1"},
+                {"variant_id": "V2", "supplier_variant_uid": "V2", "sku": "SKU-2"},
+                {"variant_id": "V3", "supplier_variant_uid": "V3", "sku": "SKU-3"},
+            ],
+            "mockups": []
+        }
+        candidate = {
+            "id": "promio-25986528",
+            "supplierProductId": "25986528",
+            "supplier": "Promio",
+            "name": "Crafter Tee",
+            "variants": [
+                {"variant_id": "V1", "supplier_variant_uid": "V1", "sku": "SKU-1"},
+            ],
+            "mockups": []
+        }
+        diff = diff_promio_catalog([candidate], [existing])
+        self.assertEqual(len(diff["updated_candidates"]), 1)
+        upd = diff["updated_candidates"][0]
+        self.assertEqual(upd["diff_summary"]["missing_variants_count"], 2)
+        self.assertEqual(upd["diff_summary"]["missing_variant_uids"], ["V2", "V3"])
+        self.assertEqual(diff["summary"]["missing_variants_count"], 2)
+
+    def test_cron_promio_sync_endpoint(self):
+        """Verify /api/cron/promio-sync auth with both X-Cron-Secret and Bearer token."""
+        with patch.object(config, "CRON_SECRET", "super-cron-secret-123"):
+            # 1. Missing auth
+            r1 = self.client.post("/api/cron/promio-sync")
+            self.assertEqual(r1.status_code, 403)
+
+            # 2. Invalid secret
+            r2 = self.client.post("/api/cron/promio-sync", headers={"X-Cron-Secret": "wrong"})
+            self.assertEqual(r2.status_code, 403)
+
+            # 3. Valid X-Cron-Secret header (feature flag disabled -> returns disabled status)
+            with patch.object(config, "PROMIO_CATALOG_SYNC_ENABLED", False):
+                r3 = self.client.post("/api/cron/promio-sync", headers={"X-Cron-Secret": "super-cron-secret-123"})
+                self.assertEqual(r3.status_code, 200)
+                self.assertEqual(r3.json()["status"], "disabled")
+
+            # 4. Valid Authorization: Bearer <CRON_SECRET> header (GET request from Vercel)
+            with patch.object(config, "PROMIO_CATALOG_SYNC_ENABLED", False):
+                r4 = self.client.get(
+                    "/api/cron/promio-sync",
+                    headers={"Authorization": "Bearer super-cron-secret-123"}
+                )
+                self.assertEqual(r4.status_code, 200)
+                self.assertEqual(r4.json()["status"], "disabled")
+
+    def test_repeated_sync_idempotency(self):
+        """Repeated live syncs must be completely idempotent: zero duplicate products or variants created."""
+        raw_list = [MOCK_CRAFTER_TSHIRT, MOCK_SWEATSHIRT]
+        store = {"cfg": {"customProducts": []}}
+
+        def fake_read():
+            return copy.deepcopy(store["cfg"])
+
+        def fake_write(new_cfg):
+            store["cfg"] = copy.deepcopy(new_cfg)
+
+        with patch("app.suppliers.promio_sync._read_site_config", side_effect=fake_read), \
+             patch("app.suppliers.promio_sync._write_site_config", side_effect=fake_write), \
+             patch("app.suppliers.promio_sync._save_sync_metadata"):
+
+            # 1. First sync: creates 2 new products
+            res1 = sync_promio_catalog(dry_run=False, force_enable=True, raw_products=raw_list)
+            self.assertEqual(res1["status"], "success")
+            self.assertEqual(res1["summary"]["new_count"], 2)
+            self.assertEqual(len(store["cfg"]["customProducts"]), 2)
+
+            # Record variant count of first product
+            p1_variants_count = len(store["cfg"]["customProducts"][0]["variants"])
+
+            # 2. Second sync: repeated execution must yield 0 new, 0 duplicate products, 0 duplicate variants
+            res2 = sync_promio_catalog(dry_run=False, force_enable=True, raw_products=raw_list)
+            self.assertEqual(res2["status"], "success")
+            self.assertEqual(res2["summary"]["new_count"], 0)
+            self.assertEqual(res2["summary"]["unchanged_count"], 2)
+            self.assertEqual(len(store["cfg"]["customProducts"]), 2)
+            self.assertEqual(len(store["cfg"]["customProducts"][0]["variants"]), p1_variants_count)
+
+            # 3. Third sync: still completely unchanged
+            res3 = sync_promio_catalog(dry_run=False, force_enable=True, raw_products=raw_list)
+            self.assertEqual(res3["summary"]["new_count"], 0)
+            self.assertEqual(res3["summary"]["unchanged_count"], 2)
+            self.assertEqual(len(store["cfg"]["customProducts"]), 2)
+
 
 if __name__ == "__main__":
     unittest.main()

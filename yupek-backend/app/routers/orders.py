@@ -261,9 +261,19 @@ def _resolve_and_validate_items(items: list[CheckoutItemInput]) -> tuple[list[di
             raise HTTPException(400, f"Variant '{matched_variant.get('title')}' is currently out of stock.")
 
         # Authoritative price strictly from catalog (in integer cents)
-        unit_price_cents = matched_variant.get("price_cents")
-        if unit_price_cents is None or unit_price_cents <= 0:
-            unit_price_cents = int(round(float(matched_product.get("price", 0)) * 100))
+        is_promio = (
+            str(matched_product.get("supplier", "")).lower() == "promio"
+            or str(matched_product.get("id", "")).startswith("promio-")
+        )
+        if is_promio:
+            # For Promio products, matched_product['price'] is the authoritative consumer retail price.
+            # Variant price_cents represents supplier wholesale blank cost (€5.75).
+            prod_price = matched_product.get("price")
+            unit_price_cents = int(round(float(prod_price) * 100)) if (prod_price is not None and float(prod_price) > 0) else 0
+        else:
+            unit_price_cents = matched_variant.get("price_cents")
+            if unit_price_cents is None or unit_price_cents <= 0:
+                unit_price_cents = int(round(float(matched_product.get("price", 0)) * 100))
 
         if unit_price_cents <= 0:
             raise HTTPException(500, f"Invalid pricing detected for '{matched_product.get('name')}'.")
