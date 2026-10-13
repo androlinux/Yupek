@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { useSiteConfig } from "./ConfigContext";
 import { useLanguage } from "./LanguageContext";
@@ -73,30 +74,26 @@ export default function Hero() {
         </div>
       ) : (
         <div className="absolute inset-0 z-0 overflow-hidden">
-          <picture className="block h-full w-full">
-            <source
-              media="(max-width: 767px)"
-              type="image/avif"
-              srcSet="/images/hero/hero_mobile.avif"
-            />
-            <source
-              media="(max-width: 767px)"
-              type="image/webp"
-              srcSet="/images/hero/hero_mobile.webp"
-            />
-            <source
-              type="image/avif"
-              srcSet="/images/hero/hero_desktop.avif"
-            />
-            <img
-              src="/images/hero/hero_desktop.webp"
-              alt="YUPEK — Silk Inspired Style"
-              fetchPriority="high"
-              loading="eager"
-              decoding="async"
-              className="h-full w-full object-cover object-center pointer-events-none select-none"
-            />
-          </picture>
+          {/* Mobile: served as optimized AVIF via Next.js — hidden on md+ */}
+          <Image
+            src="/images/hero/hero_mobile.avif"
+            alt="YUPEK — Eastern Heritage, European Style"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-top md:hidden"
+            quality={85}
+          />
+          {/* Desktop: served as optimized AVIF via Next.js — hidden below md */}
+          <Image
+            src="/images/hero/hero_desktop.avif"
+            alt="YUPEK — Eastern Heritage, European Style"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-center hidden md:block"
+            quality={85}
+          />
         </div>
       )}
 

@@ -71,6 +71,8 @@ export default function ProductCard({ p: rawProduct, priority = false }: { p: Pr
             <ProductImage
               src={p.images[1]}
               alt=""
+              priority={false}
+              sizes="(max-width: 768px) 50vw, 25vw"
               className="opacity-0 transition-opacity duration-500 group-hover:opacity-100"
             />
           )}

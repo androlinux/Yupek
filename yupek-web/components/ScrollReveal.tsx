@@ -27,7 +27,15 @@ export default function ScrollReveal({
     const el = ref.current;
     if (!el) return;
 
+    // Respect prefers-reduced-motion
     if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setIsVisible(true);
+      return;
+    }
+
+    // If already in viewport at mount, show immediately (prevents LCP delay)
+    const rect = el.getBoundingClientRect();
+    if (rect.top < window.innerHeight && rect.bottom > 0) {
       setIsVisible(true);
       return;
     }
@@ -39,7 +47,7 @@ export default function ScrollReveal({
           observer.unobserve(el);
         }
       },
-      { threshold, rootMargin: "0px 0px -50px 0px" }
+      { threshold, rootMargin: "0px 0px -30px 0px" }
     );
 
     observer.observe(el);

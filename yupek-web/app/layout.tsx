@@ -134,6 +134,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${serif.variable} ${sans.variable}`}>
       <head>
+        {/* Google Fonts preconnect — eliminates render-blocking DNS lookup */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* Hero LCP image preload — compressed optimized variants */}
         <link
           rel="preload"
           as="image"
