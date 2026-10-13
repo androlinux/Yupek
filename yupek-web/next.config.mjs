@@ -123,7 +123,7 @@ const nextConfig = {
         ],
       },
       {
-        source: "/(.*)",
+        source: "/:path*",
         headers: [
           {
             key: "Strict-Transport-Security",
