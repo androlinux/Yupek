@@ -35,10 +35,6 @@ export const metadata: Metadata = {
   description,
   alternates: {
     canonical: productionCanonical,
-    languages: {
-      "en-US": `${siteUrl}/?lang=en`,
-      "nl-NL": `${siteUrl}/?lang=nl`,
-    },
   },
   robots: {
     index: true,

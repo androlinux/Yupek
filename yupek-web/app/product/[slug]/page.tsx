@@ -167,7 +167,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const p = await getProductServer(params.slug);
   if (!p) return {};
 
-  const title = `${p.name} | YUPEK`;
+  const productTitle = `${p.name} — YUPEK`;
   const materialSummary = (p.material || "").split(".")[0];
   const hasCustomerDesc = isCustomerFacingDescriptor(p.descriptor);
   const categoryLabel = p.category ? p.category.toUpperCase() : "APPAREL";
@@ -182,14 +182,14 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     : (p.description ? p.description.split("<br")[0].replace(/•/g, "").trim() : p.name);
 
   return {
-    title,
+    title: { absolute: productTitle },
     description: cleanDescription,
     keywords: ["YUPEK", p.name, p.category, ...(p.tags || []), ...(p.colors || [])],
     alternates: {
       canonical: canonicalUrl,
     },
     openGraph: {
-      title: `${p.name} — YUPEK`,
+      title: productTitle,
       description: `€${p.price.toFixed(2)} | ${ogDesc}`,
       type: "website",
       url: canonicalUrl,
