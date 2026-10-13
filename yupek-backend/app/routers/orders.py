@@ -5,17 +5,17 @@ from datetime import datetime, timezone
 from typing import Any, Literal
 from fastapi import APIRouter, Depends, HTTPException, Header, Request
 from pydantic import BaseModel, EmailStr
-from .. import config
-from ..auth import optional_user, current_user
-from ..db import get_db
-from ..payments.provider import (
+from app import config
+from app.auth import optional_user, current_user
+from app.db import get_db
+from app.payments.provider import (
     PaymentsNotConfigured,
     InvalidSignature,
     create_payment_intent,
     verify_webhook_signature,
     retrieve_payment_intent,
 )
-from ..suppliers.printify import PrintifyClient
+from app.suppliers.printify import PrintifyClient
 
 logger = logging.getLogger("orders")
 router = APIRouter(tags=["orders"])
@@ -534,14 +534,14 @@ async def calculate_shipping_rates(body: CalculateShippingRequest):
     - Pure, deterministic calculation based on Promio Breda published tariffs.
     - Never invents rates or currencies.
     """
-    from ..suppliers.promio import (
+    from app.suppliers.promio import (
         calculate_promio_shipping,
         DEFAULT_PRODUCT_WEIGHT_POINTS,
         EUROPE_COUNTRIES,
         US_CA_COUNTRIES,
         PromioShippingCalculationError,
     )
-    from ..suppliers.printify import to_iso_country_code
+    from app.suppliers.printify import to_iso_country_code
 
     # 1. Address Validation
     country_input = (body.address.country or "Netherlands").strip()
@@ -567,7 +567,7 @@ async def calculate_shipping_rates(body: CalculateShippingRequest):
     # 3. Retrieve free shipping threshold from site_config or backend config
     free_shipping_threshold_cents = config.FREE_SHIPPING_OVER
     try:
-        from ..suppliers.promio_sync import _read_site_config
+        from app.suppliers.promio_sync import _read_site_config
         cfg = _read_site_config()
         if "freeShippingThreshold" in cfg:
             free_shipping_threshold_cents = int(round(float(cfg["freeShippingThreshold"]) * 100))
@@ -602,7 +602,7 @@ async def calculate_shipping_rates(body: CalculateShippingRequest):
 
     shipping_options = []
     if printify_line_items and config.PRINTIFY_API_TOKEN:
-        from ..suppliers.printify import PrintifyClient, normalize_shipping_options
+        from app.suppliers.printify import PrintifyClient, normalize_shipping_options
         clean_address = {
             "first_name": getattr(body.address, "first_name", "") or "",
             "last_name": getattr(body.address, "last_name", "") or "",
@@ -984,7 +984,7 @@ async def stripe_webhook(request: Request):
 
             if printify_line_items:
                 # Legacy Printify fulfillment
-                from ..suppliers.printify import PrintifyClient
+                from app.suppliers.printify import PrintifyClient
                 printify_client = PrintifyClient()
                 shipping_addr = order.get("shipping_address") or {}
                 printify_order_payload = {
@@ -1022,7 +1022,7 @@ async def stripe_webhook(request: Request):
                     order["fulfillment_status"] = "paid"
             else:
                 # Promio Order (Primary and Sole Fulfillment Provider for YUPEK Storefront)
-                from ..suppliers.promio import PromioAdapter, PromioOrderSubmissionDisabledError
+                from app.suppliers.promio import PromioAdapter, PromioOrderSubmissionDisabledError
                 promio_adapter = PromioAdapter({})
 
                 try:
@@ -1271,7 +1271,7 @@ def _check_admin_authorization(request: Request) -> tuple[bool, int, str]:
 
     if bearer_token:
         try:
-            from ..auth import _decode
+            from app.auth import _decode
             decoded = _decode(bearer_token)
             if decoded.get("app_metadata", {}).get("role") == "admin":
                 return True, 200, ""
@@ -1556,7 +1556,7 @@ def retry_promio_fulfillment(order_id: str, request: Request):
         if order.get("fulfillment_status") == "cancelled":
             raise HTTPException(400, "Cannot fulfill a cancelled order.")
 
-        from ..suppliers.promio import (
+        from app.suppliers.promio import (
             PromioAdapter,
             PromioOrderSubmissionDisabledError,
             PromioMappingError,
