@@ -8,8 +8,17 @@ import path from "path";
 export const dynamic = "force-dynamic";
 
 import { verifyAdminAuth } from "@/lib/adminAuth";
+import crypto from "crypto";
 
 const CONFIG_FILE_PATH = path.join(process.cwd(), "data", "site-config.json");
+
+function safeCompare(a?: string | null, b?: string | null): boolean {
+  if (!a || !b) return false;
+  const bufA = Buffer.from(a.trim());
+  const bufB = Buffer.from(b.trim());
+  if (bufA.length !== bufB.length) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
+}
 
 // Helper to determine whether the caller has verified admin authorization
 async function isCallerAdmin(req: NextRequest, body?: any, currentConfig?: SiteConfig): Promise<boolean> {
@@ -20,9 +29,9 @@ async function isCallerAdmin(req: NextRequest, body?: any, currentConfig?: SiteC
   if (body && currentConfig) {
     const enteredPass = String(body.adminPassword || "").trim();
     const envAdmin = process.env.YUPEK_ADMIN_KEY?.trim();
-    const isProd = process.env.NODE_ENV === "production";
+    const isProd = Boolean(process.env.VERCEL) || process.env.NODE_ENV === "production";
     const configuredPass = String(envAdmin || currentConfig.adminPassword || (isProd ? "" : "yupek2026")).trim();
-    if (enteredPass && configuredPass && enteredPass === configuredPass) {
+    if (enteredPass && configuredPass && safeCompare(enteredPass, configuredPass)) {
       return true;
     }
     if (!isProd && enteredPass && (enteredPass === "yupek2026" || enteredPass === "admin")) {
@@ -33,12 +42,18 @@ async function isCallerAdmin(req: NextRequest, body?: any, currentConfig?: SiteC
   return false;
 }
 
-// Sanitize configuration for public visitors: hide sensitive admin credentials & SMTP keys
+// Sanitize configuration for public visitors: strictly strip administrative credentials, SMTP settings,
+// and private customer data (storeOrders, contactSubmissions, notification emails)
 function sanitizePublicConfig(config: SiteConfig): SiteConfig {
   return {
     ...config,
+    adminUsername: "",
     adminPassword: "",
+    smtpUser: "",
     smtpPass: "",
+    orderNotificationEmail: "",
+    contactSubmissions: [],
+    storeOrders: [],
   };
 }
 
