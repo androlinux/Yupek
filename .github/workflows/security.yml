@@ -44,7 +44,7 @@ jobs:
         run: |
           cd yupek-backend
           export PYTHONPATH=.
-          python -m unittest discover tests
+          python -m unittest discover tests -v
 
   frontend-build:
     name: Frontend Build & Typecheck
