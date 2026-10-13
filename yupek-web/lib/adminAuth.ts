@@ -63,9 +63,9 @@ export async function verifyAdminAuth(req: NextRequest): Promise<{
       const cookieStore = cookies();
       const supabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL ||
-          "https://your-project.supabase.co",
+          "https://placeholder.supabase.co",
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-          "your_supabase_anon_key",
+          "placeholder-key",
         {
           cookies: {
             getAll() {
@@ -97,9 +97,9 @@ export async function verifyAdminAuth(req: NextRequest): Promise<{
     const cookieStore = cookies();
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL ||
-        "https://your-project.supabase.co",
+        "https://placeholder.supabase.co",
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-        "your_supabase_anon_key",
+        "placeholder-key",
       {
         cookies: {
           getAll() {

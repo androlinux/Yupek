@@ -2,13 +2,13 @@ import { createClient as createSupabaseClient, SupabaseClient } from "@supabase/
 
 const supabaseUrl =
   process.env.NEXT_PUBLIC_SUPABASE_URL ||
-  "https://your-project.supabase.co";
+  "https://placeholder.supabase.co";
 
 // Use SUPABASE_SERVICE_ROLE_KEY if set on the server, otherwise fallback to anon key
 const supabaseKey =
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  "your_supabase_anon_key";
+  "placeholder-key";
 
 let serverClientInstance: SupabaseClient | null = null;
 

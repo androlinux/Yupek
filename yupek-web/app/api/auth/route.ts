@@ -10,8 +10,8 @@ export const dynamic = "force-dynamic";
 async function getAuthenticatedUser(req: NextRequest) {
   const cookieStore = cookies();
   const ssrClient = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || "https://your-project.supabase.co",
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "your_supabase_anon_key",
+    process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co",
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-key",
     {
       cookies: {
         getAll() {
