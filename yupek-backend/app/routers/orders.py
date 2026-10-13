@@ -757,11 +757,9 @@ async def create_checkout_intent(body: CreateIntentRequest, user=Depends(optiona
         "Standard Delivery"
     )
 
-    if body.shipping_cents is not None and body.shipping_cents >= 0:
-        shipping_cents = body.shipping_cents
-    else:
-        free_shipping = body.delivery == "standard" and subtotal_cents >= config.FREE_SHIPPING_OVER
-        shipping_cents = 0 if free_shipping else config.DELIVERY.get(body.delivery, 495)
+    # Authoritative server-side shipping calculation (prevents client price/shipping manipulation)
+    free_shipping = body.delivery == "standard" and subtotal_cents >= config.FREE_SHIPPING_OVER
+    shipping_cents = 0 if free_shipping else config.DELIVERY.get(body.delivery, 495)
 
     total_cents = subtotal_cents + shipping_cents
     vat_cents = round(total_cents - total_cents / (1 + config.VAT_RATE))
@@ -1249,22 +1247,32 @@ def _check_admin_authorization(request: Request) -> tuple[bool, int, str]:
     - User metadata or client cookies
     - Authenticated customer tokens where app_metadata.role != 'admin' (HTTP 403)
     """
+    import secrets
+
     cron_secret = request.headers.get("X-Cron-Secret") or request.headers.get("x-cron-secret")
-    if cron_secret and config.CRON_SECRET and cron_secret == config.CRON_SECRET:
+    if cron_secret and config.CRON_SECRET and secrets.compare_digest(cron_secret, config.CRON_SECRET):
         return True, 200, ""
 
-    admin_key = request.headers.get("x-yupek-admin-key")
-    if admin_key and admin_key in ("yupek2026", "admin"):
-        return True, 200, ""
+    admin_key = request.headers.get("x-yupek-admin-key") or ""
+    auth_header = request.headers.get("authorization") or ""
+    bearer_token = ""
+    if auth_header.lower().startswith("bearer "):
+        bearer_token = auth_header[7:].strip()
 
-    auth_header = request.headers.get("authorization")
-    if auth_header:
-        token = auth_header.replace("Bearer ", "").replace("bearer ", "").strip()
-        if token in ("yupek2026", "admin"):
+    valid_keys = [config.ADMIN_KEY] if config.ADMIN_KEY else []
+    if not config.IS_PRODUCTION and not valid_keys:
+        valid_keys = ["yupek2026"]  # Local development / test fallback only
+
+    for key in valid_keys:
+        if admin_key and secrets.compare_digest(admin_key, key):
             return True, 200, ""
+        if bearer_token and secrets.compare_digest(bearer_token, key):
+            return True, 200, ""
+
+    if bearer_token:
         try:
             from ..auth import _decode
-            decoded = _decode(token)
+            decoded = _decode(bearer_token)
             if decoded.get("app_metadata", {}).get("role") == "admin":
                 return True, 200, ""
             return False, 403, "Forbidden: Customer cannot perform administrative operations."

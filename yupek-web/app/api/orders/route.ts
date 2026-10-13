@@ -4,6 +4,7 @@ import { promises as fs } from "fs";
 import path from "path";
 import { StoreOrder, defaultSiteConfig, SiteConfig } from "@/lib/siteConfig";
 import { getSupabaseServerClient } from "@/lib/supabaseServer";
+import { verifyAdminAuth } from "@/lib/adminAuth";
 
 export const dynamic = "force-dynamic";
 
@@ -176,8 +177,16 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    // 1. Handle Test Email request from Admin Panel
+    // 1. Handle Test Email request from Admin Panel (Admin-only)
     if (body.action === "test_email") {
+      const authRes = await verifyAdminAuth(request);
+      if (!authRes.authorized) {
+        return NextResponse.json(
+          { error: authRes.errorMessage || "Unauthorized" },
+          { status: authRes.errorStatus || 401 }
+        );
+      }
+
       const recipient =
         body.recipient ||
         process.env.NOTIFICATION_GMAIL ||

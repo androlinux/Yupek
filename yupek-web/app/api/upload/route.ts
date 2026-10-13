@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
 import { getSupabaseServerClient } from "@/lib/supabaseServer";
+import { verifyAdminAuth } from "@/lib/adminAuth";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,15 @@ function sanitizeFilename(originalName: string): string {
 }
 
 export async function POST(request: NextRequest) {
+  // Authorization check: Only verified administrators can upload media
+  const authRes = await verifyAdminAuth(request);
+  if (!authRes.authorized) {
+    return NextResponse.json(
+      { error: authRes.errorMessage || "Unauthorized" },
+      { status: authRes.errorStatus || 401 }
+    );
+  }
+
   try {
     const formData = await request.formData();
     
@@ -54,19 +64,22 @@ export async function POST(request: NextRequest) {
       Boolean(process.env.VERCEL) || process.env.NODE_ENV === "production";
 
     for (const file of files) {
-      // Validate file is an image
+      // Validate file is a safe raster image (exclude SVG to prevent XSS payloads)
       const isImage =
-        file.type.startsWith("image/") ||
-        /\.(jpe?g|png|webp|gif|svg|avif|heic|heif)$/i.test(file.name);
+        (file.type.startsWith("image/") && file.type !== "image/svg+xml") ||
+        /\.(jpe?g|png|webp|gif|avif)$/i.test(file.name);
 
       if (!isImage) {
-        continue;
+        return NextResponse.json(
+          { error: `File '${file.name}' is not an allowed image format. Supported formats: JPG, PNG, WEBP, AVIF.` },
+          { status: 400 }
+        );
       }
 
-      // Max size: 50MB
-      if (file.size > 50 * 1024 * 1024) {
+      // Max size: 10MB per image
+      if (file.size > 10 * 1024 * 1024) {
         return NextResponse.json(
-          { error: `File ${file.name} exceeds maximum allowed size (50MB)` },
+          { error: `File ${file.name} exceeds maximum allowed size (10MB)` },
           { status: 400 }
         );
       }
@@ -155,7 +168,16 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // Authorization check: Only verified administrators can list uploaded media
+  const authRes = await verifyAdminAuth(request);
+  if (!authRes.authorized) {
+    return NextResponse.json(
+      { error: authRes.errorMessage || "Unauthorized" },
+      { status: authRes.errorStatus || 401 }
+    );
+  }
+
   try {
     const isServerlessOrProd =
       Boolean(process.env.VERCEL) || process.env.NODE_ENV === "production";
@@ -227,6 +249,15 @@ export async function GET() {
 }
 
 export async function DELETE(request: NextRequest) {
+  // Authorization check: Only verified administrators can delete uploaded media
+  const authRes = await verifyAdminAuth(request);
+  if (!authRes.authorized) {
+    return NextResponse.json(
+      { error: authRes.errorMessage || "Unauthorized" },
+      { status: authRes.errorStatus || 401 }
+    );
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     let filename = searchParams.get("filename");

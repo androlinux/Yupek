@@ -80,7 +80,17 @@ class VercelPathMiddleware:
 
 
 limiter = Limiter(key_func=get_remote_address, default_limits=["120/minute"])
-app = FastAPI(title="YUPEK API", version="1.0.0")
+docs_url = None if config.IS_PRODUCTION else "/docs"
+redoc_url = None if config.IS_PRODUCTION else "/redoc"
+openapi_url = None if config.IS_PRODUCTION else "/openapi.json"
+
+app = FastAPI(
+    title="YUPEK API",
+    version="1.0.0",
+    docs_url=docs_url,
+    redoc_url=redoc_url,
+    openapi_url=openapi_url,
+)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(VercelPathMiddleware)
@@ -88,6 +98,18 @@ app.add_middleware(SlowAPIMiddleware)
 app.add_middleware(GZipMiddleware, minimum_size=800)
 app.add_middleware(CORSMiddleware, allow_origins=config.CORS_ORIGINS, allow_credentials=True,
                    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"], allow_headers=["Authorization", "Content-Type"])
+
+
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains; preload"
+    if "cache-control" not in response.headers:
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+    return response
 
 for r in (products.router, cart.router, wishlist.router, orders.router, admin.router, printify.router, promio.router):
     app.include_router(r)
@@ -102,7 +124,10 @@ def vercel_entrypoint_info(request: Request):
 
 @app.get("/")
 def root():
-    return {"name": "YUPEK API", "status": "online", "docs": "/docs", "health": "/health"}
+    resp = {"name": "YUPEK API", "status": "online", "health": "/health"}
+    if not config.IS_PRODUCTION:
+        resp["docs"] = "/docs"
+    return resp
 
 
 @app.get("/health")
@@ -113,4 +138,5 @@ def health():
 
 @app.exception_handler(RuntimeError)
 async def runtime_error(_: Request, exc: RuntimeError):
-    return JSONResponse({"detail": str(exc)}, status_code=500)
+    detail = "Internal Server Error" if config.IS_PRODUCTION else str(exc)
+    return JSONResponse({"detail": detail}, status_code=500)

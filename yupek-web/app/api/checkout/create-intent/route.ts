@@ -142,16 +142,9 @@ export async function POST(req: NextRequest) {
       "Standard Delivery"
     );
 
-    let shippingCents: number;
-    if (typeof body.shipping_cents === "number" && body.shipping_cents >= 0) {
-      shippingCents = Math.round(body.shipping_cents);
-    } else {
-      const isExpress = deliveryMethod === "express";
-      shippingCents = isExpress ? 995 : 495;
-      if (!isExpress && subtotalCents >= 10000) {
-        shippingCents = 0; // Free shipping over €100
-      }
-    }
+    // Authoritative server-side shipping fee calculation (prevents client-side price/shipping manipulation)
+    const isExpress = deliveryMethod === "express";
+    const shippingCents = isExpress ? 995 : (subtotalCents >= 10000 ? 0 : 495);
 
     const totalCents = subtotalCents + shippingCents;
     const vatCents = Math.round(totalCents - totalCents / 1.21);
