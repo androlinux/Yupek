@@ -1,0 +1,13 @@
+{
+  "include": [
+    "yupek-backend"
+  ],
+  "executionEnvironments": [
+    {
+      "root": "yupek-backend",
+      "extraPaths": [
+        "yupek-backend"
+      ]
+    }
+  ]
+}
