@@ -67,6 +67,9 @@ from app.routers.printify import (
     send_order_shipped_email,
     send_order_delivered_email,
 )
+_TESTS_DIR = os.path.dirname(os.path.abspath(__file__))
+_WORKSPACE_ROOT = os.path.abspath(os.path.join(_TESTS_DIR, "..", ".."))
+_YUPEK_WEB_DIR = os.path.join(_WORKSPACE_ROOT, "yupek-web")
 
 
 class TestYupekPaymentPipeline(unittest.TestCase):
@@ -4224,7 +4227,7 @@ class TestYupekLegalPrivacyCookieConsentAndGdpr(unittest.TestCase):
     # 17. privacy page does not expose secrets
     def test_17_privacy_page_does_not_expose_secrets(self):
         # Inspect privacy page text representation
-        with open("c:/Users/Gebruiker/Desktop/YUPEK/yupek-web/app/privacy/page.tsx", "r", encoding="utf-8") as f:
+        with open(os.path.join(_YUPEK_WEB_DIR, "app", "privacy", "page.tsx"), "r", encoding="utf-8") as f:
             privacy_code = f.read()
         self.assertNotIn("sk_test_", privacy_code)
         self.assertNotIn("sk_live_", privacy_code)
@@ -4235,7 +4238,7 @@ class TestYupekLegalPrivacyCookieConsentAndGdpr(unittest.TestCase):
     # 18. legal pages contain no environment variables
     def test_18_legal_pages_contain_no_environment_variables(self):
         for page in ["privacy", "terms", "returns", "shipping"]:
-            with open(f"c:/Users/Gebruiker/Desktop/YUPEK/yupek-web/app/{page}/page.tsx", "r", encoding="utf-8") as f:
+            with open(os.path.join(_YUPEK_WEB_DIR, "app", page, "page.tsx"), "r", encoding="utf-8") as f:
                 code = f.read()
             self.assertNotIn("process.env.STRIPE_SECRET_KEY", code)
             self.assertNotIn("process.env.SUPABASE_SERVICE_ROLE_KEY", code)
@@ -4281,7 +4284,7 @@ class TestYupekLegalPrivacyCookieConsentAndGdpr(unittest.TestCase):
 
     # 22. customer email/order data is not embedded in public pages
     def test_22_customer_email_order_data_is_not_embedded_in_public_pages(self):
-        with open("c:/Users/Gebruiker/Desktop/YUPEK/yupek-web/data/site-config.json", "r", encoding="utf-8") as f:
+        with open(os.path.join(_YUPEK_WEB_DIR, "data", "site-config.json"), "r", encoding="utf-8") as f:
             cfg = json.load(f)
         products = cfg.get("products", [])
         for item in products:
@@ -4305,9 +4308,9 @@ class TestYupekLegalPrivacyCookieConsentAndGdpr(unittest.TestCase):
 
     # 25. statutory placeholders audit (no invented KVK or VAT)
     def test_25_statutory_placeholders_audit_no_invented_kvk_or_vat(self):
-        with open("c:/Users/Gebruiker/Desktop/YUPEK/yupek-web/app/privacy/page.tsx", "r", encoding="utf-8") as f:
+        with open(os.path.join(_YUPEK_WEB_DIR, "app", "privacy", "page.tsx"), "r", encoding="utf-8") as f:
             privacy_code = f.read()
-        with open("c:/Users/Gebruiker/Desktop/YUPEK/yupek-web/app/terms/page.tsx", "r", encoding="utf-8") as f:
+        with open(os.path.join(_YUPEK_WEB_DIR, "app", "terms", "page.tsx"), "r", encoding="utf-8") as f:
             terms_code = f.read()
 
         # Must contain explicit placeholder labels
@@ -4318,7 +4321,7 @@ class TestYupekLegalPrivacyCookieConsentAndGdpr(unittest.TestCase):
         self.assertIn("[VAT / BTW NUMBER", terms_code)
 
         # Must NOT contain invented B.V. corporate structure in footer
-        with open("c:/Users/Gebruiker/Desktop/YUPEK/yupek-web/components/Footer.tsx", "r", encoding="utf-8") as f:
+        with open(os.path.join(_YUPEK_WEB_DIR, "components", "Footer.tsx"), "r", encoding="utf-8") as f:
             footer_code = f.read()
         self.assertNotIn("YUPEK B.V.", footer_code)
 
@@ -4762,7 +4765,7 @@ class TestShippingAndTrackingPipeline(unittest.TestCase):
 
     # 17. Public product page contains no Printify metadata
     def test_17_public_product_page_contains_no_printify_metadata(self):
-        with open("c:/Users/Gebruiker/Desktop/YUPEK/yupek-web/data/site-config.json", "r", encoding="utf-8") as f:
+        with open(os.path.join(_YUPEK_WEB_DIR, "data", "site-config.json"), "r", encoding="utf-8") as f:
             cfg = json.load(f)
 
         serialized = json.dumps(cfg)

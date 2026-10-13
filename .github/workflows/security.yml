@@ -43,6 +43,7 @@ jobs:
       - name: Run Python unit tests
         run: |
           cd yupek-backend
+          export PYTHONPATH=.
           python -m unittest discover tests
 
   frontend-build:
