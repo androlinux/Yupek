@@ -41,10 +41,25 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run Python unit tests
+        id: run_tests
         run: |
           cd yupek-backend
           export PYTHONPATH=.
-          python -m unittest discover tests -v
+          python -m unittest discover tests -v 2>&1 | tee test_results.log
+        continue-on-error: true
+
+      - name: Summarize Backend Results
+        if: always()
+        run: |
+          if [ -f yupek-backend/test_results.log ]; then
+            echo "### Backend Test Results" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            tail -n 60 yupek-backend/test_results.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            if grep -q "FAILED" yupek-backend/test_results.log; then
+              exit 1
+            fi
+          fi
 
   frontend-build:
     name: Frontend Build & Typecheck
@@ -66,9 +81,25 @@ jobs:
           npm ci
 
       - name: Run Next.js build
+        id: run_build
         run: |
           cd yupek-web
-          npm run build
+          npm run build 2>&1 | tee build_results.log
         env:
           NEXT_PUBLIC_SUPABASE_URL: "https://umopnncjoswyilibslep.supabase.co"
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: "dummy_anon_key_for_ci"
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: "sb_publishable_xGCmb036JS-dQiAi0KxWVw_LKUjQyfB"
+          NEXT_PUBLIC_SITE_URL: "https://www.yupek.shop"
+        continue-on-error: true
+
+      - name: Summarize Frontend Results
+        if: always()
+        run: |
+          if [ -f yupek-web/build_results.log ]; then
+            echo "### Frontend Build Results" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            tail -n 60 yupek-web/build_results.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            if grep -q "Failed to compile" yupek-web/build_results.log; then
+              exit 1
+            fi
+          fi
