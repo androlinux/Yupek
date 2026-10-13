@@ -39,3 +39,15 @@ yarn-error.log*
 
 # Editor
 .vscode/
+
+# Database dumps and temporary backups
+*dump*.json
+*verified*.json
+*.dump
+*.sql.bak
+*.bak
+
+# Keys and certificates
+*.pem
+*.key
+*.crt

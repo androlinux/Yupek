@@ -1,6 +1,6 @@
 {
   "adminUsername": "admin",
-  "adminPassword": "yupek2026",
+  "adminPassword": "",
   "announcementEnabled": true,
   "announcementText": "COMPLIMENTARY SHIPPING ACROSS EUROPE ON ORDERS OVER €100 — CLIENT CONCIERGE ASSISTANCE AVAILABLE",
   "announcementLink": "/shop",
@@ -36,7 +36,7 @@
   "contactVideoUrl": "",
   "orderNotificationEmail": "daniyarov16@gmail.com",
   "smtpUser": "daniyarov16@gmail.com",
-  "smtpPass": "ewfw iwop cvmk mpij",
+  "smtpPass": "",
   "freeShippingThreshold": 100,
   "shopButtonLabel": "SHOP COLLECTION",
   "addToBagLabel": "ADD TO BAG",
@@ -31370,42 +31370,7 @@
     }
   ],
   "contactSubmissions": [],
-  "storeOrders": [
-    {
-      "id": "ord-sample-1",
-      "items": [
-        {
-          "qty": 1,
-          "name": "TURKMEN SILK-INSPIRED SHIRT",
-          "size": "L",
-          "slug": "turkmen-silk-shirt",
-          "color": "Raw Silk",
-          "image": "/images/look-1.jpg",
-          "price": 285
-        }
-      ],
-      "total": 285,
-      "status": "New",
-      "customer": {
-        "city": "Amsterdam",
-        "email": "alexander.dejong@example.nl",
-        "phone": "+31 6 1122 3344",
-        "street": "Herengracht 142",
-        "country": "Netherlands",
-        "lastName": "de Jong",
-        "firstName": "Alexander",
-        "postalCode": "1015 BN"
-      },
-      "shipping": 0,
-      "subtotal": 285,
-      "createdAt": "2026-10-05T09:15:00Z",
-      "orderNumber": "YPK-2026-7821",
-      "paymentMethod": "iDEAL",
-      "deliveryMethod": "Standard Courier",
-      "emailNotificationSent": true,
-      "emailNotificationRecipient": "daniyarow16@gmail.com"
-    }
-  ],
+  "storeOrders": [],
   "_reset": true,
   "updatedAt": "2026-10-06T19:32:35.491Z"
 }

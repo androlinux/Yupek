@@ -1,0 +1,73 @@
+name: Security & Quality Audit
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  secret-scan:
+    name: Secret Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Gitleaks Secret Scanner
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: false
+
+  backend-tests:
+    name: Backend Test Suite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          cd yupek-backend
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Python unit tests
+        run: |
+          cd yupek-backend
+          python -m unittest discover tests
+
+  frontend-build:
+    name: Frontend Build & Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: "yupek-web/package-lock.json"
+
+      - name: Install dependencies
+        run: |
+          cd yupek-web
+          npm ci
+
+      - name: Run Next.js build
+        run: |
+          cd yupek-web
+          npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: "https://umopnncjoswyilibslep.supabase.co"
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: "dummy_anon_key_for_ci"
