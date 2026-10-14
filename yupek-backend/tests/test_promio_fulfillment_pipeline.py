@@ -31,9 +31,9 @@ class TestPromioCatalogNormalization(unittest.TestCase):
     """Test catalog normalization for the 4 Promio design products."""
 
     def setUp(self):
-        scratch_path = os.path.join(
-            r"C:\Users\Gebruiker\.gemini\antigravity-ide\brain\4dbcc181-541c-4981-a64b-0342974a6248\scratch\yupek_api_products.json"
-        )
+        _tests_dir = os.path.dirname(os.path.abspath(__file__))
+        _workspace_root = os.path.abspath(os.path.join(_tests_dir, "..", ".."))
+        scratch_path = os.path.join(_workspace_root, "scratch", "yupek_api_products.json")
         if os.path.exists(scratch_path):
             with open(scratch_path, "r", encoding="utf-8") as f:
                 self.raw_products = json.load(f)["products"]
