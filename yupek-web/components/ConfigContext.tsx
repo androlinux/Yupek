@@ -27,7 +27,7 @@ interface ConfigContextType {
 
 const ConfigContext = createContext<ConfigContextType | null>(null);
 
-function getAdminHeaders(): Record<string, string> {
+export function getAdminHeaders(): Record<string, string> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (typeof window !== "undefined") {
     try {

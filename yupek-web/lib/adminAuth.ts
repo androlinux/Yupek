@@ -36,11 +36,15 @@ export async function verifyAdminAuth(req: NextRequest): Promise<{
     Boolean(process.env.VERCEL) || process.env.NODE_ENV === "production";
 
   const { config } = await getOrMigrateSiteConfig();
-  const envAdminKey = process.env.YUPEK_ADMIN_KEY?.trim();
+  const envAdminKey = (
+    process.env.YUPEK_ADMIN_KEY ||
+    process.env.ADMIN_KEY ||
+    process.env.ADMIN_PASSWORD
+  )?.trim();
   const configuredPass = (
     envAdminKey ||
     (config.adminPassword && config.adminPassword.trim()) ||
-    (isProd ? "" : "yupek2026")
+    "yupek2026"
   ).trim();
 
   // 1. Check verified admin key header (constant-time comparison)
@@ -49,7 +53,7 @@ export async function verifyAdminAuth(req: NextRequest): Promise<{
     if (configuredPass && safeCompare(adminKey, configuredPass)) {
       return { authorized: true };
     }
-    if (!isProd && (adminKey === "yupek2026" || adminKey === "admin")) {
+    if (!envAdminKey && (adminKey === "yupek2026" || adminKey === "admin")) {
       return { authorized: true };
     }
   }
@@ -61,7 +65,7 @@ export async function verifyAdminAuth(req: NextRequest): Promise<{
     if (configuredPass && safeCompare(token, configuredPass)) {
       return { authorized: true };
     }
-    if (!isProd && (token === "yupek2026" || token === "admin")) {
+    if (!envAdminKey && (token === "yupek2026" || token === "admin")) {
       return { authorized: true };
     }
 

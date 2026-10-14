@@ -2,7 +2,7 @@
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { useSiteConfig } from "@/components/ConfigContext";
+import { useSiteConfig, getAdminHeaders } from "@/components/ConfigContext";
 import { useAuth } from "@/components/AuthContext";
 import Icon from "@/components/ui/Icon";
 import ImageUploader from "@/components/admin/ImageUploader";
@@ -117,7 +117,9 @@ export default function AdminPage() {
   const fetchUploadedMedia = async () => {
     try {
       setLoadingMedia(true);
-      const res = await fetch("/api/upload");
+      const res = await fetch("/api/upload", {
+        headers: getAdminHeaders(),
+      });
       const data = await res.json();
       if (data.success && Array.isArray(data.files)) {
         setUploadedMedia(data.files);
@@ -316,8 +318,12 @@ export default function AdminPage() {
     try {
       const formData = new FormData();
       fileArray.forEach((f) => formData.append("files", f));
+      const adminKey = typeof window !== "undefined" ? sessionStorage.getItem("yupek_admin_key") || "yupek2026" : "yupek2026";
       const res = await fetch("/api/upload", {
         method: "POST",
+        headers: {
+          "x-yupek-admin-key": adminKey,
+        },
         body: formData,
       });
       const data = await res.json();
@@ -344,6 +350,7 @@ export default function AdminPage() {
     try {
       const res = await fetch(`/api/upload?filename=${encodeURIComponent(filename)}`, {
         method: "DELETE",
+        headers: getAdminHeaders(),
       });
       const data = await res.json();
       if (data.success) {
@@ -364,7 +371,7 @@ export default function AdminPage() {
     try {
       const res = await fetch("/api/orders", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getAdminHeaders(),
         body: JSON.stringify({
           action: "test_email",
           recipient: form.orderNotificationEmail,
