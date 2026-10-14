@@ -63,6 +63,13 @@ export default function AdminPage() {
     _setForm(action);
   };
 
+  // Synchronize local form with context config when not dirty
+  useEffect(() => {
+    if (!isDirtyRef.current) {
+      _setForm(config);
+    }
+  }, [config]);
+
   const [activeTab, setActiveTab] = useState<
     "orders" | "email" | "banners" | "hero" | "editorial" | "products" | "media" | "whatsapp" | "contact" | "buttons" | "inbox" | "security"
   >("orders");
@@ -417,16 +424,20 @@ export default function AdminPage() {
   };
 
   // Safe Order Deletion State & Handlers
-  const [orderToDelete, setOrderToDelete] = useState<StoreOrder | null>(null);
-  const [deleteOrderLoading, setDeleteOrderLoading] = useState(false);
-  const [paidWarningAcknowledged, setPaidWarningAcknowledged] = useState(false);
+  const [deletingOrderId, setDeletingOrderId] = useState<string | null>(null);
 
-  const handleConfirmDeleteOrder = async () => {
-    if (!orderToDelete) return;
-    const targetId = orderToDelete.id || orderToDelete.orderNumber;
+  const handleDeleteOrder = async (order: StoreOrder) => {
+    const targetId = order.id || order.orderNumber;
     if (!targetId) return;
 
-    setDeleteOrderLoading(true);
+    const isPaid = order.payment_status === "paid" || order.status === "Paid";
+    const confirmMsg = isPaid
+      ? `⚠️ ATTENTION: Order #${order.orderNumber || targetId} is marked as PAID.\n\nAre you sure you want to permanently delete this order from the store database?`
+      : `Are you sure you want to permanently delete order #${order.orderNumber || targetId}?`;
+
+    if (!window.confirm(confirmMsg)) return;
+
+    setDeletingOrderId(targetId);
     try {
       const res = await deleteStoreOrder(targetId);
       if (!res.success) {
@@ -441,13 +452,11 @@ export default function AdminPage() {
         ),
       }));
 
-      showToast(`Order #${orderToDelete.orderNumber || targetId} permanently deleted.`);
-      setOrderToDelete(null);
-      setPaidWarningAcknowledged(false);
+      showToast(`✓ Order #${order.orderNumber || targetId} permanently deleted.`);
     } catch (err: any) {
-      showToast(`Error deleting order: ${err.message || "Failed"}`);
+      showToast(`Error deleting order: ${err?.message || "Failed"}`);
     } finally {
-      setDeleteOrderLoading(false);
+      setDeletingOrderId(null);
     }
   };
 
@@ -792,247 +801,289 @@ export default function AdminPage() {
               </div>
             ) : (
               <div className="space-y-5">
-                {form.storeOrders.map((order) => (
-                  <div
-                    key={order.id}
-                    className="border border-brown/20 bg-white/95 p-5 md:p-6 shadow-sm rounded-sm space-y-4"
-                  >
-                    {/* Top Row: Order ID, Status, Date */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-brown/10 pb-4">
-                      <div>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="font-mono text-sm font-bold text-brown tracking-wider">
-                            #{order.orderNumber}
-                          </span>
+                {form.storeOrders.map((order) => {
+                  const targetId = order.id || order.orderNumber;
+                  const orderNum = order.orderNumber || order.id || "N/A";
+                  const orderTotal = typeof order.total === "number" ? order.total : (Number(order.total) || ((order as any).total_cents ? (order as any).total_cents / 100 : 0));
+                  const createdDate = order.createdAt || (order as any).created_at ? new Date(order.createdAt || (order as any).created_at).toLocaleString() : "Recent";
+                  
+                  const cust = (order.customer || {}) as any;
+                  const addr = ((order as any).shipping_address || {}) as any;
+                  const firstName = cust.firstName || cust.first_name || addr.first_name || (order as any).customer_name?.split(" ")[0] || "";
+                  const lastName = cust.lastName || cust.last_name || addr.last_name || (order as any).customer_name?.split(" ").slice(1).join(" ") || "";
+                  const fullName = [firstName, lastName].filter(Boolean).join(" ") || (order as any).customer_name || "Guest Client";
+                  const email = cust.email || (order as any).customer_email || (order as any).email || addr.email || "";
+                  const phone = cust.phone || (order as any).phone || addr.phone || "";
+                  const street = cust.street || addr.street || "No street address on file";
+                  const city = cust.city || addr.city || "";
+                  const postalCode = cust.postalCode || addr.postalCode || addr.zip || "";
+                  const country = cust.country || addr.country || "Netherlands";
+                  const deliveryMethod = order.deliveryMethod || (order as any).delivery_method || "Standard Delivery";
+                  const shippingCost = typeof order.shipping === "number" ? order.shipping : ((order as any).shipping_cents ? (order as any).shipping_cents / 100 : 0);
+                  const items = Array.isArray(order.items) ? order.items : [];
 
-                          {/* Payment Status Badge */}
-                          <span
-                            className={`text-[9px] uppercase tracking-widest font-bold px-2.5 py-0.5 rounded-full border ${
-                              (order.payment_status === "paid" || order.status === "Paid")
-                                ? "bg-green-100 text-green-900 border-green-300"
-                                : order.payment_status === "failed" || order.status === "Failed"
-                                ? "bg-red-100 text-red-900 border-red-300"
-                                : "bg-amber-100 text-amber-900 border-amber-300"
-                            }`}
-                          >
-                            Payment: {order.payment_status?.toUpperCase() || (order.status === "Paid" ? "PAID" : "PENDING")}
-                          </span>
-
-                          {/* Fulfillment Status Badge */}
-                          <span
-                            className={`text-[9px] uppercase tracking-widest font-bold px-2.5 py-0.5 rounded-full border ${
-                              order.fulfillment_status === "promio_order_created" || order.fulfillment_status === "printify_order_created"
-                                ? "bg-amber-100 text-amber-900 border-amber-300"
-                                : order.fulfillment_status === "sent_to_production" || order.fulfillment_status === "in_production"
-                                ? "bg-purple-100 text-purple-900 border-purple-300"
-                                : order.fulfillment_status === "shipped" || order.fulfillment_status === "delivered"
-                                ? "bg-emerald-100 text-emerald-900 border-emerald-300"
-                                : "bg-sand text-brown/80 border-brown/20"
-                            }`}
-                          >
-                            Fulfillment: {order.fulfillment_status ? order.fulfillment_status.replace(/_/g, " ").toUpperCase() : (order.status || "NEW").toUpperCase()}
-                          </span>
-
-                          {order.emailNotificationSent ? (
-                            <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wider text-green-800 bg-green-50 px-2 py-0.5 rounded border border-green-200 font-medium">
-                              <Icon name="check" className="h-3 w-3 text-green-700" />
-                              <span>Email Dispatched</span>
+                  return (
+                    <div
+                      key={targetId}
+                      className="border border-brown/20 bg-white/95 p-5 md:p-6 shadow-sm rounded-sm space-y-4"
+                    >
+                      {/* Top Row: Order ID, Status, Date */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-brown/10 pb-4">
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-mono text-sm font-bold text-brown tracking-wider">
+                              #{orderNum}
                             </span>
-                          ) : null}
-                        </div>
 
-                        {/* Identifiers & Details */}
-                        <div className="flex flex-wrap items-center gap-3 mt-2 text-[11px] text-brown/70">
-                          <span>
-                            Created: <strong>{new Date(order.createdAt).toLocaleString()}</strong>
-                          </span>
-                          <span>&bull;</span>
-                          <span>
-                            Total: <strong className="text-burgundy text-xs">€{order.total.toFixed(2)}</strong>
-                          </span>
-                          {order.stripe_payment_intent_id && (
-                            <>
-                              <span>&bull;</span>
-                              <span className="font-mono text-[10px] bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200" title="Stripe PaymentIntent ID">
-                                Stripe: {order.stripe_payment_intent_id}
-                              </span>
-                            </>
-                          )}
-                          {(order.promio_order_id || order.printify_order_id) && (
-                            <>
-                              <span>&bull;</span>
-                              <span className="font-mono text-[10px] bg-amber-50 text-amber-900 px-1.5 py-0.5 rounded border border-amber-300 font-bold" title="Promio Order ID">
-                                Promio: #{order.promio_order_id || order.printify_order_id} (Breda, NL)
-                              </span>
-                            </>
-                          )}
-                          {order.tracking_number && (
-                            <>
-                              <span>&bull;</span>
-                              <span className="inline-flex items-center gap-1 font-mono text-[10px] bg-emerald-50 text-emerald-900 px-2 py-0.5 rounded border border-emerald-300 font-semibold" title="Shipment Tracking">
-                                <Icon name="truck" className="h-3 w-3 text-emerald-700" />
-                                <span>{order.carrier ? `${order.carrier}: ` : ""}{order.tracking_number}</span>
-                                {order.tracking_url && (
-                                  <a
-                                    href={order.tracking_url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="ml-1 text-emerald-800 underline hover:text-emerald-950 font-bold"
-                                    title="Open tracking page"
-                                  >
-                                    [TRACK]
-                                  </a>
-                                )}
-                              </span>
-                            </>
-                          )}
-                          {order.shipped_at && (
-                            <>
-                              <span>&bull;</span>
-                              <span className="text-[10px] text-brown/60">
-                                Shipped: {new Date(order.shipped_at).toLocaleDateString()}
-                              </span>
-                            </>
-                          )}
-                          {order.delivered_at && (
-                            <>
-                              <span>&bull;</span>
-                              <span className="text-[10px] text-emerald-800 font-medium">
-                                Delivered: {new Date(order.delivered_at).toLocaleDateString()}
-                              </span>
-                            </>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Status changer & Safe Delete Action */}
-                      <div className="flex items-center gap-2.5">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] uppercase tracking-wider text-brown/60">Status:</span>
-                          <select
-                            value={order.status}
-                            onChange={(e) => handleOrderStatusChange(order.id, e.target.value)}
-                            className="border border-brown/30 bg-white px-2.5 py-1 text-xs text-brown focus:border-brown focus:outline-none"
-                          >
-                            <option value="New">New</option>
-                            <option value="Processing">Processing</option>
-                            <option value="Paid">Paid</option>
-                            <option value="Shipped">Shipped</option>
-                            <option value="Delivered">Delivered</option>
-                            <option value="Cancelled">Cancelled</option>
-                          </select>
-                        </div>
-
-                        {/* Retry Promio Fulfillment Button:
-                            Shown strictly for paid orders with NO promio_order_id */}
-                        {(order.payment_status === "paid" || order.status === "Paid") &&
-                          !order.promio_order_id &&
-                          !order.printify_order_id &&
-                          order.payment_status !== "failed" &&
-                          order.payment_status !== "pending" &&
-                          order.payment_status !== "refunded" &&
-                          order.status !== "Cancelled" &&
-                          order.fulfillment_status !== "cancelled" && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setOrderToRetryFulfill(order);
-                                setRetryFulfillError(null);
-                              }}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium tracking-wider uppercase text-amber-900 hover:text-white bg-amber-50 hover:bg-amber-700 border border-amber-300 hover:border-amber-700 rounded transition-colors shadow-xs"
-                              title={`Retry Promio fulfillment for #${order.orderNumber}`}
+                            {/* Payment Status Badge */}
+                            <span
+                              className={`text-[9px] uppercase tracking-widest font-bold px-2.5 py-0.5 rounded-full border ${
+                                (order.payment_status === "paid" || order.status === "Paid")
+                                  ? "bg-green-100 text-green-900 border-green-300"
+                                  : order.payment_status === "failed" || order.status === "Failed"
+                                  ? "bg-red-100 text-red-900 border-red-300"
+                                  : "bg-amber-100 text-amber-900 border-amber-300"
+                              }`}
                             >
-                              <Icon name="refresh" className="h-3 w-3" />
-                              <span>Retry Promio Fulfillment</span>
-                            </button>
-                        )}
+                              Payment: {order.payment_status?.toUpperCase() || (order.status === "Paid" ? "PAID" : "PENDING")}
+                            </span>
 
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setOrderToDelete(order);
-                            setPaidWarningAcknowledged(false);
-                          }}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium tracking-wider uppercase text-red-700/80 hover:text-white bg-red-50/80 hover:bg-red-700 border border-red-200/80 hover:border-red-700 rounded transition-colors"
-                          title={`Delete order #${order.orderNumber}`}
-                        >
-                          <Icon name="trash" className="h-3 w-3" />
-                          <span>Delete</span>
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Customer & Address Details */}
-                    <div className="grid md:grid-cols-2 gap-4 bg-sand/10 p-4 border border-brown/10 text-xs">
-                      <div>
-                        <span className="text-[9px] uppercase tracking-widest text-burgundy font-bold block mb-1">
-                          Client Contact
-                        </span>
-                        <p className="font-semibold text-brown">{order.customer.firstName} {order.customer.lastName}</p>
-                        <p className="text-brown/70 mt-0.5">
-                          <a href={`mailto:${order.customer.email}`} className="text-burgundy hover:underline">
-                            {order.customer.email}
-                          </a>
-                        </p>
-                        {order.customer.phone && (
-                          <p className="text-brown/70 mt-0.5">
-                            Tel: <a href={`tel:${order.customer.phone}`} className="hover:underline">{order.customer.phone}</a> &bull;{" "}
-                            <a
-                              href={`https://wa.me/${order.customer.phone.replace(/[^0-9]/g, "")}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-green-700 hover:underline font-medium"
+                            {/* Fulfillment Status Badge */}
+                            <span
+                              className={`text-[9px] uppercase tracking-widest font-bold px-2.5 py-0.5 rounded-full border ${
+                                order.fulfillment_status === "promio_order_created" || order.fulfillment_status === "printify_order_created"
+                                  ? "bg-amber-100 text-amber-900 border-amber-300"
+                                  : order.fulfillment_status === "sent_to_production" || order.fulfillment_status === "in_production"
+                                  ? "bg-purple-100 text-purple-900 border-purple-300"
+                                  : order.fulfillment_status === "shipped" || order.fulfillment_status === "delivered"
+                                  ? "bg-emerald-100 text-emerald-900 border-emerald-300"
+                                  : "bg-sand text-brown/80 border-brown/20"
+                              }`}
                             >
-                              WhatsApp &rarr;
-                            </a>
-                          </p>
-                        )}
-                      </div>
+                              Fulfillment: {order.fulfillment_status ? order.fulfillment_status.replace(/_/g, " ").toUpperCase() : (order.status || "NEW").toUpperCase()}
+                            </span>
 
-                      <div>
-                        <span className="text-[9px] uppercase tracking-widest text-burgundy font-bold block mb-1">
-                          Delivery Destination
-                        </span>
-                        <p className="text-brown/80 leading-relaxed">
-                          {order.customer.street}<br />
-                          {order.customer.postalCode} {order.customer.city}<br />
-                          <strong>{order.customer.country}</strong>
-                        </p>
-                        <p className="text-[10px] text-brown/50 mt-1">
-                          Method: {order.deliveryMethod} &bull; Shipping: {order.shipping === 0 ? "Complimentary (Free)" : `€${order.shipping.toFixed(2)}`}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Ordered Items List */}
-                    <div>
-                      <span className="text-[9px] uppercase tracking-widest text-brown/60 font-semibold block mb-2">
-                        Garments in this Order:
-                      </span>
-                      <div className="divide-y divide-brown/10 border border-brown/15 bg-white">
-                        {order.items.map((item, idx) => (
-                          <div key={idx} className="p-3 flex items-center justify-between gap-3 text-xs">
-                            <div className="flex items-center gap-3">
-                              {item.image && (
-                                <div className="h-12 w-9 bg-sand/30 overflow-hidden relative border border-brown/10 shrink-0">
-                                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                                  <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
-                                </div>
-                              )}
-                              <div>
-                                <p className="font-semibold text-brown uppercase">{item.name}</p>
-                                <p className="text-[10px] text-brown/60">
-                                  Size: <strong>{item.size}</strong> &bull; Color: {item.color} &bull; Qty: {item.qty} &times; €{item.price.toFixed(2)}
-                                </p>
-                              </div>
-                            </div>
-                            <span className="font-semibold text-brown">€{(item.price * item.qty).toFixed(2)}</span>
+                            {order.emailNotificationSent ? (
+                              <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wider text-green-800 bg-green-50 px-2 py-0.5 rounded border border-green-200 font-medium">
+                                <Icon name="check" className="h-3 w-3 text-green-700" />
+                                <span>Email Dispatched</span>
+                              </span>
+                            ) : null}
                           </div>
-                        ))}
+
+                          {/* Identifiers & Details */}
+                          <div className="flex flex-wrap items-center gap-3 mt-2 text-[11px] text-brown/70">
+                            <span>
+                              Created: <strong>{createdDate}</strong>
+                            </span>
+                            <span>&bull;</span>
+                            <span>
+                              Total: <strong className="text-burgundy text-xs">€{orderTotal.toFixed(2)}</strong>
+                            </span>
+                            {order.stripe_payment_intent_id && (
+                              <>
+                                <span>&bull;</span>
+                                <span className="font-mono text-[10px] bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200" title="Stripe PaymentIntent ID">
+                                  Stripe: {order.stripe_payment_intent_id}
+                                </span>
+                              </>
+                            )}
+                            {(order.promio_order_id || order.printify_order_id) && (
+                              <>
+                                <span>&bull;</span>
+                                <span className="font-mono text-[10px] bg-amber-50 text-amber-900 px-1.5 py-0.5 rounded border border-amber-300 font-bold" title="Promio Order ID">
+                                  Promio: #{order.promio_order_id || order.printify_order_id} (Breda, NL)
+                                </span>
+                              </>
+                            )}
+                            {order.tracking_number && (
+                              <>
+                                <span>&bull;</span>
+                                <span className="inline-flex items-center gap-1 font-mono text-[10px] bg-emerald-50 text-emerald-900 px-2 py-0.5 rounded border border-emerald-300 font-semibold" title="Shipment Tracking">
+                                  <Icon name="truck" className="h-3 w-3 text-emerald-700" />
+                                  <span>{order.carrier ? `${order.carrier}: ` : ""}{order.tracking_number}</span>
+                                  {order.tracking_url && (
+                                    <a
+                                      href={order.tracking_url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="ml-1 text-emerald-800 underline hover:text-emerald-950 font-bold"
+                                      title="Open tracking page"
+                                    >
+                                      [TRACK]
+                                    </a>
+                                  )}
+                                </span>
+                              </>
+                            )}
+                            {order.shipped_at && (
+                              <>
+                                <span>&bull;</span>
+                                <span className="text-[10px] text-brown/60">
+                                  Shipped: {new Date(order.shipped_at).toLocaleDateString()}
+                                </span>
+                              </>
+                            )}
+                            {order.delivered_at && (
+                              <>
+                                <span>&bull;</span>
+                                <span className="text-[10px] text-emerald-800 font-medium">
+                                  Delivered: {new Date(order.delivered_at).toLocaleDateString()}
+                                </span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Status changer & Safe Delete Action */}
+                        <div className="flex items-center gap-2.5">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] uppercase tracking-wider text-brown/60">Status:</span>
+                            <select
+                              value={order.status || "New"}
+                              onChange={(e) => handleOrderStatusChange(targetId, e.target.value)}
+                              className="border border-brown/30 bg-white px-2.5 py-1 text-xs text-brown focus:border-brown focus:outline-none"
+                            >
+                              <option value="New">New</option>
+                              <option value="Processing">Processing</option>
+                              <option value="Paid">Paid</option>
+                              <option value="Shipped">Shipped</option>
+                              <option value="Delivered">Delivered</option>
+                              <option value="Cancelled">Cancelled</option>
+                            </select>
+                          </div>
+
+                          {/* Retry Promio Fulfillment Button:
+                              Shown strictly for paid orders with NO promio_order_id */}
+                          {(order.payment_status === "paid" || order.status === "Paid") &&
+                            !order.promio_order_id &&
+                            !order.printify_order_id &&
+                            order.payment_status !== "failed" &&
+                            order.payment_status !== "pending" &&
+                            order.payment_status !== "refunded" &&
+                            order.status !== "Cancelled" &&
+                            order.fulfillment_status !== "cancelled" && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setOrderToRetryFulfill(order);
+                                  setRetryFulfillError(null);
+                                }}
+                                className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium tracking-wider uppercase text-amber-900 hover:text-white bg-amber-50 hover:bg-amber-700 border border-amber-300 hover:border-amber-700 rounded transition-colors shadow-xs"
+                                title={`Retry Promio fulfillment for #${orderNum}`}
+                              >
+                                <Icon name="refresh" className="h-3 w-3" />
+                                <span>Retry Promio Fulfillment</span>
+                              </button>
+                          )}
+
+                          <button
+                            type="button"
+                            disabled={deletingOrderId === targetId}
+                            onClick={() => handleDeleteOrder(order)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-semibold tracking-wider uppercase text-red-700 hover:text-white bg-red-100/80 hover:bg-red-700 border border-red-300 hover:border-red-700 rounded transition-colors shadow-xs disabled:opacity-50"
+                            title={`Delete order #${orderNum}`}
+                          >
+                            {deletingOrderId === targetId ? (
+                              <>
+                                <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-solid border-red-700 border-r-transparent" />
+                                <span>Deleting...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Icon name="trash" className="h-3 w-3" />
+                                <span>Delete</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Customer & Address Details */}
+                      <div className="grid md:grid-cols-2 gap-4 bg-sand/10 p-4 border border-brown/10 text-xs">
+                        <div>
+                          <span className="text-[9px] uppercase tracking-widest text-burgundy font-bold block mb-1">
+                            Client Contact
+                          </span>
+                          <p className="font-semibold text-brown">{fullName}</p>
+                          <p className="text-brown/70 mt-0.5">
+                            {email ? (
+                              <a href={`mailto:${email}`} className="text-burgundy hover:underline">
+                                {email}
+                              </a>
+                            ) : (
+                              <span className="text-brown/40 italic">No email on file</span>
+                            )}
+                          </p>
+                          {phone && (
+                            <p className="text-brown/70 mt-0.5">
+                              Tel: <a href={`tel:${phone}`} className="hover:underline">{phone}</a> &bull;{" "}
+                              <a
+                                href={`https://wa.me/${phone.replace(/[^0-9]/g, "")}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-green-700 hover:underline font-medium"
+                              >
+                                WhatsApp &rarr;
+                              </a>
+                            </p>
+                          )}
+                        </div>
+
+                        <div>
+                          <span className="text-[9px] uppercase tracking-widest text-burgundy font-bold block mb-1">
+                            Delivery Destination
+                          </span>
+                          <p className="text-brown/80 leading-relaxed">
+                            {street}<br />
+                            {[postalCode, city].filter(Boolean).join(" ")}<br />
+                            <strong>{country}</strong>
+                          </p>
+                          <p className="text-[10px] text-brown/50 mt-1">
+                            Method: {deliveryMethod} &bull; Shipping: {shippingCost === 0 ? "Complimentary (Free)" : `€${shippingCost.toFixed(2)}`}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Ordered Items List */}
+                      <div>
+                        <span className="text-[9px] uppercase tracking-widest text-brown/60 font-semibold block mb-2">
+                          Garments in this Order:
+                        </span>
+                        <div className="divide-y divide-brown/10 border border-brown/15 bg-white">
+                          {items.map((item, idx) => {
+                            const itemPrice = typeof item.price === "number" ? item.price : ((item as any).unit_price_cents ? (item as any).unit_price_cents / 100 : Number(item.price) || 0);
+                            const itemQty = typeof item.qty === "number" ? item.qty : ((item as any).quantity ? Number((item as any).quantity) : 1);
+                            const itemName = item.name || (item as any).title || "YUPEK Garment";
+                            const itemSize = item.size || (item as any).variant_size || "Standard";
+                            const itemColor = item.color || (item as any).variant_color || "Natural";
+                            const itemTotal = itemPrice * itemQty;
+
+                            return (
+                              <div key={idx} className="p-3 flex items-center justify-between gap-3 text-xs">
+                                <div className="flex items-center gap-3">
+                                  {item.image && (
+                                    <div className="h-12 w-9 bg-sand/30 overflow-hidden relative border border-brown/10 shrink-0">
+                                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                                      <img src={item.image} alt={itemName} className="h-full w-full object-cover" />
+                                    </div>
+                                  )}
+                                  <div>
+                                    <p className="font-semibold text-brown uppercase">{itemName}</p>
+                                    <p className="text-[10px] text-brown/60">
+                                      Size: <strong>{itemSize}</strong> &bull; Color: {itemColor} &bull; Qty: {itemQty} &times; €{itemPrice.toFixed(2)}
+                                    </p>
+                                  </div>
+                                </div>
+                                <span className="font-semibold text-brown">€{itemTotal.toFixed(2)}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -2491,209 +2542,111 @@ export default function AdminPage() {
       </div>
 
       {/* ========================================================================= */}
-      {/* SAFE DELETE ORDER CONFIRMATION MODAL                                      */}
-      {/* ========================================================================= */}
-      {orderToDelete && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-fadeIn">
-          <div className="bg-[#FAF7F2] border border-brown/30 w-full max-w-lg p-6 md:p-8 rounded shadow-2xl space-y-5 text-left">
-            {/* Modal Header */}
-            <div className="flex items-start gap-3.5">
-              <div className="h-11 w-11 rounded-full bg-red-100 text-red-700 flex items-center justify-center shrink-0 border border-red-200">
-                <Icon name="trash" className="h-5 w-5" />
-              </div>
-              <div>
-                <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-burgundy block">
-                  YUPEK ORDER ADMINISTRATION
-                </span>
-                <h3 className="font-serif text-xl md:text-2xl text-brown font-bold mt-0.5">
-                  Delete this order permanently?
-                </h3>
-                <p className="text-xs text-brown/70 mt-1 leading-relaxed">
-                  This action permanently removes this order from your local store database.
-                  It will <strong className="text-brown">NOT</strong> call Stripe, refund funds, call Promio, or modify customer profiles.
-                </p>
-              </div>
-            </div>
-
-            {/* Order Attributes Required Summary */}
-            <div className="border border-brown/20 bg-white p-4 rounded text-xs space-y-2.5 shadow-xs">
-              <div className="flex items-center justify-between border-b border-brown/10 pb-2">
-                <span className="text-brown/60 uppercase tracking-wider text-[10px] font-semibold">Order Number</span>
-                <span className="font-mono font-bold text-brown text-sm">#{orderToDelete.orderNumber || orderToDelete.id}</span>
-              </div>
-              <div className="flex items-center justify-between border-b border-brown/10 pb-2">
-                <span className="text-brown/60 uppercase tracking-wider text-[10px] font-semibold">Customer Email</span>
-                <span className="font-medium text-brown truncate max-w-[260px]">{orderToDelete.customer?.email || "No email provided"}</span>
-              </div>
-              <div className="flex items-center justify-between border-b border-brown/10 pb-2">
-                <span className="text-brown/60 uppercase tracking-wider text-[10px] font-semibold">Total</span>
-                <span className="font-bold text-burgundy text-sm">€{(orderToDelete.total || 0).toFixed(2)}</span>
-              </div>
-              <div className="flex items-center justify-between border-b border-brown/10 pb-2">
-                <span className="text-brown/60 uppercase tracking-wider text-[10px] font-semibold">Payment Status</span>
-                <span className="uppercase font-semibold tracking-wider text-[11px] px-2 py-0.5 rounded bg-sand/30 text-brown">
-                  {(orderToDelete.payment_status || orderToDelete.status || "pending").toUpperCase()}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-brown/60 uppercase tracking-wider text-[10px] font-semibold">Fulfillment Status</span>
-                <span className="uppercase font-semibold tracking-wider text-[11px] px-2 py-0.5 rounded bg-sand/30 text-brown">
-                  {(orderToDelete.fulfillment_status || "pending").replace(/_/g, " ").toUpperCase()}
-                </span>
-              </div>
-            </div>
-
-            {/* Additional Confirmation for Paid/Fulfilled Orders */}
-            {(orderToDelete.payment_status === "paid" || orderToDelete.status === "Paid" || orderToDelete.fulfillment_status === "shipped" || orderToDelete.fulfillment_status === "delivered") && (
-              <div className="p-3.5 bg-amber-50 border border-amber-300 rounded text-xs space-y-2 text-amber-900">
-                <div className="flex items-start gap-2">
-                  <span className="text-amber-700 font-bold text-sm">⚠️</span>
-                  <p className="leading-relaxed">
-                    <strong>Attention:</strong> This order is marked as <strong>PAID</strong> or in fulfillment. Deleting will permanently remove it from local store records.
-                  </p>
-                </div>
-                <label className="flex items-center gap-2 cursor-pointer pt-1 font-medium select-none">
-                  <input
-                    type="checkbox"
-                    checked={paidWarningAcknowledged}
-                    onChange={(e) => setPaidWarningAcknowledged(e.target.checked)}
-                    className="rounded border-amber-400 text-burgundy focus:ring-burgundy"
-                  />
-                  <span>I understand and confirm deletion of this paid order.</span>
-                </label>
-              </div>
-            )}
-
-            {/* Action Buttons: CANCEL & DELETE ORDER */}
-            <div className="flex items-center justify-end gap-3 pt-2 border-t border-brown/15">
-              <button
-                type="button"
-                disabled={deleteOrderLoading}
-                onClick={() => {
-                  setOrderToDelete(null);
-                  setPaidWarningAcknowledged(false);
-                }}
-                className="px-5 py-2 text-xs font-semibold uppercase tracking-wider text-brown/70 hover:text-brown border border-brown/30 hover:bg-sand/30 rounded transition-colors disabled:opacity-50"
-              >
-                CANCEL
-              </button>
-              <button
-                type="button"
-                disabled={
-                  deleteOrderLoading ||
-                  ((orderToDelete.payment_status === "paid" || orderToDelete.status === "Paid" || orderToDelete.fulfillment_status === "shipped" || orderToDelete.fulfillment_status === "delivered") && !paidWarningAcknowledged)
-                }
-                onClick={handleConfirmDeleteOrder}
-                className="px-6 py-2 text-xs font-semibold uppercase tracking-wider text-white bg-red-700 hover:bg-red-800 rounded transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                {deleteOrderLoading ? (
-                  <>
-                    <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-solid border-white border-r-transparent" />
-                    <span>DELETING...</span>
-                  </>
-                ) : (
-                  <span>DELETE ORDER</span>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      {/* ========================================================================= */}
       {/* MANUAL PROMIO FULFILLMENT RETRY CONFIRMATION MODAL                        */}
       {/* ========================================================================= */}
-      {orderToRetryFulfill && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-fadeIn">
-          <div className="bg-[#FAF7F2] border border-brown/30 w-full max-w-lg p-6 md:p-8 rounded shadow-2xl space-y-5 text-left">
-            {/* Modal Header */}
-            <div className="flex items-start gap-3.5">
-              <div className="h-11 w-11 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center shrink-0 border border-amber-200">
-                <Icon name="refresh" className="h-5 w-5" />
-              </div>
-              <div>
-                <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-amber-900 block">
-                  PROMIO FULFILLMENT DISPATCH
-                </span>
-                <h3 className="font-serif text-xl md:text-2xl text-brown font-bold mt-0.5">
-                  Retry Promio fulfillment for this paid order?
-                </h3>
-                <p className="text-xs text-brown/70 mt-1 leading-relaxed">
-                  This will dispatch the paid order to Promio (Breda, NL) for production and fulfillment.
-                  The customer will <strong className="text-brown">NOT</strong> be charged again.
-                </p>
-              </div>
-            </div>
+      {orderToRetryFulfill && (() => {
+        const retryCust = (orderToRetryFulfill.customer || {}) as any;
+        const retryAddr = ((orderToRetryFulfill as any).shipping_address || {}) as any;
+        const retryName = [
+          retryCust.firstName || retryCust.first_name || retryAddr.first_name,
+          retryCust.lastName || retryCust.last_name || retryAddr.last_name,
+        ].filter(Boolean).join(" ") || (orderToRetryFulfill as any).customer_name || "Customer";
+        const retryEmail = retryCust.email || (orderToRetryFulfill as any).customer_email || (orderToRetryFulfill as any).email || "";
+        const retryTotal = typeof orderToRetryFulfill.total === "number" ? orderToRetryFulfill.total : (Number(orderToRetryFulfill.total) || ((orderToRetryFulfill as any).total_cents ? (orderToRetryFulfill as any).total_cents / 100 : 0));
 
-            {/* Error Message if Retry Failed */}
-            {retryFulfillError && (
-              <div className="p-3 bg-red-50 border border-red-200 text-red-800 rounded text-xs">
-                <strong className="block font-semibold mb-0.5">Fulfillment Notice:</strong>
-                {retryFulfillError}
+        return (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+            <div className="bg-[#FAF7F2] border border-brown/30 w-full max-w-lg p-6 md:p-8 rounded shadow-2xl space-y-5 text-left">
+              {/* Modal Header */}
+              <div className="flex items-start gap-3.5">
+                <div className="h-11 w-11 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center shrink-0 border border-amber-200">
+                  <Icon name="refresh" className="h-5 w-5" />
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-amber-900 block">
+                    PROMIO FULFILLMENT DISPATCH
+                  </span>
+                  <h3 className="font-serif text-xl md:text-2xl text-brown font-bold mt-0.5">
+                    Retry Promio fulfillment for this paid order?
+                  </h3>
+                  <p className="text-xs text-brown/70 mt-1 leading-relaxed">
+                    This will dispatch the paid order to Promio (Breda, NL) for production and fulfillment.
+                    The customer will <strong className="text-brown">NOT</strong> be charged again.
+                  </p>
+                </div>
               </div>
-            )}
 
-            {/* Order Summary */}
-            <div className="border border-brown/20 bg-white p-4 rounded text-xs space-y-2.5 shadow-xs">
-              <div className="flex items-center justify-between border-b border-brown/10 pb-2">
-                <span className="text-brown/60 uppercase tracking-wider text-[10px] font-semibold">Order Number</span>
-                <span className="font-mono font-bold text-brown text-sm">#{orderToRetryFulfill.orderNumber || orderToRetryFulfill.id}</span>
-              </div>
-              <div className="flex items-center justify-between border-b border-brown/10 pb-2">
-                <span className="text-brown/60 uppercase tracking-wider text-[10px] font-semibold">Customer</span>
-                <span className="font-medium text-brown truncate max-w-[260px]">
-                  {orderToRetryFulfill.customer?.firstName} {orderToRetryFulfill.customer?.lastName} ({orderToRetryFulfill.customer?.email})
-                </span>
-              </div>
-              <div className="flex items-center justify-between border-b border-brown/10 pb-2">
-                <span className="text-brown/60 uppercase tracking-wider text-[10px] font-semibold">Total (incl. VAT)</span>
-                <span className="font-bold text-burgundy text-sm">€{(orderToRetryFulfill.total || 0).toFixed(2)}</span>
-              </div>
-              <div className="flex items-center justify-between border-b border-brown/10 pb-2">
-                <span className="text-brown/60 uppercase tracking-wider text-[10px] font-semibold">Payment Status</span>
-                <span className="uppercase font-bold tracking-wider text-[10px] px-2 py-0.5 rounded bg-green-100 text-green-800 border border-green-300">
-                  PAID
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-brown/60 uppercase tracking-wider text-[10px] font-semibold">Target Fulfillment</span>
-                <span className="font-mono text-[10px] font-bold text-amber-900 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                  Promio Brick API 1.0 (Breda, NL)
-                </span>
-              </div>
-            </div>
+              {/* Error Message if Retry Failed */}
+              {retryFulfillError && (
+                <div className="p-3 bg-red-50 border border-red-200 text-red-800 rounded text-xs">
+                  <strong className="block font-semibold mb-0.5">Fulfillment Notice:</strong>
+                  {retryFulfillError}
+                </div>
+              )}
 
-            {/* Action Buttons: CANCEL & RETRY FULFILLMENT */}
-            <div className="flex items-center justify-end gap-3 pt-2 border-t border-brown/15">
-              <button
-                type="button"
-                disabled={retryFulfillLoading}
-                onClick={() => {
-                  setOrderToRetryFulfill(null);
-                  setRetryFulfillError(null);
-                }}
-                className="px-5 py-2 text-xs font-semibold uppercase tracking-wider text-brown/70 hover:text-brown border border-brown/30 hover:bg-sand/30 rounded transition-colors disabled:opacity-50"
-              >
-                CANCEL
-              </button>
-              <button
-                type="button"
-                disabled={retryFulfillLoading}
-                onClick={handleConfirmRetryFulfill}
-                className="px-6 py-2 text-xs font-semibold uppercase tracking-wider text-white bg-amber-800 hover:bg-amber-900 rounded transition-colors shadow-sm disabled:opacity-50 flex items-center gap-2"
-              >
-                {retryFulfillLoading ? (
-                  <>
-                    <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-solid border-white border-r-transparent" />
-                    <span>SENDING TO PROMIO...</span>
-                  </>
-                ) : (
-                  <span>DISPATCH TO PROMIO</span>
-                )}
-              </button>
+              {/* Order Summary */}
+              <div className="border border-brown/20 bg-white p-4 rounded text-xs space-y-2.5 shadow-xs">
+                <div className="flex items-center justify-between border-b border-brown/10 pb-2">
+                  <span className="text-brown/60 uppercase tracking-wider text-[10px] font-semibold">Order Number</span>
+                  <span className="font-mono font-bold text-brown text-sm">#{orderToRetryFulfill.orderNumber || orderToRetryFulfill.id}</span>
+                </div>
+                <div className="flex items-center justify-between border-b border-brown/10 pb-2">
+                  <span className="text-brown/60 uppercase tracking-wider text-[10px] font-semibold">Customer</span>
+                  <span className="font-medium text-brown truncate max-w-[260px]">
+                    {retryName} {retryEmail ? `(${retryEmail})` : ""}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between border-b border-brown/10 pb-2">
+                  <span className="text-brown/60 uppercase tracking-wider text-[10px] font-semibold">Total (incl. VAT)</span>
+                  <span className="font-bold text-burgundy text-sm">€{retryTotal.toFixed(2)}</span>
+                </div>
+                <div className="flex items-center justify-between border-b border-brown/10 pb-2">
+                  <span className="text-brown/60 uppercase tracking-wider text-[10px] font-semibold">Payment Status</span>
+                  <span className="uppercase font-bold tracking-wider text-[10px] px-2 py-0.5 rounded bg-green-100 text-green-800 border border-green-300">
+                    PAID
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-brown/60 uppercase tracking-wider text-[10px] font-semibold">Target Fulfillment</span>
+                  <span className="font-mono text-[10px] font-bold text-amber-900 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                    Promio Brick API 1.0 (Breda, NL)
+                  </span>
+                </div>
+              </div>
+
+              {/* Action Buttons: CANCEL & RETRY FULFILLMENT */}
+              <div className="flex items-center justify-end gap-3 pt-2 border-t border-brown/15">
+                <button
+                  type="button"
+                  disabled={retryFulfillLoading}
+                  onClick={() => {
+                    setOrderToRetryFulfill(null);
+                    setRetryFulfillError(null);
+                  }}
+                  className="px-5 py-2 text-xs font-semibold uppercase tracking-wider text-brown/70 hover:text-brown border border-brown/30 hover:bg-sand/30 rounded transition-colors disabled:opacity-50"
+                >
+                  CANCEL
+                </button>
+                <button
+                  type="button"
+                  disabled={retryFulfillLoading}
+                  onClick={handleConfirmRetryFulfill}
+                  className="px-6 py-2 text-xs font-semibold uppercase tracking-wider text-white bg-amber-800 hover:bg-amber-900 rounded transition-colors shadow-sm disabled:opacity-50 flex items-center gap-2"
+                >
+                  {retryFulfillLoading ? (
+                    <>
+                      <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-solid border-white border-r-transparent" />
+                      <span>SENDING TO PROMIO...</span>
+                    </>
+                  ) : (
+                    <span>DISPATCH TO PROMIO</span>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
