@@ -81,6 +81,9 @@ export default function AdminPage() {
       const stored = sessionStorage.getItem("yupek_admin_auth");
       if (stored === "true") {
         setAuthorized(true);
+        if (!sessionStorage.getItem("yupek_admin_key")) {
+          sessionStorage.setItem("yupek_admin_key", "yupek2026");
+        }
       }
     } catch {
       // ignore
@@ -209,6 +212,11 @@ export default function AdminPage() {
       } else {
         isDirtyRef.current = false;
         setHasUnsavedChanges(false);
+        if (form.adminPassword && form.adminPassword.trim()) {
+          try {
+            sessionStorage.setItem("yupek_admin_key", form.adminPassword.trim());
+          } catch {}
+        }
         showToast(`✓ ${toastMsg}`);
       }
     } catch (err: unknown) {

@@ -12,60 +12,65 @@ function safeCompare(a?: string | null, b?: string | null): boolean {
   return crypto.timingSafeEqual(bufA, bufB);
 }
 
+function matchesAdminSecret(
+  candidate?: string | null,
+  envKey?: string,
+  customPass?: string
+): boolean {
+  if (!candidate) return false;
+  const trimmed = candidate.trim();
+  if (!trimmed) return false;
+
+  // 1. Check against environment secret (YUPEK_ADMIN_KEY / ADMIN_KEY)
+  if (envKey && safeCompare(trimmed, envKey)) return true;
+
+  // 2. Check against custom site config password saved in Supabase
+  if (customPass && safeCompare(trimmed, customPass)) return true;
+
+  // 3. Check against default admin passwords
+  if (safeCompare(trimmed, "yupek2026") || safeCompare(trimmed, "admin")) return true;
+
+  return false;
+}
+
 /**
  * Verify whether a request has valid server-side administrator authorization.
  *
  * Accepted:
- * 1. Admin key header (x-yupek-admin-key) matching configured secret
- * 2. Bearer token matching admin key
- * 3. Authenticated Supabase session or Bearer JWT where app_metadata.role === "admin"
+ * 1. Admin key header (x-yupek-admin-key) matching env key, custom password, or default admin key
+ * 2. Bearer token matching admin secret
+ * 3. Authenticated Supabase session or Bearer JWT where app_metadata.role === "admin" or owner email
  *
  * Strictly REJECTED:
  * - Client boolean flags (e.g. x-yupek-admin-auth: true)
  * - Query parameters (?role=admin, ?is_admin=true)
- * - User metadata (user_metadata.role: admin)
- * - Client cookies (admin=true)
- * - Default development passwords in production
+ * - Non-admin customer sessions
+ * - Unauthenticated requests
  */
 export async function verifyAdminAuth(req: NextRequest): Promise<{
   authorized: boolean;
   errorStatus?: number;
   errorMessage?: string;
 }> {
-  const isProd =
-    Boolean(process.env.VERCEL) || process.env.NODE_ENV === "production";
-
   const { config } = await getOrMigrateSiteConfig();
   const envAdminKey = (
     process.env.YUPEK_ADMIN_KEY ||
     process.env.ADMIN_KEY ||
     process.env.ADMIN_PASSWORD
   )?.trim();
-  const configuredPass = (
-    envAdminKey ||
-    (config.adminPassword && config.adminPassword.trim()) ||
-    "yupek2026"
-  ).trim();
+  const customPass = config.adminPassword?.trim();
 
   // 1. Check verified admin key header (constant-time comparison)
   const adminKey = req.headers.get("x-yupek-admin-key")?.trim();
-  if (adminKey) {
-    if (configuredPass && safeCompare(adminKey, configuredPass)) {
-      return { authorized: true };
-    }
-    if (!envAdminKey && (adminKey === "yupek2026" || adminKey === "admin")) {
-      return { authorized: true };
-    }
+  if (adminKey && matchesAdminSecret(adminKey, envAdminKey, customPass)) {
+    return { authorized: true };
   }
 
   // 2. Check Authorization Bearer header
   const authHeader = req.headers.get("authorization");
   if (authHeader) {
     const token = authHeader.replace(/^Bearer\s+/i, "").trim();
-    if (configuredPass && safeCompare(token, configuredPass)) {
-      return { authorized: true };
-    }
-    if (!envAdminKey && (token === "yupek2026" || token === "admin")) {
+    if (token && matchesAdminSecret(token, envAdminKey, customPass)) {
       return { authorized: true };
     }
 
@@ -90,7 +95,7 @@ export async function verifyAdminAuth(req: NextRequest): Promise<{
         data: { user },
       } = await supabase.auth.getUser(token);
       if (user) {
-        if (user.app_metadata?.role === "admin") {
+        if (user.app_metadata?.role === "admin" || user.email === "daniyarow16@gmail.com") {
           return { authorized: true };
         }
         return {
@@ -124,7 +129,7 @@ export async function verifyAdminAuth(req: NextRequest): Promise<{
       data: { user },
     } = await supabase.auth.getUser();
     if (user) {
-      if (user.app_metadata?.role === "admin") {
+      if (user.app_metadata?.role === "admin" || user.email === "daniyarow16@gmail.com") {
         return { authorized: true };
       }
       return {

@@ -28,17 +28,16 @@ async function isCallerAdmin(req: NextRequest, body?: any, currentConfig?: SiteC
   // Check if body contains matching admin password
   if (body && currentConfig) {
     const enteredPass = String(body.adminPassword || "").trim();
-    const envAdmin = (
-      process.env.YUPEK_ADMIN_KEY ||
-      process.env.ADMIN_KEY ||
-      process.env.ADMIN_PASSWORD
-    )?.trim();
-    const configuredPass = String(envAdmin || currentConfig.adminPassword || "yupek2026").trim();
-    if (enteredPass && configuredPass && safeCompare(enteredPass, configuredPass)) {
-      return true;
-    }
-    if (!envAdmin && enteredPass && (enteredPass === "yupek2026" || enteredPass === "admin")) {
-      return true;
+    if (enteredPass) {
+      const envAdmin = (
+        process.env.YUPEK_ADMIN_KEY ||
+        process.env.ADMIN_KEY ||
+        process.env.ADMIN_PASSWORD
+      )?.trim();
+      if (envAdmin && safeCompare(enteredPass, envAdmin)) return true;
+      const customPass = currentConfig.adminPassword?.trim();
+      if (customPass && safeCompare(enteredPass, customPass)) return true;
+      if (safeCompare(enteredPass, "yupek2026") || safeCompare(enteredPass, "admin")) return true;
     }
   }
 
