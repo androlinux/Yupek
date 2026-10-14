@@ -4,6 +4,7 @@ import { promises as fs } from "fs";
 import path from "path";
 import { StoreOrder, defaultSiteConfig, SiteConfig } from "@/lib/siteConfig";
 import { getSupabaseServerClient } from "@/lib/supabaseServer";
+import { getOrMigrateSiteConfig } from "@/lib/siteConfigServer";
 import { verifyAdminAuth } from "@/lib/adminAuth";
 
 export const dynamic = "force-dynamic";
@@ -291,9 +292,13 @@ export async function POST(request: NextRequest) {
       emailNotificationSent: false,
     };
 
+    // Fetch site configuration for stored SMTP credentials
+    const { config } = await getOrMigrateSiteConfig();
+
     // Determine Gmail recipient
     const recipientEmail =
       body.notificationEmail ||
+      config.orderNotificationEmail ||
       process.env.NOTIFICATION_GMAIL ||
       process.env.GMAIL_USER ||
       "daniyarow16@gmail.com";
@@ -301,8 +306,8 @@ export async function POST(request: NextRequest) {
     newOrder.emailNotificationRecipient = recipientEmail;
 
     // Credentials for sending
-    const gmailUser = (body.smtpUser || process.env.GMAIL_USER || recipientEmail).trim();
-    const gmailPass = (body.smtpPass || process.env.GMAIL_APP_PASSWORD || "").trim().replace(/\s+/g, "");
+    const gmailUser = (body.smtpUser || config.smtpUser || process.env.GMAIL_USER || recipientEmail).trim();
+    const gmailPass = (body.smtpPass || config.smtpPass || process.env.GMAIL_APP_PASSWORD || "").trim().replace(/\s+/g, "");
 
     let emailError: string | null = null;
 
